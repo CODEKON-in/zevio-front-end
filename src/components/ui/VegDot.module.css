@@ -1,0 +1,34 @@
+.mark {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.dot {
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.veg {
+  color: var(--color-veg);
+}
+
+.nonveg {
+  color: var(--color-nonveg);
+}
+
+/* non-veg uses a triangle (FSSAI style) so it is not colour-only */
+.nonveg .dot {
+  width: 0;
+  height: 0;
+  border-radius: 0;
+  background: none;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 7px solid currentColor;
+}

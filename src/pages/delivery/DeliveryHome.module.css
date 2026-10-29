@@ -1,0 +1,82 @@
+/* Greeting doubles as the page's main heading */
+.hello {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+}
+
+.toggle {
+  margin-top: var(--space-2);
+}
+
+.summary {
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.summaryTitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-md);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  text-align: center;
+}
+
+.statValue {
+  font-family: var(--font-en);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.statLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.statHint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.cash {
+  background: var(--color-warning-light);
+}
+
+.cash .statLabel {
+  color: var(--color-warning);
+}
+
+.offline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: #2b2b33;
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.dev {
+  margin-top: var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+}

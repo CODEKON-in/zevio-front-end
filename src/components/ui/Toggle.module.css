@@ -1,0 +1,115 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.stateText {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  min-width: 2.5em;
+  text-align: right;
+}
+
+.on .stateText {
+  color: var(--color-success);
+}
+
+.track {
+  position: relative;
+  width: 52px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  transition: background-color var(--transition);
+}
+
+.thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition);
+}
+
+.on .track {
+  background: var(--color-success);
+}
+
+.on .thumb {
+  transform: translateX(22px);
+}
+
+/* Large: the big shop Open/Closed and partner Online/Offline switch */
+.lg {
+  padding: var(--space-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  transition: border-color var(--transition), background-color var(--transition);
+}
+
+.lg.on {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.lg .label {
+  font-size: var(--font-size-lg);
+}
+
+.lg .stateText {
+  font-size: var(--font-size-md);
+}
+
+.lg .track {
+  width: 68px;
+  height: 38px;
+}
+
+.lg .thumb {
+  width: 32px;
+  height: 32px;
+}
+
+.lg.on .thumb {
+  transform: translateX(30px);
+}

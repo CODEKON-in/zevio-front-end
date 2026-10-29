@@ -1,0 +1,33 @@
+.frame {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-placeholder);
+}
+
+.rounded {
+  border-radius: var(--radius-md);
+}
+
+.img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.loaded {
+  opacity: 1;
+}
+
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  opacity: 0.55;
+}

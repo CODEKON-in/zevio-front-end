@@ -1,0 +1,79 @@
+.viewport {
+  position: fixed;
+  left: 50%;
+  /* top of the screen so toasts never cover cart bars or action buttons */
+  top: calc(var(--space-3) + env(safe-area-inset-top));
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: calc(100% - 2 * var(--space-4));
+  max-width: 480px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: #1f1f26;
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: toast-in 200ms ease-out;
+}
+
+.success svg:first-child { color: #6ee7a0; }
+.error svg:first-child { color: #ff9b9b; }
+.info svg:first-child { color: #9cc9ff; }
+
+.error {
+  background: #3a1416;
+}
+
+.message {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.close:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* Wide screens (admin): bottom-left corner — clear of page headers and of
+   the right-side drawers, whose buttons a toast must never cover. */
+@media (min-width: 900px) {
+  .viewport {
+    top: auto;
+    bottom: var(--space-5);
+    left: var(--space-5);
+    right: auto;
+    width: 380px;
+    transform: none;
+  }
+}

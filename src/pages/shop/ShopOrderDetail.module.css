@@ -1,0 +1,129 @@
+.block {
+  margin-top: var(--space-3);
+}
+
+.blockTitle {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.items {
+  list-style: none;
+  margin-bottom: var(--space-3);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-lg);
+}
+
+.qty {
+  min-width: 2.6em;
+  font-weight: var(--font-weight-bold);
+  font-family: var(--font-en);
+  color: var(--color-primary-dark);
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.instructions {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-light);
+}
+
+.paymentLine {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.customer {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.landmark {
+  margin-top: 2px;
+  font-weight: var(--font-weight-semibold);
+}
+
+.callBtn {
+  margin-top: var(--space-3);
+}
+
+.partner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: var(--space-2);
+}
+
+.reject {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.reasons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.reasons legend {
+  margin-bottom: var(--space-2);
+}
+
+.reason {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.reason input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-danger);
+}
+
+.reasonActive {
+  border-color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.reason:focus-within {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.reasonError {
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+}

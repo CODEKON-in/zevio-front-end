@@ -1,0 +1,36 @@
+.title {
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.row dt {
+  color: var(--color-text-muted);
+}
+
+.row dd {
+  margin: 0;
+}
+
+.total {
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border-strong);
+}
+
+.total dt {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}

@@ -1,0 +1,9 @@
+node_modules
+dist
+.env.local
+.env.*.local
+.netlify
+
+# local-only files (not part of the app)
+_to_delete/
+*.rar

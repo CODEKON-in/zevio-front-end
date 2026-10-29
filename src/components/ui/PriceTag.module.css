@@ -1,0 +1,25 @@
+.price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-family: var(--font-en);
+  font-weight: var(--font-weight-bold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sm { font-size: var(--font-size-sm); }
+.md { font-size: var(--font-size-md); }
+.lg { font-size: var(--font-size-lg); }
+.xl { font-size: var(--font-size-2xl); }
+
+.muted {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+.original {
+  font-size: 0.85em;
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
+}

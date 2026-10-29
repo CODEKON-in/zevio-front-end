@@ -1,0 +1,89 @@
+/*
+ * Design tokens — change the brand here and the whole app follows.
+ * Colours are chosen for high contrast on low-end, dim phone screens.
+ */
+:root {
+  /* Brand */
+  --color-primary: #5b3cc4;
+  --color-primary-dark: #452b9e;
+  --color-primary-light: #eeeafb;
+  --color-on-primary: #ffffff;
+
+  /* Meaning colours */
+  --color-success: #15803d;        /* success + veg */
+  --color-success-light: #dcfce7;
+  --color-danger: #c62828;         /* errors + non-veg */
+  --color-danger-light: #fdecec;
+  --color-warning: #a45a00;        /* pending (amber, darkened for text contrast) */
+  --color-warning-light: #fff1d6;
+  --color-info: #0b63a3;
+  --color-info-light: #e2f1fc;
+
+  --color-veg: var(--color-success);
+  --color-nonveg: var(--color-danger);
+
+  /* Neutrals */
+  --color-text: #17171c;
+  --color-text-muted: #52525b;
+  --color-text-inverse: #ffffff;
+  --color-bg: #f4f4f6;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9f9fb;
+  --color-border: #dcdce2;
+  --color-border-strong: #a9a9b3;
+  --color-placeholder: #e9e6f2;
+  --color-overlay: rgba(10, 10, 20, 0.55);
+  --color-focus: #1d4ed8;
+
+  /* Spacing (4px scale) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 48px;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Typography */
+  --font-en: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 13px;
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 22px;
+  --font-size-2xl: 28px;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height: 1.5;
+
+  /* Sizing */
+  --tap-target: 48px;
+  --header-height: 56px;
+  --bottom-nav-height: 64px;
+  --container-max: 640px;
+  --admin-sidebar-width: 240px;
+
+  /* Effects */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.18);
+  --transition-fast: 150ms ease;
+  --transition: 220ms ease;
+
+  /* Layers */
+  --z-header: 10;
+  --z-bottom-nav: 20;
+  --z-sheet: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-dev: 45; /* below sheets/modals so it never covers them */
+  --z-offline: 90;
+}

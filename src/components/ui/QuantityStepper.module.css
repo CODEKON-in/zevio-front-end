@@ -1,0 +1,48 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  overflow: hidden;
+}
+
+.btn {
+  display: grid;
+  place-items: center;
+  width: var(--tap-target);
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  transition: background-color var(--transition-fast);
+}
+
+.btn:hover:not(:disabled) {
+  background: rgba(91, 60, 196, 0.12);
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.value {
+  min-width: 28px;
+  text-align: center;
+  font-family: var(--font-en);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg .btn {
+  width: 56px;
+  height: 52px;
+}
+
+.lg .value {
+  min-width: 36px;
+  font-size: var(--font-size-lg);
+}

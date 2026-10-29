@@ -1,0 +1,24 @@
+.banner {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.banner svg {
+  flex-shrink: 0;
+}
+
+.expired {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border: 2px solid var(--color-danger);
+}
+
+.warning {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}

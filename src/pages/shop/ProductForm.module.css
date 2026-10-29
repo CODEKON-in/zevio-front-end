@@ -1,0 +1,32 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.photoCard {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.photo {
+  width: 96px;
+  flex-shrink: 0;
+}
+
+.photoText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.photoLabel {
+  font-weight: var(--font-weight-semibold);
+}
+
+.delete {
+  align-self: flex-start;
+  color: var(--color-danger);
+}

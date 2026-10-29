@@ -1,0 +1,56 @@
+.shopName,
+.blockTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-md);
+}
+
+.block {
+  margin-top: var(--space-3);
+}
+
+.items {
+  list-style: none;
+  margin: var(--space-2) 0;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    'dot info stepper'
+    'dot info total';
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.item > :first-child {
+  grid-area: dot;
+  align-self: start;
+  margin-top: 3px;
+}
+
+.itemInfo {
+  grid-area: info;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  align-self: start;
+}
+
+.itemName {
+  font-weight: var(--font-weight-semibold);
+}
+
+.item > div[role='group'] {
+  grid-area: stepper;
+}
+
+.lineTotal {
+  grid-area: total;
+  justify-self: end;
+}

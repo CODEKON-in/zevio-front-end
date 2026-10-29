@@ -1,0 +1,105 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--tap-target);
+  padding: 0 var(--space-5);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn:active:not(.inactive) {
+  transform: scale(0.98);
+}
+
+.label {
+  min-width: 0;
+}
+
+/* Sizes */
+.sm {
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  font-size: var(--font-size-sm);
+}
+/* keep a 48px touch area for small buttons */
+.sm::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+.lg {
+  min-height: 56px;
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-lg);
+}
+.block {
+  display: flex;
+  width: 100%;
+}
+
+/* Variants */
+.primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.primary:hover:not(.inactive) {
+  background: var(--color-primary-dark);
+}
+
+.secondary {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+.secondary:hover:not(.inactive) {
+  border-color: var(--color-primary);
+}
+
+.outline {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+.outline:hover:not(.inactive) {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-primary-dark);
+}
+.ghost:hover:not(.inactive) {
+  background: var(--color-primary-light);
+}
+
+.danger {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+.danger:hover:not(.inactive) {
+  filter: brightness(0.92);
+}
+
+.success {
+  background: var(--color-success);
+  color: var(--color-text-inverse);
+}
+.success:hover:not(.inactive) {
+  filter: brightness(0.92);
+}
+
+.inactive {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

@@ -1,0 +1,85 @@
+.title {
+  margin-bottom: var(--space-3);
+}
+
+.block {
+  margin-top: var(--space-3);
+}
+
+.blockTitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-md);
+}
+
+.photoRow {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.photo {
+  width: 88px;
+  flex-shrink: 0;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.shopName {
+  font-size: var(--font-size-lg);
+}
+
+.photoHint {
+  margin-top: var(--space-2);
+}
+
+.times {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.sub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.subGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.subGrid dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.subGrid dd {
+  margin: 2px 0 0;
+  font-weight: var(--font-weight-semibold);
+}
+
+.logout {
+  margin-top: var(--space-6);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}

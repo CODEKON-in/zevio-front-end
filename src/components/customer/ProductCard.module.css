@@ -1,0 +1,54 @@
+.card {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.info {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.name {
+  font-size: var(--font-size-md);
+  line-height: 1.35;
+}
+
+.oos {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-danger);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.control {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* stepper fits exactly in 120px */
+.control > span {
+  min-width: 20px;
+}
+
+/* Out of stock: faded photo, readable text */
+.unavailable .side {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.unavailable .name {
+  color: var(--color-text-muted);
+}

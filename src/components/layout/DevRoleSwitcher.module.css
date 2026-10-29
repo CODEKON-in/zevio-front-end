@@ -1,0 +1,52 @@
+.fab {
+  position: fixed;
+  /* right edge, middle of the screen — clear of headers, cart bar and bottom nav */
+  right: 0;
+  top: 50%;
+  z-index: var(--z-dev);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border: 2px solid #fff;
+  border-right: 0;
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  background: #111;
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.05em;
+  box-shadow: var(--shadow-md);
+  opacity: 0.55;
+}
+
+.fab:hover {
+  opacity: 1;
+}
+
+.current {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.heading {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
