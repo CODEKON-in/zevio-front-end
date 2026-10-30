@@ -1,146 +1,122 @@
-# Zevio API — changes the backend needs
+# Zevio API — state of the backend
 
-The frontend is connected to the Zevio API (`zevio-apis-main`). This file lists what the API
-must change or add so that every part of the app runs on real data. Items are in priority order.
+The admin panel runs entirely on the database now. Every list, number and toggle in
+`/admin` is a row the API read or wrote — there is no demo data behind those screens.
 
-I tested the app against a local copy of the API code (Flask + an in-memory stand-in for Supabase).
-The live API at `zevio-apis.vercel.app` could not be reached from my test machine, so test one full
-order on the live API after deploying.
+Getting there needed a migration and new endpoints. This file records what was done
+and what is still missing.
 
 ---
 
-## A. Done — the API code now does what its README says (29/10/2026)
+## Deploy order (important)
 
-These changes were made in `D:\projects\zevio-apis-main` so the code matches the README:
+The new API code reads columns that do not exist yet, so **run the migration before
+deploying the API**. Pushing first would break the live customer app: `PUBLIC_COLUMNS`
+in `profile.py` selects `is_blocked`, `vehicle`, `base_place`, `is_active` and
+`is_online`, and Supabase errors on an unknown column, so every `/api/user/<uid>`
+call would answer 500.
 
-| File | README says | Was | Now |
-|---|---|---|---|
-| `shop.py`, `product.py` | Shop / product ids are UUIDs (every endpoint checks `is_valid_uuid`) | ids were `16-8-8-8-24` characters → adding failed, or the new item could not be used | `str(uuid4())` |
-| `profile.py` | 404 when a user does not exist | crashed → 500 | returns `None` → **404 "user not found"** |
-| `order.py` | "Creates an order along with its line items in a **single atomic operation**" | order saved, then items one by one; a failing item left a half order | all items saved in **one insert**; if anything fails, the order is removed again → nothing half-saved. Also fixed: a `unit_price` sent as text (`"20"`) broke the line total. |
+1. Supabase → SQL Editor → run `Zevio-delivery-app/database/migrations/001_admin_real_data.sql`
+   (safe to run more than once).
+2. Push `zevio-api` so Vercel redeploys.
+3. Create the first admin — the API hashes the password:
+   ```bash
+   curl -X POST https://zevio-apis.vercel.app/api/admin/add/ \
+     -H "X-API-Key: $ZEVIO_API_KEY" \
+     -d "name=Admin" -d "email=admin@zevio.in" -d "phone=9876500100" -d "password=choose-a-strong-one"
+   ```
+   `/api/admin/add/` is deliberately **not** in the frontend proxy's allowlist: making
+   an admin stays a server-side call with the API key, never something a browser can do.
+4. Add the places you serve in admin → Settings (or insert into `service_places`).
+   Partners and shops cannot be filed under a place until this list exists.
+5. Create `zevio-front-end/.env.local` from `.env.example` with `VITE_DATA_SOURCE=api`,
+   `ZEVIO_API_URL` and `ZEVIO_API_KEY`. Without it the app still runs on demo data.
 
-| `main.py` + modules | 404 when the record does not exist | update / toggle / cancel / delete on a missing id answered **200 "ok"** | answers **404 "… not found"** (shop, product, order, item, user) |
-| `main.py` | 400 for invalid input | an order item with a bad `product_id` crashed the insert → 500; `quantity: true` was accepted | **400** with a clear message |
+---
 
-Push the folder to GitHub (`CODEKON-in/zevio-apis`) so Vercel deploys it.
+## A. Done
 
-## A2. Still open (small)
+### Bugs fixed in the API
 
-### 3. `add_shop` / `add_product` do not return the new id
-The app works around this by looking the record up by slug, which costs one extra call. Return it:
-```python
-# shop.py / product.py
-new_id = str(uuid4())
-shop_table.insert({... 'id': new_id ...}).execute()
-return new_id            # main.py: return response('ok', {'id': result}, code=201)
+| | Was | Now |
+|---|---|---|
+| `shop.py`, `product.py` | ids built as `token_hex(8)+'-'+token_hex(4)+…` → **16-8-8-8-24** characters, not a UUID, so every later endpoint rejected the new record | `uuid4()`, and the new id comes back as `data.id` |
+| `profile.py` | `users.data[0]` on an unknown id → `IndexError` → **500** | **404 `user not found`** |
+| `shops.postal_code` | `NOT NULL`, but `/api/shop/add/` never sent one, so inserts failed | the migration drops that `NOT NULL` |
+| `order.py` | items inserted one at a time; a failing item left half an order | one insert for all lines, and the order row is removed again if it fails |
+| `main.py` | `quantity: true` accepted as `1` | **400** (a bool is an int in Python — checked explicitly) |
+| `main.py` | update / toggle / cancel on a missing id answered **200 `ok`** | **404** |
+
+### Columns added, text-field hacks removed
+
+The app used to hide data the schema lacked inside existing text fields. All of it is
+real columns now, and `src/services/api/mappers.js` reads them directly:
+
+- `shops.description` no longer carries a `#zevio {json}` line. `category`, `owner_name`,
+  `upi_id`, `open_time`, `close_time`, `delivery_time`, `is_active` and the four
+  `subscription_*` columns exist.
+- `products.description` no longer carries one either: `section` and `is_veg` are columns.
+- `orders.delivery_address` is just the street. `landmark`, `directions`, `instructions`,
+  `payment_method` and `payment_status` are columns, so it is no longer packed as
+  `street | Landmark: … | Pay: COD`.
+- `orders.delivery_partner_id` is a real foreign key. The assignment used to live in one
+  browser's `localStorage`, so only the device that made it could see it.
+- One timestamp per status (`confirmed_at` … `cancelled_at`) plus `reject_reason`, so the
+  tracking timeline and the reason an order was rejected read the same on every phone.
+- `profiles.is_blocked`, and `vehicle` / `base_place` / `is_active` / `is_online` for
+  delivery partners.
+- `platform_settings` (one row) and `service_places` replace the per-device settings.
+
+### Endpoints added
+
+```
+GET  /api/users/?user_type=                 admin Customers and Partners lists
+GET  /api/user/by-phone/<phone>
+POST /api/admin/add/                        create an admin (API key only)
+POST /api/auth/admin                        admin login, password checked against the hash
+GET  /api/orders/?status=&date=             every order, for the admin list + dashboard
+GET  /api/orders/by-partner/<id>
+GET  /api/order/items/?order_ids=a,b,c      items for a whole list in one call
+POST /api/order/assign-partner/
+POST /api/order/mark-paid/
+POST /api/shop/set-active/                  admin show/hide, separate from toggle-orders
+GET/POST /api/settings/
+GET  /api/places/   POST /api/place/add|update|delete/
 ```
 
-### 4. Update endpoints do not validate values
-`/api/shop/update/` and `/api/product/update/` store `attr_value` as-is (no length limit and no
-`sanitize_str`), unlike the add endpoints. Apply the same validation as on add.
+`/api/user/update/`, `/api/shop/update/` and `/api/product/update/` now validate values
+the same way the add endpoints do, and the shop/product ones accept either one
+`attr`/`attr_value` pair or any number of columns in a single request.
+
+`password_hash` is never returned by any endpoint.
+
+Admins are `profiles` rows with `user_type = 'admin'`; the migration widens the
+`user_type` CHECK to allow it.
 
 ---
 
-## B. Columns to add (the app stores these in text fields for now)
+## B. Still missing
 
-The app needs some data that has no column yet. Until the columns exist, it keeps that data inside
-existing text fields, so every phone sees the same data:
+Nothing the admin panel shows depends on these, but the rest of the app does:
 
-| Where now | What is inside |
+| Needed for | What |
 |---|---|
-| `shops.description` ends with `#zevio {json}` | `category` (hotels/bakery), `ownerName`, `upiId`, `timings {open, close}`, `deliveryTime`, `isActive`, `subscription {plan, status, startDate, endDate}` |
-| `products.description` ends with `#zevio {json}` | `section` (menu group, e.g. "Tiffin"), `isVeg` |
-| `orders.delivery_address` = `street \| Landmark: … \| Directions: … \| Note: … \| Pay: UPI` | landmark, directions, customer instructions, payment method |
+| Real sign-in | `POST /api/auth/google` verifying the Google ID token server-side. Today the app derives the profile id from the Google account in the browser, which **identifies** someone without **proving** who they are. Add `email` + `google_sub` (unique) to `profiles`. |
+| Saved addresses | An `addresses` table + `GET/POST /api/user/<id>/addresses`. Customer addresses are still per-device, which is why the admin Customers table shows the place of a customer's most recent **order** instead of a saved address. |
+| Photos | Image upload (Supabase Storage) returning a URL for `logo_url` / `image_url`. The shop and product forms preview a chosen file but cannot upload it. |
+| Delete account | `orders.customer_id` / `shop_id` are `ON DELETE RESTRICT`, so deleting fails while old orders exist. Prefer a soft delete (`deleted_at` + clear the personal fields); shops need their order history. |
+| Status rules | `update-status` still accepts any status. The app enforces the flow, but the API should refuse impossible moves (`delivered` → `pending`). |
 
-Please add real columns. When they exist, only `src/services/api/mappers.js` in the frontend changes.
+## C. Security
 
-```sql
--- shops
-alter table shops add column category text not null default 'hotels';  -- 'hotels' | 'bakery'
-alter table shops add column upi_id text;
-alter table shops add column open_time time, add column close_time time;
-alter table shops add column delivery_time text default '30-40';
-alter table shops add column is_active boolean not null default true; -- admin on/off (separate from is_accepting_orders)
-alter table shops add column subscription_plan text, add column subscription_status text,
-                  add column subscription_start date, add column subscription_end date;
-
--- products
-alter table products add column section text;
-alter table products add column is_veg boolean;
-
--- orders
-alter table orders add column payment_method text not null default 'COD';   -- 'UPI' | 'COD'
-alter table orders add column payment_status text not null default 'pending'; -- 'pending' | 'paid'
-alter table orders add column landmark text;
-alter table orders add column instructions text;
-alter table orders add column delivery_partner_id uuid references profiles(id);
-alter table orders add column reject_reason text;
-alter table orders add column accepted_at timestamptz, add column ready_at timestamptz,
-                   add column picked_up_at timestamptz, add column delivered_at timestamptz,
-                   add column cancelled_at timestamptz;
-
--- profiles
-alter table profiles add column is_blocked boolean not null default false;
-```
-Then allow the new fields in `/api/shop/add/`, `/api/shop/update/` (`allowed_attrs`), `/api/product/add/`,
-`/api/product/update/` and `/api/order/place/`.
-
----
-
-## C. Order statuses — the app now uses the README lifecycle exactly
-
-```
-pending ──► confirmed ──► preparing ──► out_for_delivery ──► delivered
-   └──► cancelled
-```
-
-- Customer can cancel while `pending`. Shop: **Accept** → `confirmed`, **Start preparing** → `preparing`, **Reject** → `cancelled`.
-- Delivery partner: **Picked up** → `out_for_delivery` (only from `preparing`), **Delivered** → `delivered`.
-- The shop's reject reason is not in the API, so other phones just see "Cancelled".
-  Optional: add a `cancel_reason` column, and the time of each status change.
-- Optional: make `update-status` refuse impossible moves (e.g. `delivered` → `pending`).
-
----
-
-## D. Endpoints to add
-
-| Needed for | Endpoint |
-|---|---|
-| Customer login on a second phone | `GET /api/user/by-phone/<phone>`. Today the app remembers the profile id on the phone that first logged in; on a new phone it creates a second profile. |
-| Real sign-in | OTP or Google sign-in (e.g. Supabase Auth) that returns the profile. Today the login is a mock. |
-| Admin: all orders | `GET /api/orders/?status=&date=`. Today the app asks for each shop's orders one by one. |
-| Order lists with items | `GET /api/orders/by-shop/<id>?include=items` (and by-customer). Today the app makes one items call per order, but caches them. |
-| Admin: customers & partners | `GET /api/users/?user_type=customer\|delivery_person`, plus `is_blocked` |
-| Delivery partner app | `POST /api/order/assign-partner/` (`order_id`, `partner_id`), `GET /api/orders/by-partner/<id>`, partner online/offline |
-| Saved addresses | `addresses` table + `GET/POST /api/user/<id>/addresses` (today they are stored on the phone only) |
-| Platform settings | `GET/POST /api/settings/` (delivery fee, service places, platform UPI ID, support phone) |
-| Photos | Image upload (e.g. Supabase Storage) that returns a URL for `logo_url` / `image_url` |
-| Mark COD paid | `POST /api/order/mark-paid/` |
-
----
-
-## E. Google sign-in
-
-The app now signs everyone in (customers, shop owners, delivery partners) with **Google only**.
-
-- Today the app reads the Google account in the browser and makes the profile id from it. That **identifies** the person, but it does not **prove** who they are: the browser could be faked.
-- Please add `POST /api/auth/google` (field `credential` = the Google ID token). The API should verify the token with Google (`google-auth` library: `id_token.verify_oauth2_token(credential, requests.Request(), GOOGLE_CLIENT_ID)`), then find or create the profile by the Google `sub` / email, and return the profile plus a session token for later calls.
-- Add `email` and `google_sub` columns to `profiles` (unique).
-- Delivery partners: add `user_type = 'delivery_person'` profiles with `vehicle`, `base_place`, `is_active`. The app is ready to switch to them.
-
-### Delete account
-The app calls `POST /api/user/delete/` (customer) and `POST /api/shop/delete/` + `/api/user/delete/` (shop owner).
-If `orders.customer_id` / `orders.shop_id` are foreign keys, these deletes fail while old orders exist.
-Choose one: a soft delete (`profiles.deleted_at`, `shops.deleted_at`, and clear the personal fields), or `ON DELETE SET NULL` on those keys. Soft delete is recommended, because shops need their order history.
-
-## F. Security
-
-- **The API key must not be in the browser.** The frontend never sends it. It calls `/api/...` on its own site,
-  and a small proxy adds `X-API-Key` (Vite locally, a Netlify edge function in production). The proxy only
-  allows the endpoints the app uses; delete-user, delete-shop and delete-order are blocked.
-- Even so, anyone can use the app's public `/api/...` like the app does. Real protection needs **per-user
-  sign-in** in the API: a shop owner can change only their own shop, and a customer can see only their own orders.
-  Supabase Auth + Row Level Security is the usual way.
-- CORS is **not** needed while the proxy is used. If you ever call the API directly from a browser, add
-  `flask-cors` limited to the app's domain.
-- The `csrf` value in every reply is random and nothing checks it. Either remove it or implement real CSRF checks.
+- **The API key is never in the browser.** The app calls same-site `/api/...` and a proxy
+  adds `X-API-Key` (Vite in dev, `netlify/edge-functions/api.js` in production). The proxy
+  passes only the endpoints the app uses.
+- Anyone can still call the app's public `/api/...` the way the app does. Real protection
+  needs per-user authorisation **in the API**: a shop owner able to change only their own
+  shop, a customer able to see only their own orders. Supabase Auth + Row Level Security is
+  the usual route. Admin login is a password check, not a session — there is no token, so
+  the admin endpoints are protected by the proxy allowlist and the API key, not by who is
+  signed in.
+- The `csrf` value in every reply is random and nothing checks it. Either implement real
+  CSRF checks or drop the field.

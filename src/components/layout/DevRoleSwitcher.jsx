@@ -10,6 +10,7 @@ import BottomSheet from '../ui/BottomSheet.jsx';
 import Button from '../ui/Button.jsx';
 import { CodeIcon } from '../icons/Icons.jsx';
 import { ROLES, ROLE_HOME } from '../../utils/constants.js';
+import { USE_API } from '../../services/api/config.js';
 import s from './DevRoleSwitcher.module.css';
 
 /**
@@ -27,6 +28,15 @@ export default function DevRoleSwitcher() {
   const navigate = useNavigate();
 
   const switchTo = async (role) => {
+    // In API mode the admin is a real account with a password, so there is
+    // nothing to switch straight into — open the admin login screen instead of
+    // attempting a credential-less login (which just fails as "wrong password").
+    if (USE_API && role === ROLES.ADMIN && user?.role !== ROLES.ADMIN) {
+      setOpen(false);
+      if (user) await logout();
+      navigate(ROLE_HOME[ROLES.ADMIN]);
+      return;
+    }
     setBusy(role);
     try {
       await login(role);

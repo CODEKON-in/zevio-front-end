@@ -9,7 +9,7 @@ import { Badge, Card, ErrorState, PriceTag, Skeleton, statusTone } from '../../c
 import StatCard from '../../components/admin/StatCard.jsx';
 import BarChart from '../../components/admin/BarChart.jsx';
 import { AlertIcon, BikeIcon, CheckIcon, CloseIcon, OrdersIcon, StoreIcon } from '../../components/icons/Icons.jsx';
-import { ORDER_STATUS } from '../../utils/constants.js';
+import { ADMIN_BASE, ORDER_STATUS } from '../../utils/constants.js';
 import { formatDate, formatTime, isToday } from '../../utils/format.js';
 import { deliveredAt } from '../../utils/orders.js';
 import a from './admin.module.css';
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
       ) : (
         <>
           <div className={s.grid}>
-            <StatCard label={t('admin.dashboard.todayOrders')} value={stats.todayCount} icon={<OrdersIcon size={20} />} tone="primary" to="/admin/orders" />
+            <StatCard label={t('admin.dashboard.todayOrders')} value={stats.todayCount} icon={<OrdersIcon size={20} />} tone="primary" to={`${ADMIN_BASE}/orders`} />
             <StatCard label={t('admin.dashboard.delivered')} value={stats.delivered} icon={<CheckIcon size={20} />} tone="success" />
             <StatCard label={t('admin.dashboard.cancelled')} value={stats.cancelled} icon={<CloseIcon size={20} />} tone="danger" />
             <StatCard
@@ -96,7 +96,7 @@ export default function AdminDashboard() {
               value={stats.activeShops}
               hint={t('admin.dashboard.openNow', { count: stats.openShops })}
               icon={<StoreIcon size={20} />}
-              to="/admin/shops"
+              to={`${ADMIN_BASE}/shops`}
             />
             <StatCard
               label={t('admin.dashboard.onlinePartners')}
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
                 </>
               }
               icon={<BikeIcon size={20} />}
-              to="/admin/partners"
+              to={`${ADMIN_BASE}/partners`}
             />
             <StatCard
               label={t('admin.dashboard.needPartner')}
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
               hint={t('admin.dashboard.needPartnerHint')}
               icon={<AlertIcon size={20} />}
               tone={stats.needPartner ? 'warning' : 'neutral'}
-              to="/admin/orders?unassigned=1"
+              to={`${ADMIN_BASE}/orders?unassigned=1`}
             />
           </div>
 
@@ -127,12 +127,12 @@ export default function AdminDashboard() {
             <Card>
               <div className={s.recentHead}>
                 <h2 className={a.blockTitle} style={{ margin: 0 }}>{t('admin.dashboard.recent')}</h2>
-                <Link to="/admin/orders" className={s.viewAll}>{t('admin.dashboard.viewAll')}</Link>
+                <Link to={`${ADMIN_BASE}/orders`} className={s.viewAll}>{t('admin.dashboard.viewAll')}</Link>
               </div>
               <ul className={s.recent}>
                 {data.data.orders.slice(0, 6).map((o) => (
                   <li key={o.id}>
-                    <Link to={`/admin/orders?open=${o.id}`} className={s.recentRow}>
+                    <Link to={`${ADMIN_BASE}/orders?open=${o.id}`} className={s.recentRow}>
                       <span>
                         <span className={a.cellMain}>#{o.number} · {o.shopName}</span>
                         <span className={a.cellSub}>

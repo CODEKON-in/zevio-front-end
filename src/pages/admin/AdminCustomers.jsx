@@ -43,7 +43,11 @@ export default function AdminCustomers() {
   const columns = [
     { key: 'name', header: t('admin.customers.col.name'), render: (c) => <span className={a.cellMain}>{c.name || t('admin.common.none')}</span> },
     { key: 'phone', header: t('admin.customers.col.phone'), render: (c) => `+91 ${c.phone}` },
-    { key: 'place', header: t('admin.customers.col.place'), render: (c) => getPlace(c.addresses?.[0]?.placeId)?.name || t('admin.common.none') },
+    {
+      key: 'place',
+      header: t('admin.customers.col.place'),
+      render: (c) => getPlace(c.addresses?.[0]?.placeId)?.name || c.addresses?.[0]?.city || t('admin.common.none'),
+    },
     { key: 'orders', header: t('admin.customers.col.orders'), align: 'center', render: (c) => <strong>{c.orderCount}</strong> },
     { key: 'joined', header: t('admin.customers.col.joined'), render: (c) => formatDate(c.createdAt) },
     {

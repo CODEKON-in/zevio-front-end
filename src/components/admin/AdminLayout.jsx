@@ -5,15 +5,16 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import Drawer from '../ui/Drawer.jsx';
 import ConfirmDialog from '../ui/ConfirmDialog.jsx';
 import { BikeIcon, GridIcon, LogoutIcon, MenuIcon, OrdersIcon, StoreIcon, UserIcon, SlidersIcon } from '../icons/Icons.jsx';
+import { ADMIN_BASE } from '../../utils/constants.js';
 import s from './AdminLayout.module.css';
 
 const LINKS = [
-  { to: '/admin', key: 'dashboard', Icon: GridIcon, end: true },
-  { to: '/admin/orders', key: 'orders', Icon: OrdersIcon },
-  { to: '/admin/shops', key: 'shops', Icon: StoreIcon },
-  { to: '/admin/partners', key: 'partners', Icon: BikeIcon },
-  { to: '/admin/customers', key: 'customers', Icon: UserIcon },
-  { to: '/admin/settings', key: 'settings', Icon: SlidersIcon },
+  { to: ADMIN_BASE, key: 'dashboard', Icon: GridIcon, end: true },
+  { to: `${ADMIN_BASE}/orders`, key: 'orders', Icon: OrdersIcon },
+  { to: `${ADMIN_BASE}/shops`, key: 'shops', Icon: StoreIcon },
+  { to: `${ADMIN_BASE}/partners`, key: 'partners', Icon: BikeIcon },
+  { to: `${ADMIN_BASE}/customers`, key: 'customers', Icon: UserIcon },
+  { to: `${ADMIN_BASE}/settings`, key: 'settings', Icon: SlidersIcon },
 ];
 
 function NavLinks({ onLogout }) {
@@ -93,7 +94,7 @@ export default function AdminLayout() {
         onConfirm={async () => {
           setConfirmLogout(false);
           await logout();
-          navigate('/admin', { replace: true });
+          navigate(ADMIN_BASE, { replace: true });
         }}
       />
     </div>

@@ -1,11 +1,12 @@
 /**
- * MOCK authentication. No passwords, no real Google sign-in.
+ * Authentication. In API mode the admin signs in against the database
+ * (POST /api/auth/admin); the demo path below has no passwords.
  * Later this becomes Firebase Auth; the returned user shape stays the same:
  *   { id, name, phone, role, shopId?, partnerId?, customerId? }
  */
 import { request } from './request.js';
 import { USE_API } from './api/config.js';
-import { loginCustomer, loginShop } from './api/apiAuth.js';
+import { loginAdmin, loginCustomer, loginShop } from './api/apiAuth.js';
 import { ServiceError, makeId } from '../utils/mock.js';
 import { ROLES } from '../utils/constants.js';
 import { cleanPhone } from '../utils/format.js';
@@ -18,6 +19,8 @@ export function login(role, details = {}) {
   // API mode (used by the DEV role switcher): a test customer / the first shop when nothing is given.
   if (USE_API && role === ROLES.CUSTOMER) return loginCustomer(details.phone ? details : { name: 'Test Customer', phone: '9876500999' });
   if (USE_API && role === ROLES.SHOP) return loginShop(details);
+  // The admin panel runs on real data, so the admin is a real account.
+  if (USE_API && role === ROLES.ADMIN) return loginAdmin(details);
   return request(({ getDb, commit }) => {
     const db = getDb();
 

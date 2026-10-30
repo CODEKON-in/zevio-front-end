@@ -1,44 +1,20 @@
 /**
  * Converts between the Zevio API's records and the shapes the app's screens use.
  *
- * The API does not have columns for everything the app needs yet (shop category,
- * UPI ID, timings, product veg/non-veg, order payment method…). Until it does,
- * those extras travel inside existing text fields so every phone sees them:
- *   - shop/product `description` ends with a line  "#zevio {json}"
- *   - order `delivery_address` holds tagged parts  "street | Landmark: … | Note: … | Pay: COD"
- * Once the backend adds real columns (BACKEND-CHANGES.md), only this file changes.
+ * Every field below is a real column. Earlier versions packed the fields the
+ * database did not have into existing text ones — shop extras as a "#zevio {json}"
+ * line inside `description`, order extras as tags inside `delivery_address`. The
+ * migration in Zevio-delivery-app/database/migrations/ added the columns, so that
+ * is gone: what a screen shows is what the database holds.
  */
 import { ORDER_STATUS, PAYMENT_METHODS, PAYMENT_STATUS } from '../../utils/constants.js';
-import { loadDb } from '../request.js';
-
-/* ---------------- extras inside description ---------------- */
-
-const META_TAG = '#zevio ';
-const META_RE = /(?:^|\n)#zevio (\{.*\})\s*$/s;
-
-export function decodeMeta(description) {
-  const text = description || '';
-  const m = text.match(META_RE);
-  if (!m) return { text: text.trim(), meta: {} };
-  let meta = {};
-  try {
-    meta = JSON.parse(m[1]) || {};
-  } catch {
-    meta = {};
-  }
-  return { text: text.slice(0, m.index).trim(), meta };
-}
-
-export function encodeMeta(text, meta) {
-  const clean = Object.fromEntries(Object.entries(meta).filter(([, v]) => v !== undefined));
-  return `${text ? `${text.trim()}\n\n` : ''}${META_TAG}${JSON.stringify(clean)}`;
-}
+import { getPlacesOrEmpty } from './apiSettings.js';
 
 /* ---------------- places (city ↔ placeId) ---------------- */
 
-export async function getPlaces() {
-  const db = (await loadDb()).getDb();
-  return db.settings?.servicePlaces || [];
+/** The service area, as [{ id, name }]. */
+export function getPlaces() {
+  return getPlacesOrEmpty();
 }
 
 const norm = (v) => String(v || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -65,140 +41,154 @@ export function makeSlug(name) {
   return `${base}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/* ---------------- times ---------------- */
+
+/** Postgres `time` comes back as 'HH:MM:SS'; the form inputs want 'HH:MM'. */
+const toHourMinute = (value, fallback) => (typeof value === 'string' && value.length >= 5 ? value.slice(0, 5) : fallback);
+
 /* ---------------- shops ---------------- */
 
 const NO_SUBSCRIPTION = { plan: '', status: 'ACTIVE', startDate: null, endDate: null };
 
 export function toShop(raw, places) {
-  const { text, meta } = decodeMeta(raw.description);
+  const subscription = raw.subscription_end || raw.subscription_plan
+    ? {
+        plan: raw.subscription_plan || '',
+        status: raw.subscription_status || 'ACTIVE',
+        startDate: raw.subscription_start || null,
+        endDate: raw.subscription_end || null,
+      }
+    : NO_SUBSCRIPTION;
+
   return {
     id: raw.id,
     name: raw.shop_name,
     slug: raw.slug,
-    description: text,
-    category: meta.category || 'hotels',
+    description: raw.description || '',
+    category: raw.category || 'hotels',
     placeId: placeIdFromCity(raw.city, places),
     city: raw.city || '',
     address: raw.address || '',
-    ownerName: meta.ownerName || '',
+    ownerName: raw.owner_name || '',
     profileId: raw.profile_id,
     phone: raw.contact_phone || '',
     email: raw.contact_email || '',
-    upiId: meta.upiId || '',
-    timings: meta.timings || { open: '08:00', close: '22:00' },
+    upiId: raw.upi_id || '',
+    timings: { open: toHourMinute(raw.open_time, '08:00'), close: toHourMinute(raw.close_time, '22:00') },
     isOpen: Boolean(raw.is_accepting_orders),
-    isActive: meta.isActive !== false,
-    deliveryTime: meta.deliveryTime || '30-40',
+    isActive: raw.is_active !== false,
+    deliveryTime: raw.delivery_time || '30-40',
     image: raw.cover_image_url || raw.logo_url || null,
-    subscription: meta.subscription || NO_SUBSCRIPTION,
+    subscription,
     createdAt: raw.created_at,
   };
 }
 
-/** The extras of a shop that live in its description. */
-export function shopMeta(shop) {
-  return {
+/** The app's shop object → the API's columns. Only defined fields are included. */
+export function shopColumns(shop, places) {
+  const columns = {
+    shop_name: shop.name,
+    description: shop.description,
+    contact_phone: shop.phone,
+    contact_email: shop.email,
+    address: shop.address,
     category: shop.category,
-    ownerName: shop.ownerName,
-    upiId: shop.upiId,
-    timings: shop.timings,
-    deliveryTime: shop.deliveryTime,
-    isActive: shop.isActive,
-    subscription: shop.subscription && shop.subscription.endDate ? shop.subscription : undefined,
+    owner_name: shop.ownerName,
+    upi_id: shop.upiId,
+    delivery_time: shop.deliveryTime,
   };
+  if (shop.placeId !== undefined) columns.city = cityFromPlaceId(shop.placeId, places);
+  if (shop.timings?.open) columns.open_time = shop.timings.open;
+  if (shop.timings?.close) columns.close_time = shop.timings.close;
+  if (typeof shop.isActive === 'boolean') columns.is_active = shop.isActive;
+  if (shop.subscription) {
+    columns.subscription_plan = shop.subscription.plan;
+    columns.subscription_status = shop.subscription.status;
+    columns.subscription_start = shop.subscription.startDate;
+    columns.subscription_end = shop.subscription.endDate;
+  }
+  if (isWebUrl(shop.image)) columns.cover_image_url = shop.image;
+  return clean(columns);
+}
+
+export const isWebUrl = (v) => typeof v === 'string' && /^https?:\/\//.test(v) && v.length <= 500;
+
+/** Drops keys the caller did not set, so an update never blanks a column by accident. */
+function clean(columns) {
+  return Object.fromEntries(Object.entries(columns).filter(([, v]) => v !== undefined));
 }
 
 /* ---------------- products ---------------- */
 
 export function toProduct(raw) {
-  const { text, meta } = decodeMeta(raw.description);
   return {
     id: raw.id,
     shopId: raw.shop_id,
     name: raw.name,
     slug: raw.slug,
-    description: text,
+    description: raw.description || '',
     price: Number(raw.price) || 0,
-    section: meta.section || '',
-    isVeg: typeof meta.isVeg === 'boolean' ? meta.isVeg : null,
+    section: raw.section || '',
+    isVeg: typeof raw.is_veg === 'boolean' ? raw.is_veg : null,
     inStock: raw.is_available !== false,
     image: raw.image_url || null,
   };
 }
 
-export function productMeta(p) {
-  return { section: p.section || undefined, isVeg: typeof p.isVeg === 'boolean' ? p.isVeg : undefined };
+export function productColumns(product) {
+  const columns = {
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    section: product.section,
+  };
+  if (typeof product.isVeg === 'boolean') columns.is_veg = product.isVeg;
+  if (typeof product.inStock === 'boolean') columns.is_available = product.inStock;
+  if (isWebUrl(product.image)) columns.image_url = product.image;
+  return clean(columns);
 }
 
 /* ---------------- order status ---------------- */
 
 /*
- * The app uses the API's own lifecycle (README), only written in capitals:
+ * The app uses the API's own lifecycle, only written in capitals:
  *   pending → confirmed → preparing → out_for_delivery → delivered, or cancelled.
  */
-/** Status names used by earlier versions of the app → today's names. */
-const LEGACY_STATUS = { PLACED: 'PENDING', ACCEPTED: 'CONFIRMED', READY: 'PREPARING', PICKED_UP: 'OUT_FOR_DELIVERY', REJECTED: 'CANCELLED' };
-
 export const toApiStatus = (status) => String(status).toLowerCase();
+
 export function fromApiStatus(apiStatus) {
   const st = String(apiStatus || 'pending').toUpperCase();
   return ORDER_STATUS[st] || ORDER_STATUS.PENDING;
 }
 
-/* ---------------- order address ---------------- */
-
-const TAGS = { landmark: 'Landmark', notes: 'Directions', instructions: 'Note', payment: 'Pay' };
-const tidy = (v, max) => String(v || '').replace(/\|/g, '/').replace(/\s+/g, ' ').trim().slice(0, max);
-
-/** Packs address + order extras into the API's single `delivery_address` text (max 500). */
-export function encodeAddress({ street, landmark, notes }, { instructions, paymentMethod }) {
-  const parts = [tidy(street, 200) || '-'];
-  if (landmark) parts.push(`${TAGS.landmark}: ${tidy(landmark, 100)}`);
-  if (notes) parts.push(`${TAGS.notes}: ${tidy(notes, 80)}`);
-  if (instructions) parts.push(`${TAGS.instructions}: ${tidy(instructions, 80)}`);
-  if (paymentMethod) parts.push(`${TAGS.payment}: ${paymentMethod}`);
-  return parts.join(' | ').slice(0, 500);
-}
-
-export function decodeAddress(text) {
-  const out = { street: '', landmark: '', notes: '', instructions: '', paymentMethod: null };
-  const rest = [];
-  for (const part of String(text || '').split(' | ')) {
-    const m = part.match(/^(Landmark|Directions|Note|Pay):\s*(.*)$/);
-    if (!m) rest.push(part);
-    else if (m[1] === TAGS.landmark) out.landmark = m[2];
-    else if (m[1] === TAGS.notes) out.notes = m[2];
-    else if (m[1] === TAGS.instructions) out.instructions = m[2];
-    else if (m[1] === TAGS.payment) out.paymentMethod = m[2] === PAYMENT_METHODS.UPI ? PAYMENT_METHODS.UPI : PAYMENT_METHODS.COD;
-  }
-  out.street = rest.join(' | ').replace(/^-$/, '');
-  return out;
-}
+/** status → the column holding the moment it happened. */
+const STATUS_AT = {
+  [ORDER_STATUS.CONFIRMED]: 'confirmed_at',
+  [ORDER_STATUS.PREPARING]: 'preparing_at',
+  [ORDER_STATUS.OUT_FOR_DELIVERY]: 'out_for_delivery_at',
+  [ORDER_STATUS.DELIVERED]: 'delivered_at',
+  [ORDER_STATUS.CANCELLED]: 'cancelled_at',
+};
 
 /* ---------------- orders ---------------- */
 
 /**
  * @param raw   API order
- * @param items API order items
- * @param shop  mapped shop (may be null if deleted)
- * @param extra this device's notes about the order { partnerId, rejectReason, paymentStatus, history }
+ * @param items its line items
+ * @param shop  mapped shop (may be null if the shop was deleted)
+ * @param places service area
  */
-export function toOrder(raw, items, shop, extra = {}, places = []) {
-  const addr = decodeAddress(raw.delivery_address);
+export function toOrder(raw, items, shop, places = []) {
   const status = fromApiStatus(raw.status);
-  const paymentMethod = addr.paymentMethod || PAYMENT_METHODS.COD;
-  const paid =
-    paymentMethod === PAYMENT_METHODS.UPI || status === ORDER_STATUS.DELIVERED || extra.paymentStatus === PAYMENT_STATUS.PAID;
+  const paymentMethod = raw.payment_method === PAYMENT_METHODS.UPI ? PAYMENT_METHODS.UPI : PAYMENT_METHODS.COD;
 
-  // Times: the API only stores when the order was created; later steps are
-  // timed when this device saw/made the change.
+  // Every step's time is a column, so the timeline reads the same on every phone.
   const history = [{ status: ORDER_STATUS.PENDING, at: raw.created_at }];
-  for (const h of extra.history || []) {
-    // Times saved on this phone; older app versions used other status names.
-    const st = ORDER_STATUS[LEGACY_STATUS[h.status] || h.status];
-    if (st && st !== ORDER_STATUS.PENDING && !history.some((x) => x.status === st)) history.push({ status: st, at: h.at });
+  for (const [st, column] of Object.entries(STATUS_AT)) {
+    if (raw[column]) history.push({ status: st, at: raw[column] });
   }
-  if (!history.some((h) => h.status === status) && status !== ORDER_STATUS.PENDING) history.push({ status, at: null });
+  history.sort((a, b) => new Date(a.at) - new Date(b.at));
+  if (!history.some((h) => h.status === status)) history.push({ status, at: null });
 
   const lines = (items || []).map((i) => ({
     productId: i.product_id,
@@ -225,20 +215,52 @@ export function toOrder(raw, items, shop, extra = {}, places = []) {
     deliveryFee,
     total: Number(raw.total_amount) || itemTotal + deliveryFee,
     paymentMethod,
-    paymentStatus: paid ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.PENDING,
+    paymentStatus: raw.payment_status === PAYMENT_STATUS.PAID ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.PENDING,
     address: {
       name: raw.recipient_name,
       phone: raw.recipient_phone,
       placeId: placeIdFromCity(raw.delivery_city, places),
-      street: addr.street,
-      landmark: addr.landmark,
-      notes: addr.notes,
+      // The city as stored, so a place that is not in the service list still shows.
+      city: raw.delivery_city || '',
+      street: raw.delivery_address || '',
+      landmark: raw.landmark || '',
+      notes: raw.directions || '',
     },
-    instructions: addr.instructions,
+    instructions: raw.instructions || '',
     status,
     statusHistory: history.filter((h) => h.at !== null || h.status === status),
-    partnerId: extra.partnerId || null,
-    rejectReason: extra.rejectReason || null,
+    partnerId: raw.delivery_partner_id || null,
+    rejectReason: raw.reject_reason || null,
+    createdAt: raw.created_at,
+  };
+}
+
+/* ---------------- people ---------------- */
+
+export function toCustomer(raw, orderCount = 0) {
+  return {
+    id: raw.id,
+    name: raw.name || '',
+    phone: raw.phone || '',
+    email: raw.email || '',
+    isBlocked: raw.is_blocked === true,
+    orderCount,
+    addresses: [],
+    createdAt: raw.created_at,
+  };
+}
+
+export function toPartner(raw, places = [], todayDeliveries = 0) {
+  return {
+    id: raw.id,
+    name: raw.name || '',
+    phone: raw.phone || '',
+    email: raw.email || '',
+    vehicle: raw.vehicle || '',
+    placeId: placeIdFromCity(raw.base_place, places),
+    isOnline: raw.is_online === true,
+    isActive: raw.is_active !== false,
+    todayDeliveries,
     createdAt: raw.created_at,
   };
 }

@@ -1,4 +1,6 @@
 import { request } from './request.js';
+import { USE_API, isApiId } from './api/config.js';
+import * as api from './api/apiUsers.js';
 import { ServiceError, makeId } from '../utils/mock.js';
 import { isSameDay } from '../utils/format.js';
 
@@ -6,6 +8,7 @@ import { isSameDay } from '../utils/format.js';
 
 /** Customers with their order count (admin list). */
 export function getCustomers() {
+  if (USE_API) return api.getCustomers();
   return request(({ getDb, commit }) => {
     const db = getDb();
     return db.customers.map((c) => ({ ...c, orderCount: db.orders.filter((o) => o.customerId === c.id).length }));
@@ -13,6 +16,7 @@ export function getCustomers() {
 }
 
 export function getCustomerById(id) {
+  if (isApiId(id)) return api.getCustomerById(id);
   return request(({ getDb, commit }) => {
     const c = getDb().customers.find((x) => x.id === id);
     if (!c) throw new ServiceError('NOT_FOUND');
@@ -21,6 +25,7 @@ export function getCustomerById(id) {
 }
 
 export function updateCustomer(id, patch) {
+  if (isApiId(id)) return api.updateCustomer(id, patch);
   return request(({ getDb, commit }) => {
     const c = getDb().customers.find((x) => x.id === id);
     if (!c) throw new ServiceError('NOT_FOUND');
@@ -67,6 +72,7 @@ export function deleteAddress(customerId, addressId) {
 
 /** Partners with today's delivered count. */
 export function getPartners() {
+  if (USE_API) return api.getPartners();
   return request(({ getDb, commit }) => {
     const db = getDb();
     const now = Date.now();
@@ -78,6 +84,7 @@ export function getPartners() {
 }
 
 export function getPartnerById(id) {
+  if (isApiId(id)) return api.getPartnerById(id);
   return request(({ getDb, commit }) => {
     const p = getDb().partners.find((x) => x.id === id);
     if (!p) throw new ServiceError('NOT_FOUND');
@@ -87,6 +94,7 @@ export function getPartnerById(id) {
 
 /** Create (no id) or update a partner. */
 export function savePartner(partner) {
+  if (USE_API && (!partner.id || isApiId(partner.id))) return api.savePartner(partner);
   return request(({ getDb, commit }) => {
     const db = getDb();
     if (!partner.id) {

@@ -58,7 +58,12 @@ export default function AdminShops() {
         </>
       ),
     },
-    { key: 'place', header: t('admin.shops.col.place'), render: (x) => getPlace(x.placeId)?.name },
+    {
+      key: 'place',
+      header: t('admin.shops.col.place'),
+      // A shop may sit in a city that is not in the service-area list.
+      render: (x) => getPlace(x.placeId)?.name || x.city || t('admin.common.none'),
+    },
     {
       key: 'owner',
       header: t('admin.shops.col.owner'),

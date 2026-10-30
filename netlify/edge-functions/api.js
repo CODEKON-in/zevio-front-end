@@ -11,6 +11,7 @@
  */
 const ID = '[0-9a-fA-F-]{36}';
 const SLUG = '[a-z0-9-]{2,100}';
+const PHONE = '[0-9]{10}';
 const ALLOWED = {
   GET: [
     '/api/shops/',
@@ -19,12 +20,20 @@ const ALLOWED = {
     `/api/products/by-shop/${ID}`,
     `/api/product/${ID}`,
     `/api/product/slug/${SLUG}`,
+    '/api/orders/',
     `/api/orders/by-customer/${ID}`,
     `/api/orders/by-shop/${ID}`,
+    `/api/orders/by-partner/${ID}`,
     `/api/order/${ID}`,
     `/api/order/${ID}/items/`,
+    '/api/order/items/',
     `/api/user/${ID}`,
+    '/api/users/',
+    `/api/user/by-phone/${PHONE}`,
     `/api/shops/by-profile/${ID}`,
+    // Admin: platform settings and the service area
+    '/api/settings/',
+    '/api/places/',
   ],
   POST: [
     '/api/user/add/',
@@ -32,6 +41,7 @@ const ALLOWED = {
     '/api/shop/add/',
     '/api/shop/update/',
     '/api/shop/toggle-orders/',
+    '/api/shop/set-active/',
     '/api/product/add/',
     '/api/product/update/',
     '/api/product/toggle-availability/',
@@ -39,6 +49,15 @@ const ALLOWED = {
     '/api/order/place/',
     '/api/order/update-status/',
     '/api/order/cancel/',
+    '/api/order/assign-partner/',
+    '/api/order/mark-paid/',
+    // Admin sign-in. /api/admin/add/ is deliberately NOT here: creating an
+    // admin stays a server-side call with the API key, never from a browser.
+    '/api/auth/admin',
+    '/api/settings/',
+    '/api/place/add/',
+    '/api/place/update/',
+    '/api/place/delete/',
     // "Delete my account" (customer, shop owner)
     '/api/user/delete/',
     '/api/shop/delete/',

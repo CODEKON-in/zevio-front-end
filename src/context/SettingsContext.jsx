@@ -8,19 +8,26 @@ const SettingsContext = createContext(null);
  * Provides platform settings loaded through settingsService:
  *  - settings: { deliveryFee, partnerIncentive, servicePlaces:[{id,name}], supportPhone, supportWhatsApp, platformUpiId, platformUpiName }
  *  - status: 'loading' | 'ready' | 'error'
+ *  - error: the failure behind status 'error', so screens can say what went wrong
  *  - reload(), updateSettings(patch)
  *  - getPlace(placeId) → place object or undefined
  */
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [status, setStatus] = useState('loading');
+  const [error, setError] = useState(null);
 
   const reload = useCallback(async () => {
     setStatus('loading');
+    setError(null);
     try {
       setSettings(await getSettings());
       setStatus('ready');
-    } catch {
+    } catch (e) {
+      // Keep it. Throwing the error away left every screen guessing "check your
+      // internet", which is wrong — and costs real time — when the actual cause
+      // is a bad API key or a server fault.
+      setError(e);
       setStatus('error');
     }
   }, []);
@@ -37,8 +44,8 @@ export function SettingsProvider({ children }) {
 
   const value = useMemo(() => {
     const placeById = Object.fromEntries(settings.servicePlaces.map((p) => [p.id, p]));
-    return { settings, status, reload, updateSettings, getPlace: (id) => placeById[id] };
-  }, [settings, status, reload, updateSettings]);
+    return { settings, status, error, reload, updateSettings, getPlace: (id) => placeById[id] };
+  }, [settings, status, error, reload, updateSettings]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

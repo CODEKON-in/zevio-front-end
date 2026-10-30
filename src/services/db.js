@@ -64,11 +64,9 @@ export function commit() {
 }
 
 export function resetDb() {
-  // Keep what belongs to the real API (customer logins/addresses, order notes) — only demo data resets.
+  // Keep what belongs to the real API (customer logins and saved addresses) — only demo data resets.
   const keepCustomers = db.customers.filter((c) => c.apiProfile);
-  const keepExtras = db.apiExtras;
   db = seed();
   db.customers.push(...keepCustomers);
-  if (keepExtras) db.apiExtras = keepExtras;
   commit();
 }

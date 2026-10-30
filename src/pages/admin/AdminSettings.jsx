@@ -15,7 +15,7 @@ const slug = (name) => name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').rep
 
 /** Admin settings: fees, support contacts, platform UPI, service-area places. */
 export default function AdminSettings() {
-  const { settings, status, reload, updateSettings } = useSettings();
+  const { settings, status, error, reload, updateSettings } = useSettings();
   const { showToast } = useToast();
   const shops = useAsync(() => getShops({ includeInactive: true }), []);
   const [values, setValues] = useState(null);
@@ -115,7 +115,7 @@ export default function AdminSettings() {
     }
   };
 
-  if (status === 'error') return <ErrorState onRetry={reload} />;
+  if (status === 'error') return <ErrorState error={error} onRetry={reload} />;
   if (!values) return <SkeletonList count={3} />;
 
   return (

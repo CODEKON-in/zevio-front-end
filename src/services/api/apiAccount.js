@@ -55,8 +55,9 @@ export async function signIn(role, google) {
   if (role === ROLES.CUSTOMER) {
     const profile = await getProfile(uid);
     if (!profile) return { needsSignUp: true };
+    // is_blocked is a real column, so the admin's block applies on every phone.
+    if (profile.is_blocked) throw new ServiceError('BLOCKED');
     const c = await localCustomer(profile, google);
-    if (c.isBlocked) throw new ServiceError('BLOCKED');
     return { user: customerUser(c, google) };
   }
   if (role === ROLES.SHOP) {

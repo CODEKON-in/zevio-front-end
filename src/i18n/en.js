@@ -52,6 +52,7 @@ const en = {
     SERVER: 'The server could not do that. Please try again.',
     API_AUTH: 'The app could not connect to the Zevio server (API key). Please contact support.',
     LOGIN_DETAILS: 'Please enter your name and phone number.',
+    ADMIN_CREDENTIALS: 'Wrong email or password.',
     EMAIL_REQUIRED: 'Please enter the shop email.',
     GOOGLE_FAILED: 'Google sign-in did not work. Please check your internet and try again.',
     ACTIVE_ORDERS: 'You have orders in progress. Please finish or cancel them before deleting your account.',
@@ -690,6 +691,7 @@ const en = {
       passwordLabel: 'Password',
       submit: 'Log in',
       mockNote: 'Demo login — any password works. No real authentication yet.',
+      noAdminNote: 'No admin account yet? Create one with POST /api/admin/add/ using the server API key.',
     },
     common: {
       all: 'All',

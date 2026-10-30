@@ -81,5 +81,6 @@ export function setShopOpen(id, isOpen) {
 
 /** Admin activate / deactivate. */
 export function setShopActive(id, isActive) {
+  if (isApiId(id)) return api.setShopActive(id, isActive);
   return saveShop({ id, isActive });
 }

@@ -34,12 +34,12 @@ function ScrollToTop() {
  */
 export default function CustomerApp() {
   const { user } = useAuth();
-  const { status, reload } = useSettings();
+  const { status, error, reload } = useSettings();
   const booted = useRef(false);
 
   if (status === 'ready') booted.current = true;
   if (!booted.current && status === 'loading') return <Splash />;
-  if (!booted.current && status === 'error') return <ErrorState onRetry={reload} />;
+  if (!booted.current && status === 'error') return <ErrorState error={error} onRetry={reload} />;
 
   if (user?.role !== ROLES.CUSTOMER) return <SignIn role={ROLES.CUSTOMER} />;
 

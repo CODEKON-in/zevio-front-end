@@ -1,7 +1,7 @@
 /** Shops and products from the Zevio API. */
 import { apiGet, apiPost } from './client.js';
 import { newUuid } from './config.js';
-import { cityFromPlaceId, encodeMeta, decodeMeta, getPlaces, makeSlug, productMeta, shopMeta, toProduct, toShop } from './mappers.js';
+import { getPlaces, makeSlug, productColumns, shopColumns, toProduct, toShop } from './mappers.js';
 import { ServiceError } from '../../utils/mock.js';
 
 /* Short caches so one screen does not ask for the same list many times. */
@@ -68,34 +68,14 @@ export async function searchAll(query) {
   };
 }
 
-const isWebUrl = (v) => typeof v === 'string' && /^https?:\/\//.test(v) && v.length <= 500;
-
-/** Create (no id) or update a shop. Only changed fields are sent. */
+/** Create (no id) or update a shop. The API takes every column in one call. */
 export async function saveShop(shop) {
   const places = await getPlaces();
   if (!shop.id) return createShop(shop, places);
 
-  const [raw] = await Promise.all([apiGet(`/shop/${shop.id}`)]);
-  const current = toShop(raw, places);
-  const next = { ...current, ...shop };
-  const { text } = decodeMeta(raw.description);
-
-  const wanted = {
-    shop_name: next.name,
-    contact_phone: next.phone,
-    contact_email: next.email || raw.contact_email,
-    address: next.address,
-    city: cityFromPlaceId(next.placeId, places) || raw.city,
-    description: encodeMeta(next.description ?? text, shopMeta(next)),
-  };
-  if (isWebUrl(next.image)) wanted.cover_image_url = next.image;
-
-  for (const [attr, value] of Object.entries(wanted)) {
-    if (value === undefined || value === null || value === '') continue;
-    if ((raw[attr] ?? '') === value) continue;
-    await apiPost('/shop/update/', { shop_id: shop.id, attr, attr_value: value });
-  }
-  if (typeof shop.isOpen === 'boolean' && shop.isOpen !== Boolean(raw.is_accepting_orders)) {
+  const columns = shopColumns(shop, places);
+  if (Object.keys(columns).length) await apiPost('/shop/update/', { shop_id: shop.id, ...columns });
+  if (typeof shop.isOpen === 'boolean') {
     await apiPost('/shop/toggle-orders/', { shop_id: shop.id, status: shop.isOpen });
   }
   forgetShops();
@@ -106,27 +86,31 @@ async function createShop(shop, places) {
   if (!shop.email) throw new ServiceError('EMAIL_REQUIRED');
   // A shop belongs to an owner profile, so create that first (sign-up passes its own).
   const profileId = shop.profileId || newUuid();
-  if (!shop.profileId) await apiPost('/user/add/', { uid: profileId, name: shop.ownerName || shop.name, phone: shop.phone, user_type: 'shop' });
+  if (!shop.profileId) {
+    await apiPost('/user/add/', { uid: profileId, name: shop.ownerName || shop.name, phone: shop.phone, user_type: 'shop' });
+  }
   const slug = makeSlug(shop.name);
   const created = await apiPost('/shop/add/', {
     profile_id: profileId,
-    shop_name: shop.name,
     slug,
-    description: encodeMeta(shop.description || '', shopMeta({ isActive: true, deliveryTime: '30-40', ...shop })),
-    contact_phone: shop.phone,
-    contact_email: shop.email,
-    address: shop.address,
-    city: cityFromPlaceId(shop.placeId, places),
-    ...(isWebUrl(shop.image) ? { cover_image_url: shop.image } : {}),
+    ...shopColumns({ deliveryTime: '30-40', isActive: true, ...shop }, places),
   });
   forgetShops();
-  // The API does not return the new id yet; find the shop by its slug.
+  // The API returns the new id; fall back to the slug for an older deployment.
   const raw = created?.id ? await apiGet(`/shop/${created.id}`) : await apiGet(`/shop/slug/${slug}`);
   return toShop(raw, places);
 }
 
 export function setShopOpen(id, isOpen) {
   return apiPost('/shop/toggle-orders/', { shop_id: id, status: isOpen }).then(() => {
+    forgetShops();
+    return getShopById(id);
+  });
+}
+
+/** Admin activate / deactivate — hides the shop from customers entirely. */
+export function setShopActive(id, isActive) {
+  return apiPost('/shop/set-active/', { shop_id: id, status: isActive }).then(() => {
     forgetShops();
     return getShopById(id);
   });
@@ -152,37 +136,18 @@ export async function saveProduct(product) {
     const slug = makeSlug(product.name);
     const created = await apiPost('/product/add/', {
       shop_id: product.shopId,
-      name: product.name,
       slug,
       price: product.price,
-      description: encodeMeta(product.description || '', productMeta(product)),
-      is_available: product.inStock !== false,
-      ...(isWebUrl(product.image) ? { image_url: product.image } : {}),
+      ...productColumns(product),
     });
     productsCache.delete(product.shopId);
     const raw = created?.id ? await apiGet(`/product/${created.id}`) : await apiGet(`/product/slug/${slug}`);
     return toProduct(raw);
   }
 
-  const raw = await apiGet(`/product/${product.id}`);
-  const current = toProduct(raw);
-  const next = { ...current, ...product };
-  const wanted = {
-    name: next.name,
-    price: next.price,
-    description: encodeMeta(next.description ?? current.description, productMeta(next)),
-  };
-  if (isWebUrl(next.image)) wanted.image_url = next.image;
-  for (const [attr, value] of Object.entries(wanted)) {
-    if (value === undefined || value === null || value === '') continue;
-    const same = attr === 'price' ? Number(raw.price) === Number(value) : (raw[attr] ?? '') === value;
-    if (same) continue;
-    await apiPost('/product/update/', { product_id: product.id, attr, attr_value: value });
-  }
-  if (typeof product.inStock === 'boolean' && product.inStock !== (raw.is_available !== false)) {
-    await apiPost('/product/toggle-availability/', { product_id: product.id, status: product.inStock });
-  }
-  productsCache.delete(current.shopId);
+  const columns = productColumns(product);
+  if (Object.keys(columns).length) await apiPost('/product/update/', { product_id: product.id, ...columns });
+  productsCache.clear();
   return getProductById(product.id);
 }
 

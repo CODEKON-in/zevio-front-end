@@ -1,6 +1,7 @@
 /**
- * Quick logins used by the DEV role switcher and DEV "simulate order" (API mode).
- * Real people sign in with Google — see apiAccount.js.
+ * Admin login, plus the quick logins used by the DEV role switcher and DEV
+ * "simulate order" (API mode). Customers and shop owners sign in with
+ * Google — see apiAccount.js.
  */
 import { apiGet, apiPost } from './client.js';
 import { newUuid } from './config.js';
@@ -59,5 +60,30 @@ export async function loginShop(details) {
     name: shop.ownerName || shop.name,
     phone: shop.phone,
     role: ROLES.SHOP,
+  };
+}
+
+/**
+ * Admin login. The admin is a profile with user_type = 'admin'; the API checks
+ * the password against the stored hash and answers 401 if it does not match.
+ */
+export async function loginAdmin(details = {}) {
+  const email = (details.email || '').trim().toLowerCase();
+  const password = details.password || '';
+  if (!email || !password) throw new ServiceError('ADMIN_CREDENTIALS');
+  let profile;
+  try {
+    profile = await apiPost('/auth/admin', { email, password });
+  } catch (e) {
+    // 401 here means "wrong email or password", not a misconfigured API key.
+    if (e.code === 'API_AUTH') throw new ServiceError('ADMIN_CREDENTIALS');
+    throw e;
+  }
+  return {
+    id: profile.id,
+    name: profile.name,
+    phone: profile.phone,
+    email: profile.email,
+    role: ROLES.ADMIN,
   };
 }

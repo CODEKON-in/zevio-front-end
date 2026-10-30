@@ -80,7 +80,11 @@ export default function AdminOrders() {
     },
     { key: 'customer', header: t('admin.orders.col.customer'), render: (o) => <span className={a.cellMain}>{o.customerName}</span> },
     { key: 'shop', header: t('admin.orders.col.shop'), render: (o) => o.shopName },
-    { key: 'place', header: t('admin.orders.col.place'), render: (o) => getPlace(o.address.placeId)?.name },
+    {
+      key: 'place',
+      header: t('admin.orders.col.place'),
+      render: (o) => getPlace(o.address.placeId)?.name || o.address.city || t('admin.common.none'),
+    },
     { key: 'total', header: t('admin.orders.col.total'), align: 'right', render: (o) => <PriceTag amount={o.total} size="sm" /> },
     { key: 'payment', header: t('admin.orders.col.payment'), render: (o) => t(`payment.${o.paymentMethod}`) },
     { key: 'status', header: t('admin.orders.col.status'), render: (o) => <Badge tone={statusTone(o.status)} size="sm">{t(`orderStatus.${o.status}`)}</Badge> },

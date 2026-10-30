@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import OfflineBanner from './components/layout/OfflineBanner.jsx';
 import PageLoader from './components/layout/PageLoader.jsx';
 import ErrorBoundary from './components/layout/ErrorBoundary.jsx';
-import { IS_DEV } from './utils/constants.js';
+import { ADMIN_BASE, IS_DEV } from './utils/constants.js';
 
 /** React.lazy that retries once after 1.5 s — village networks often drop a single request. */
 function lazyRetry(load) {
@@ -33,8 +33,9 @@ export default function App() {
             <Route path="/shop-panel/*" element={<ShopPanelApp />} />
             {/* Delivery app handles its own login screen. */}
             <Route path="/delivery/*" element={<DeliveryApp />} />
-            {/* Admin panel handles its own login screen. */}
-            <Route path="/admin/*" element={<AdminApp />} />
+            {/* Admin panel handles its own login screen. Its path comes from
+                VITE_ADMIN_PATH; anything else falls through to the customer app. */}
+            <Route path={`${ADMIN_BASE}/*`} element={<AdminApp />} />
             {IS_DEV && <Route path="/dev/ui" element={<UiKit />} />}
             {/* Customer section handles its own login screen. */}
             <Route path="/*" element={<CustomerApp />} />

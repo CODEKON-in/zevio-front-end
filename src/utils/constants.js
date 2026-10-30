@@ -49,12 +49,25 @@ export const ROLES = Object.freeze({
   ADMIN: 'admin',
 });
 
+/**
+ * URL segment of the admin panel. Set VITE_ADMIN_PATH to something hard to guess
+ * so the panel does not sit at the obvious /admin; any other path falls through
+ * to the customer app, which gives nothing away.
+ *
+ * This HIDES the panel, it does not protect it. The value ships inside the JS
+ * bundle — the browser has to know where to route — so anyone who reads the
+ * bundle can find it. Treat it as a speed bump against scanners and curious
+ * visitors. The real gate is the admin login and the API's own checks.
+ */
+export const ADMIN_PATH = (import.meta.env.VITE_ADMIN_PATH || 'admin').replace(/^\/+|\/+$/g, '') || 'admin';
+export const ADMIN_BASE = `/${ADMIN_PATH}`;
+
 /** Root path of each role's section. */
 export const ROLE_HOME = Object.freeze({
   customer: '/',
   shop: '/shop-panel',
   delivery: '/delivery',
-  admin: '/admin',
+  admin: ADMIN_BASE,
 });
 
 /** Food only: hotels and bakeries. */
