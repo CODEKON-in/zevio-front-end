@@ -18,6 +18,7 @@ const AdminApp = lazyRetry(() => import('./pages/admin/AdminApp.jsx'));
 
 // DEV-only chunks — removed from production builds.
 const UiKit = IS_DEV ? lazy(() => import('./pages/dev/UiKit.jsx')) : null;
+const DevRoleSwitcher = IS_DEV ? lazy(() => import('./components/layout/DevRoleSwitcher.jsx')) : null;
 
 export default function App() {
   const { pathname } = useLocation();
@@ -41,7 +42,11 @@ export default function App() {
           </Routes>
         </Suspense>
       </ErrorBoundary>
-
+      {IS_DEV && (
+        <Suspense fallback={null}>
+          <DevRoleSwitcher />
+        </Suspense>
+      )}
     </>
   );
 }

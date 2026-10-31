@@ -15,12 +15,7 @@
  */
 import { ServiceError } from '../utils/mock.js';
 
-// The Google OAuth Client ID is a public value — it is sent to Google's servers
-// and visible to anyone in DevTools. The secret never leaves Google's side.
-// Hardcoded here so the button works even when the env var is not set in Vercel.
-export const GOOGLE_CLIENT_ID =
-  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  '238941476634-p3kk1h8bgaosgkku7rm3omun16o83qt5.apps.googleusercontent.com';
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 let gisPromise = null;
 
