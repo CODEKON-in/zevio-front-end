@@ -1,20 +1,41 @@
 /**
  * Google sign-in / sign-up / delete account against the Zevio API.
  *
- * The API has no Google login yet, so the profile id is made from the Google
- * account (profileIdFromGoogle): the same Google account → the same profile on
- * every phone. Shops are found with /api/shops/by-profile/<id>, or by the shop's
- * contact email (for shops the admin created).
+ * The ID token Google hands the browser is sent to POST /api/auth/google, which
+ * checks its signature, issuer and audience against Google's public keys. Only
+ * what comes back from there is trusted — the browser's own decode of the token
+ * is used for filling in the sign-up form, never to decide who someone is.
+ *
+ * The verified profile is found by its google_sub column. Accounts created
+ * before Google sign-in are matched on email and linked on first sign-in.
+ * Shops are found with /api/shops/by-profile/<id>, or by the shop's contact
+ * email (for shops the admin created).
  */
 import { apiGet, apiPost } from './client.js';
 import { fetchShops, forgetShops, saveShop } from './apiShops.js';
 import { getOrders } from './apiOrders.js';
 import { getPlaces, toShop } from './mappers.js';
-import { profileIdFromGoogle } from '../google.js';
+import { newUuid } from './config.js';
 import { loadDb } from '../request.js';
 import { ServiceError } from '../../utils/mock.js';
 import { ACTIVE_STATUSES, ROLES, SUBSCRIPTION_STATUS } from '../../utils/constants.js';
 import { cleanPhone } from '../../utils/format.js';
+
+/**
+ * Verifies the Google ID token with the API.
+ * @returns {{google:{sub,email,name,picture}, profile:object|null}}
+ */
+async function verifyGoogle(google) {
+  if (!google?.credential) throw new ServiceError('GOOGLE_FAILED');
+  try {
+    return await apiPost('/auth/google', { credential: google.credential });
+  } catch (e) {
+    // 401/403 from this endpoint means the token did not check out, or the
+    // account is blocked — not that our own API key is wrong.
+    if (e.code === 'API_AUTH') throw new ServiceError('GOOGLE_REJECTED');
+    throw e;
+  }
+}
 
 async function getProfile(uid) {
   try {
@@ -50,43 +71,57 @@ async function findShop(uid, google) {
   return all.find((s) => s.email && s.email.toLowerCase() === google.email) || null;
 }
 
-export async function signIn(role, google) {
-  const uid = profileIdFromGoogle(google.sub);
+export async function signIn(role, googleFromBrowser) {
+  const { google, profile } = await verifyGoogle(googleFromBrowser);
+
   if (role === ROLES.CUSTOMER) {
-    const profile = await getProfile(uid);
-    if (!profile) return { needsSignUp: true };
+    if (!profile) return { needsSignUp: true, google };
+    if (profile.user_type !== 'customer') throw new ServiceError('WRONG_ROLE');
     // is_blocked is a real column, so the admin's block applies on every phone.
     if (profile.is_blocked) throw new ServiceError('BLOCKED');
     const c = await localCustomer(profile, google);
     return { user: customerUser(c, google) };
   }
+
   if (role === ROLES.SHOP) {
-    const shop = await findShop(uid, google);
-    return shop ? { user: shopUser(shop, google) } : { needsSignUp: true };
+    const shop = profile ? await findShop(profile.id, google) : null;
+    return shop ? { user: shopUser(shop, google) } : { needsSignUp: true, google };
   }
+
   throw new ServiceError('NOT_FOUND');
 }
 
-async function ensureProfile(uid, name, phone, userType) {
-  const existing = await getProfile(uid);
-  if (existing) return existing;
-  await apiPost('/user/add/', { uid, name, phone, user_type: userType });
+/**
+ * The profile for a verified Google account, creating it the first time.
+ * google_sub is stored so the next sign-in finds this row directly.
+ */
+async function ensureProfile(google, name, phone, userType) {
+  const { profile } = await verifyGoogle(google);
+  if (profile) return profile;
+  const uid = newUuid();
+  await apiPost('/user/add/', {
+    uid,
+    name,
+    phone,
+    user_type: userType,
+    email: google.email,
+    google_sub: google.sub,
+  });
   return { id: uid, name, phone, user_type: userType };
 }
 
 export async function signUp(role, google, details) {
-  const uid = profileIdFromGoogle(google.sub);
   const phone = cleanPhone(details.phone);
   if (role === ROLES.CUSTOMER) {
-    const profile = await ensureProfile(uid, details.name.trim(), phone, 'customer');
+    const profile = await ensureProfile(google, details.name.trim(), phone, 'customer');
     const c = await localCustomer({ ...profile, name: details.name.trim(), phone }, google);
     return customerUser(c, google);
   }
   if (role === ROLES.SHOP) {
-    await ensureProfile(uid, details.ownerName.trim(), phone, 'shop');
+    const owner = await ensureProfile(google, details.ownerName.trim(), phone, 'shop');
     const today = new Date().toISOString().slice(0, 10);
     const shop = await saveShop({
-      profileId: uid,
+      profileId: owner.id,
       name: details.shopName.trim(),
       category: details.category,
       placeId: details.placeId,
@@ -128,14 +163,4 @@ export async function deleteAccount(user) {
     return true;
   }
   throw new ServiceError('NOT_FOUND');
-}
-
-/** DEMO chooser in API mode: people this app already knows about. */
-export async function demoAccounts(role) {
-  if (role === ROLES.SHOP) {
-    const shops = await fetchShops(true).catch(() => []);
-    return shops.filter((s) => s.email).slice(0, 6).map((s) => ({ name: s.ownerName || s.name, email: s.email, note: s.name }));
-  }
-  const db = (await loadDb()).getDb();
-  return db.customers.filter((c) => c.apiProfile && c.email).slice(0, 6).map((c) => ({ name: c.name, email: c.email }));
 }

@@ -164,40 +164,12 @@
 
 /* ---------- demo account chooser ---------- */
 
-.demoNote {
-  margin-bottom: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-  font-size: var(--font-size-xs);
-}
 
-.accounts {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
 
 .accounts li + li {
   border-top: 1px solid var(--color-border);
 }
 
-.account {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  min-height: 60px;
-  padding: var(--space-2) var(--space-1);
-  border: 0;
-  background: transparent;
-  color: var(--color-text);
-  text-align: left;
-  cursor: pointer;
-}
 
 .account:hover {
   background: var(--color-surface-muted);
@@ -222,11 +194,6 @@
   object-fit: cover;
 }
 
-.avatarPlus {
-  background: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  font-size: var(--font-size-lg);
-}
 
 .accountText {
   display: flex;
@@ -247,11 +214,6 @@
   white-space: nowrap;
 }
 
-.otherForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
 
 /* ---------- sign-up step ---------- */
 

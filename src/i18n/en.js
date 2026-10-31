@@ -55,6 +55,9 @@ const en = {
     ADMIN_CREDENTIALS: 'Wrong email or password.',
     EMAIL_REQUIRED: 'Please enter the shop email.',
     GOOGLE_FAILED: 'Google sign-in did not work. Please check your internet and try again.',
+    GOOGLE_REJECTED: 'Google could not confirm that sign-in. Please try again.',
+    WRONG_ROLE: 'This Google account is already used for a different kind of account.',
+    GOOGLE_NOT_CONFIGURED: 'Google sign-in is not set up for this site (missing client ID). Please contact support.',
     ACTIVE_ORDERS: 'You have orders in progress. Please finish or cancel them before deleting your account.',
   },
   categories: {
@@ -160,11 +163,6 @@ const en = {
     goBack: 'Go to my {role} account',
     switchNote: 'Or choose another option below to sign in differently.',
     // Demo Google chooser (no Google client ID configured)
-    chooseAccount: 'Choose a Google account',
-    demoNote: 'Demo sign-in. Set VITE_GOOGLE_CLIENT_ID to use real Google sign-in.',
-    otherAccount: 'Use another account',
-    otherName: 'Name',
-    otherEmail: 'Gmail address',
     emailError: 'Please enter a valid email address',
     continue: 'Continue',
     // First-time sign-up

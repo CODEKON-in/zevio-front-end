@@ -8,7 +8,7 @@
  * Demo mode keeps people in the demo database. API mode keeps customers and
  * shops in the Zevio API (delivery partners are not in the API yet).
  */
-import { request, loadDb } from './request.js';
+import { request } from './request.js';
 import { ServiceError, makeId } from '../utils/mock.js';
 import { ACTIVE_STATUSES, ORDER_STATUS, ROLES, SUBSCRIPTION_STATUS } from '../utils/constants.js';
 import { cleanPhone } from '../utils/format.js';
@@ -168,22 +168,4 @@ export function deleteAccount(user) {
     commit();
     return true;
   });
-}
-
-/* ======================= demo Google accounts ======================= */
-
-/**
- * DEMO ONLY: the accounts shown in the demo Google chooser for a role
- * (people already in the data, so you can sign in as them).
- */
-export async function getDemoGoogleAccounts(role) {
-  if (USE_API && role !== ROLES.DELIVERY) return apiAccount.demoAccounts(role);
-  const db = (await loadDb()).getDb();
-  const list =
-    role === ROLES.CUSTOMER
-      ? db.customers.map((c) => ({ name: c.name, email: c.email }))
-      : role === ROLES.SHOP
-        ? db.shops.filter((s) => !s.deleted).map((s) => ({ name: s.ownerName, email: s.email, note: s.name }))
-        : db.partners.filter((p) => !p.deleted).map((p) => ({ name: p.name, email: p.email }));
-  return list.filter((a) => a.email).slice(0, 6);
 }

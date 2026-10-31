@@ -117,7 +117,7 @@ export default function SignIn({ role: initialRole = ROLES.CUSTOMER }) {
               ))}
             </fieldset>
 
-            <GoogleButton role={role} onSuccess={handleGoogle} busy={busy} />
+            <GoogleButton onSuccess={handleGoogle} busy={busy} />
             <p className={l.note}>{t('auth.googleNote')}</p>
           </>
         )}

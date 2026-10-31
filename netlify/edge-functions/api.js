@@ -54,6 +54,7 @@ const ALLOWED = {
     // Admin sign-in. /api/admin/add/ is deliberately NOT here: creating an
     // admin stays a server-side call with the API key, never from a browser.
     '/api/auth/admin',
+    '/api/auth/google',
     '/api/settings/',
     '/api/place/add/',
     '/api/place/update/',

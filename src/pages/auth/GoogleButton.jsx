@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { t } from '../../i18n/index.js';
-import { BottomSheet, Button, Input, Spinner } from '../../components/ui/index.js';
-import { ChevronRightIcon } from '../../components/icons/Icons.jsx';
-import { GOOGLE_CLIENT_ID, USE_REAL_GOOGLE, decodeGoogleCredential, loadGoogleScript } from '../../services/google.js';
-import { getDemoGoogleAccounts } from '../../services/accountService.js';
+import { Button, Spinner } from '../../components/ui/index.js';
+import { GOOGLE_CLIENT_ID, decodeGoogleCredential, loadGoogleScript } from '../../services/google.js';
 import s from './SignIn.module.css';
 
 export function GoogleMark({ size = 20 }) {
@@ -17,29 +15,29 @@ export function GoogleMark({ size = 20 }) {
   );
 }
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i;
-
 /**
- * GoogleButton — "Continue with Google".
+ * GoogleButton — "Continue with Google", using Google Identity Services.
+ *
+ * There is no demo chooser any more: the only way in is a real Google account.
+ * If VITE_GOOGLE_CLIENT_ID is missing the button says so plainly rather than
+ * pretending to sign anyone in.
+ *
  * Props:
- *  - role: which account list the demo chooser shows
- *  - onSuccess({ sub, email, name, picture }) — the Google account picked
+ *  - onSuccess({ sub, email, name, picture, credential }) — the Google account
  *  - busy: shows a spinner while the app signs in
  */
-export default function GoogleButton({ role, onSuccess, busy }) {
-  return USE_REAL_GOOGLE ? <RealGoogleButton onSuccess={onSuccess} busy={busy} /> : <DemoGoogleButton role={role} onSuccess={onSuccess} busy={busy} />;
-}
-
-/* ---------- real Google Identity Services button ---------- */
-
-function RealGoogleButton({ onSuccess, busy }) {
+export default function GoogleButton({ onSuccess, busy }) {
   const holder = useRef(null);
   const latest = useRef(onSuccess);
   latest.current = onSuccess;
-  const [state, setState] = useState('loading'); // loading | ready | error
+  const [state, setState] = useState('loading'); // loading | ready | error | unconfigured
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) {
+      setState('unconfigured');
+      return undefined;
+    }
     let alive = true;
     setState('loading');
     loadGoogleScript()
@@ -82,6 +80,11 @@ function RealGoogleButton({ onSuccess, busy }) {
           <Spinner size={20} /> {busy ? '' : t('auth.googleLoading')}
         </p>
       )}
+      {state === 'unconfigured' && (
+        <div className={s.googleError} role="alert">
+          <p>{t('errors.GOOGLE_NOT_CONFIGURED')}</p>
+        </div>
+      )}
       {state === 'error' && !busy && (
         <div className={s.googleError} role="alert">
           <p>{t('errors.GOOGLE_FAILED')}</p>
@@ -91,105 +94,5 @@ function RealGoogleButton({ onSuccess, busy }) {
         </div>
       )}
     </div>
-  );
-}
-
-/* ---------- demo chooser (no Google client ID configured) ---------- */
-
-function DemoGoogleButton({ role, onSuccess, busy }) {
-  const [open, setOpen] = useState(false);
-  const [accounts, setAccounts] = useState(null);
-  const [other, setOther] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '' });
-  const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (!open) return;
-    setAccounts(null);
-    setOther(false);
-    getDemoGoogleAccounts(role)
-      .then(setAccounts)
-      .catch(() => setAccounts([]));
-  }, [open, role]);
-
-  const pick = (account) => {
-    setOpen(false);
-    const email = account.email.trim().toLowerCase();
-    onSuccess({ sub: `demo:${email}`, email, name: account.name || email.split('@')[0], picture: null });
-  };
-
-  const submitOther = (e) => {
-    e.preventDefault();
-    const er = {};
-    if (!form.name.trim()) er.name = t('auth.nameError');
-    if (!EMAIL.test(form.email.trim())) er.email = t('auth.emailError');
-    setErrors(er);
-    if (!Object.keys(er).length) pick({ name: form.name.trim(), email: form.email });
-  };
-
-  return (
-    <>
-      <Button variant="outline" size="lg" block iconLeft={<GoogleMark />} loading={busy} onClick={() => setOpen(true)}>
-        {t('auth.google')}
-      </Button>
-      <BottomSheet open={open} onClose={() => setOpen(false)} title={t('auth.chooseAccount')}>
-        <p className={s.demoNote}>{t('auth.demoNote')}</p>
-        {!other ? (
-          <ul className={s.accounts}>
-            {accounts === null && (
-              <li className={s.googleStatus}>
-                <Spinner size={20} />
-              </li>
-            )}
-            {accounts?.map((a) => (
-              <li key={a.email}>
-                <button type="button" className={s.account} onClick={() => pick(a)}>
-                  <span className={s.avatar} aria-hidden="true">
-                    {(a.name || a.email).charAt(0).toUpperCase()}
-                  </span>
-                  <span className={s.accountText}>
-                    <span className={s.accountName}>{a.name || a.email}</span>
-                    <span className={s.accountEmail}>
-                      {a.email}
-                      {a.note ? ` · ${a.note}` : ''}
-                    </span>
-                  </span>
-                  <ChevronRightIcon size={18} />
-                </button>
-              </li>
-            ))}
-            <li>
-              <button type="button" className={s.account} onClick={() => setOther(true)}>
-                <span className={`${s.avatar} ${s.avatarPlus}`} aria-hidden="true">
-                  +
-                </span>
-                <span className={s.accountText}>
-                  <span className={s.accountName}>{t('auth.otherAccount')}</span>
-                </span>
-                <ChevronRightIcon size={18} />
-              </button>
-            </li>
-          </ul>
-        ) : (
-          <form className={s.otherForm} onSubmit={submitOther} noValidate>
-            <Input label={t('auth.otherName')} autoComplete="name" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} error={errors.name} />
-            <Input
-              label={t('auth.otherEmail')}
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              spellCheck={false}
-              required
-              value={form.email}
-              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              error={errors.email}
-            />
-            <Button type="submit" size="lg" block>
-              {t('auth.continue')}
-            </Button>
-          </form>
-        )}
-      </BottomSheet>
-    </>
   );
 }

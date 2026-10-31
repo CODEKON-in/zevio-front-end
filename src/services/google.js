@@ -1,20 +1,21 @@
 /**
- * Google sign-in.
+ * Google sign-in, through Google Identity Services.
  *
- * - With VITE_GOOGLE_CLIENT_ID set (.env.local / Netlify), the real Google button
- *   (Google Identity Services) is used. It returns a signed ID token; we read the
- *   person's Google id, email, name and photo from it.
- * - Without it, a DEMO account chooser is shown instead, so the app can be tried
- *   without a Google Cloud project.
+ * VITE_GOOGLE_CLIENT_ID must be set (.env.local locally, Netlify in production)
+ * and the site's address listed under "Authorized JavaScript origins" for that
+ * OAuth client. Google returns a signed ID token; the person's Google id, email,
+ * name and photo are read from it. There is no demo chooser: without a client ID
+ * the button reports that it is not configured rather than faking a sign-in.
  *
- * NOTE: the browser cannot prove the token is genuine — the backend must verify it
- * (see BACKEND-CHANGES.md → "Google sign-in"). Until then this is identification,
- * not security.
+ * SECURITY: decodeGoogleCredential below only DECODES the token — it proves
+ * nothing, so it is used for filling in the sign-up form and nothing else.
+ * Who someone actually is comes from POST /api/auth/google, where the API
+ * checks the signature, issuer and audience against Google's public keys.
+ * Never decide anything from the decoded token alone.
  */
 import { ServiceError } from '../utils/mock.js';
 
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-export const USE_REAL_GOOGLE = Boolean(GOOGLE_CLIENT_ID);
 
 let gisPromise = null;
 
@@ -63,32 +64,4 @@ export function googleSignOut() {
   } catch {
     /* not loaded */
   }
-}
-
-/**
- * The same Google account always gives the same profile id (a UUID), on every
- * phone — so the API profile is found again without a "find by email" endpoint.
- * (cyrb128 hash; works on plain http too, unlike crypto.subtle.)
- */
-export function profileIdFromGoogle(sub) {
-  const str = `zevio:${sub}`;
-  let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
-  for (let i = 0; i < str.length; i++) {
-    const k = str.charCodeAt(i);
-    h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
-    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-    h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
-    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
-  }
-  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
-  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
-  h1 ^= h2 ^ h3 ^ h4;
-  h2 ^= h1;
-  h3 ^= h1;
-  h4 ^= h1;
-  const hex = [h1, h2, h3, h4].map((n) => (n >>> 0).toString(16).padStart(8, '0')).join('');
-  const variant = ((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16);
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${variant}${hex.slice(17, 20)}-${hex.slice(20, 32)}`;
 }
