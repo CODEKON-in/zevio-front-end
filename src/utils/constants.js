@@ -1,7 +1,5 @@
 /** App-wide constants. Never hardcode these values in components. */
 
-export const IS_DEV = import.meta.env.DEV;
-
 /**
  * Order statuses — exactly the lifecycle in the Zevio API README:
  *   pending → confirmed → preparing → out_for_delivery → delivered
@@ -99,16 +97,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   platformUpiName: '',
 });
 
-// API mode keeps its own session/cart so demo logins (ids like "c1") never reach
-// the real API. Must agree with USE_API in services/api/config.js, where the API
-// is the default and demo data is opt-in via VITE_DATA_SOURCE=mock.
-const STORAGE_PREFIX = import.meta.env.VITE_DATA_SOURCE !== 'mock' ? 'zevio.api.' : 'zevio.';
-
 export const STORAGE_KEYS = Object.freeze({
-  SESSION: `${STORAGE_PREFIX}session`,
-  CART: `${STORAGE_PREFIX}cart`,
-  MOCK_DB: `${STORAGE_PREFIX}mockdb`,
+  SESSION: 'zevio.api.session',
+  CART: 'zevio.api.cart',
 });
-
-/** Fake network delay range for mock services (ms). */
-export const MOCK_DELAY = { min: 300, max: 600 };

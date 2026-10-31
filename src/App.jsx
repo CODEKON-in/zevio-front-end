@@ -1,9 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import OfflineBanner from './components/layout/OfflineBanner.jsx';
 import PageLoader from './components/layout/PageLoader.jsx';
 import ErrorBoundary from './components/layout/ErrorBoundary.jsx';
-import { ADMIN_BASE, IS_DEV } from './utils/constants.js';
+import { ADMIN_BASE } from './utils/constants.js';
 
 /** React.lazy that retries once after 1.5 s — village networks often drop a single request. */
 function lazyRetry(load) {
@@ -15,10 +15,6 @@ const CustomerApp = lazyRetry(() => import('./pages/customer/CustomerApp.jsx'));
 const ShopPanelApp = lazyRetry(() => import('./pages/shop/ShopPanelApp.jsx'));
 const DeliveryApp = lazyRetry(() => import('./pages/delivery/DeliveryApp.jsx'));
 const AdminApp = lazyRetry(() => import('./pages/admin/AdminApp.jsx'));
-
-// DEV-only chunks — removed from production builds.
-const UiKit = IS_DEV ? lazy(() => import('./pages/dev/UiKit.jsx')) : null;
-const DevRoleSwitcher = IS_DEV ? lazy(() => import('./components/layout/DevRoleSwitcher.jsx')) : null;
 
 export default function App() {
   const { pathname } = useLocation();
@@ -36,17 +32,11 @@ export default function App() {
             {/* Admin panel handles its own login screen. Its path comes from
                 VITE_ADMIN_PATH; anything else falls through to the customer app. */}
             <Route path={`${ADMIN_BASE}/*`} element={<AdminApp />} />
-            {IS_DEV && <Route path="/dev/ui" element={<UiKit />} />}
             {/* Customer section handles its own login screen. */}
             <Route path="/*" element={<CustomerApp />} />
           </Routes>
         </Suspense>
       </ErrorBoundary>
-      {IS_DEV && (
-        <Suspense fallback={null}>
-          <DevRoleSwitcher />
-        </Suspense>
-      )}
     </>
   );
 }

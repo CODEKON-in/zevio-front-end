@@ -1,5 +1,4 @@
 import en from './en.js';
-import { IS_DEV } from '../utils/constants.js';
 
 function lookup(key) {
   let node = en;
@@ -20,7 +19,7 @@ export function t(key, params) {
   if (params && params.count === 1) value = lookup(`${key}_one`);
   if (value === undefined) value = lookup(key);
   if (typeof value !== 'string') {
-    if (IS_DEV) console.warn(`[i18n] missing key: ${key}`);
+    if (import.meta.env.DEV) console.warn(`[i18n] missing key: ${key}`);
     return key;
   }
   if (!params) return value;

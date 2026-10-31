@@ -14,11 +14,11 @@
 import { apiGet, apiPost } from './client.js';
 import { fetchShops, forgetShops, saveShop } from './apiShops.js';
 import { getOrders } from './apiOrders.js';
+import { savePartner } from './apiUsers.js';
 import { getPlaces, toShop } from './mappers.js';
-import { newUuid } from './config.js';
 import { profileIdFromGoogle } from '../google.js';
-import { loadDb } from '../request.js';
-import { ServiceError } from '../../utils/mock.js';
+import { ServiceError, newUuid } from '../../utils/errors.js';
+import { forgetAddresses } from '../addressBook.js';
 import { ACTIVE_STATUSES, ROLES, SUBSCRIPTION_STATUS } from '../../utils/constants.js';
 import { cleanPhone } from '../../utils/format.js';
 
@@ -65,21 +65,8 @@ async function getProfile(uid) {
   }
 }
 
-/** Customer extras the API cannot store (addresses, blocked) live on this phone. */
-async function localCustomer(profile, google) {
-  const mod = await loadDb();
-  const db = mod.getDb();
-  let c = db.customers.find((x) => x.id === profile.id);
-  if (!c) {
-    c = { id: profile.id, addresses: [], isBlocked: false, apiProfile: true, createdAt: profile.created_at || new Date().toISOString() };
-    db.customers.push(c);
-  }
-  Object.assign(c, { name: profile.name, phone: profile.phone, email: google.email, googleId: google.sub });
-  mod.commit();
-  return c;
-}
-
 const customerUser = (c, g) => ({ id: c.id, customerId: c.id, role: ROLES.CUSTOMER, name: c.name, phone: c.phone, email: g.email, picture: g.picture || null });
+const partnerUser = (p, g) => ({ id: p.id, partnerId: p.id, role: ROLES.DELIVERY, name: p.name, phone: p.phone, email: g.email, picture: g.picture || null });
 const shopUser = (s, g) => ({ id: s.profileId || `u_${s.id}`, shopId: s.id, role: ROLES.SHOP, name: s.ownerName || s.name, phone: s.phone, email: g.email, picture: g.picture || null });
 
 async function findShop(uid, google) {
@@ -87,6 +74,14 @@ async function findShop(uid, google) {
   if (rows?.length) return toShop(rows[0], places);
   const all = await fetchShops(true);
   return all.find((s) => s.email && s.email.toLowerCase() === google.email) || null;
+}
+
+/** The partner's own profile, or an account the admin created for their email. */
+async function findPartner(profile, google) {
+  if (profile?.user_type === 'delivery_person') return profile;
+  if (profile) return null; // this Google account is already a customer or a shop owner
+  const rows = await apiGet('/users/?user_type=delivery_person').catch(() => []);
+  return (rows || []).find((r) => r.email && r.email.toLowerCase() === google.email) || null;
 }
 
 export async function signIn(role, googleFromBrowser) {
@@ -97,13 +92,19 @@ export async function signIn(role, googleFromBrowser) {
     if (profile.user_type !== 'customer') throw new ServiceError('WRONG_ROLE');
     // is_blocked is a real column, so the admin's block applies on every phone.
     if (profile.is_blocked) throw new ServiceError('BLOCKED');
-    const c = await localCustomer(profile, google);
-    return { user: customerUser(c, google) };
+    return { user: customerUser(profile, google) };
   }
 
   if (role === ROLES.SHOP) {
     const shop = profile ? await findShop(profile.id, google) : null;
     return shop ? { user: shopUser(shop, google) } : { needsSignUp: true, google };
+  }
+
+  if (role === ROLES.DELIVERY) {
+    const partner = await findPartner(profile, google);
+    if (!partner) return { needsSignUp: true, google };
+    if (partner.is_blocked) throw new ServiceError('BLOCKED');
+    return { user: partnerUser(partner, google) };
   }
 
   throw new ServiceError('NOT_FOUND');
@@ -137,8 +138,7 @@ export async function signUp(role, google, details) {
   const phone = cleanPhone(details.phone);
   if (role === ROLES.CUSTOMER) {
     const profile = await ensureProfile(google, details.name.trim(), phone, 'customer');
-    const c = await localCustomer({ ...profile, name: details.name.trim(), phone }, google);
-    return customerUser(c, google);
+    return customerUser({ ...profile, name: details.name.trim(), phone }, google);
   }
   if (role === ROLES.SHOP) {
     const owner = await ensureProfile(google, details.ownerName.trim(), phone, 'shop');
@@ -163,6 +163,18 @@ export async function signUp(role, google, details) {
     forgetShops();
     return shopUser({ ...shop, isOpen: false }, google);
   }
+  if (role === ROLES.DELIVERY) {
+    const profile = await ensureProfile(google, details.name.trim(), phone, 'delivery_person');
+    // Starts switched off: the admin approves a partner before they can go online.
+    await savePartner({
+      id: profile.id,
+      vehicle: details.vehicle.trim().toUpperCase(),
+      placeId: details.placeId,
+      isActive: false,
+      isOnline: false,
+    });
+    return partnerUser({ ...profile, name: details.name.trim(), phone }, google);
+  }
   throw new ServiceError('NOT_FOUND');
 }
 
@@ -171,10 +183,7 @@ export async function deleteAccount(user) {
     const orders = await getOrders({ customerId: user.customerId });
     if (orders.some((o) => ACTIVE_STATUSES.includes(o.status))) throw new ServiceError('ACTIVE_ORDERS');
     await apiPost('/user/delete/', { uid: user.customerId });
-    const mod = await loadDb();
-    const db = mod.getDb();
-    db.customers = db.customers.filter((c) => c.id !== user.customerId);
-    mod.commit();
+    forgetAddresses(user.customerId); // nothing of theirs left on this phone
     return true;
   }
   if (user.role === ROLES.SHOP) {
@@ -183,6 +192,12 @@ export async function deleteAccount(user) {
     await apiPost('/shop/delete/', { shop_id: user.shopId }); // also removes its products
     if (/^[0-9a-f-]{36}$/i.test(user.id)) await apiPost('/user/delete/', { uid: user.id }).catch(() => {});
     forgetShops();
+    return true;
+  }
+  if (user.role === ROLES.DELIVERY) {
+    const orders = await getOrders({ partnerId: user.partnerId });
+    if (orders.some((o) => ACTIVE_STATUSES.includes(o.status))) throw new ServiceError('ACTIVE_ORDERS');
+    await apiPost('/user/delete/', { uid: user.partnerId });
     return true;
   }
   throw new ServiceError('NOT_FOUND');

@@ -4,7 +4,7 @@
  * VITE_GOOGLE_CLIENT_ID must be set (.env.local locally, Netlify in production)
  * and the site's address listed under "Authorized JavaScript origins" for that
  * OAuth client. Google returns a signed ID token; the person's Google id, email,
- * name and photo are read from it. There is no demo chooser: without a client ID
+ * name and photo are read from it. Without a client ID
  * the button reports that it is not configured rather than faking a sign-in.
  *
  * SECURITY: decodeGoogleCredential below only DECODES the token — it proves
@@ -13,7 +13,7 @@
  * checks the signature, issuer and audience against Google's public keys.
  * Never decide anything from the decoded token alone.
  */
-import { ServiceError } from '../utils/mock.js';
+import { ServiceError } from '../utils/errors.js';
 
 /**
  * This app's Google OAuth client. A client ID is NOT a secret — it is sent to

@@ -18,7 +18,7 @@ export function GoogleMark({ size = 20 }) {
 /**
  * GoogleButton — "Continue with Google", using Google Identity Services.
  *
- * There is no demo chooser any more: the only way in is a real Google account.
+ * A real Google account is the only way in.
  * If VITE_GOOGLE_CLIENT_ID is missing the button says so plainly rather than
  * pretending to sign anyone in.
  *

@@ -1,93 +1,78 @@
-# Zevio — hyperlocal food delivery (frontend only)
+# Zevio — hyperlocal food delivery
 
-Swiggy-style local food delivery app for **Papanasam ↔ Ayyampettai** — **hotels and bakeries only**. Pure React + Vite, plain CSS. Runs on the **Zevio API** or on built-in demo data.
+Swiggy-style food delivery for **Papanasam ↔ Ayyampettai** — **hotels and bakeries only**.
+React + Vite, plain CSS, English only. Every screen runs on the **Zevio API**
+(`zevio-apis`); there is no demo or offline data in the app.
 
-> App name **Zevio** is set in `src/i18n/en.js` (`app.name`) and in `index.html` (title + loading screen).
->
-> Shop categories are set in `src/utils/constants.js` → `SHOP_CATEGORIES = ['hotels', 'bakery']`. To add a category later, add it there and give it a label in `en.js` (`categories`) and an icon in `Icons.jsx` (`CATEGORY_ICONS`).
+> App name: `src/i18n/en.js` (`app.name`) and `index.html`.
+> Shop categories: `src/utils/constants.js` → `SHOP_CATEGORIES = ['hotels', 'bakery']`.
+> Every UI string is in `src/i18n/en.js`, read with `t('key')`.
 
-**Language:** English only. All UI text is in `src/i18n/en.js` and read with `t('key')`, so another language can be added later without touching components.
+## Before it runs
+
+| | Where | Why |
+| --- | --- | --- |
+| **API deployed** | `zevio-apis` on Vercel | all data |
+| **`migration.sql` run once** | Supabase → SQL Editor | tables and columns this app needs, and the admin account |
+| **`API_KEY`** | Vercel (API project) **and** `.env.local` here | the app's proxy adds it to every call |
+| **Google OAuth client id** | Google Cloud → Credentials | the only way customers, shops and partners sign in |
 
 ## Run it
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173  (also on your phone via the Network URL)
+npm run dev        # http://localhost:5173  (and on your phone via the Network URL)
 npm run build      # production build in dist/
 ```
 
-## Connect to the Zevio API
+Copy `.env.example` to `.env.local`:
 
-The app has two data modes:
+```
+ZEVIO_API_URL=https://zevio-apis.vercel.app
+ZEVIO_API_KEY=<the API_KEY from the API project>
+VITE_GOOGLE_CLIENT_ID=<your Google OAuth client id>
+VITE_ADMIN_PATH=                 # optional: serve the admin panel somewhere less obvious
+```
 
-| Mode | When | Data |
+The API key **never reaches the browser**: the app calls `/api/...` on its own
+address and a proxy adds `X-API-Key` — `vite.config.js` while developing,
+`api/[...path].js` (a Vercel function) once deployed. The proxy forwards only
+the endpoints the app uses, so a stray path cannot reach the rest of the API.
+
+**Deploying (Vercel):** `vercel.json` builds with Vite and sends every other path
+to `index.html`, so `/shop-panel` and the admin panel survive a refresh. In
+Vercel → Settings → Environment Variables add `ZEVIO_API_URL`, `ZEVIO_API_KEY`,
+`VITE_GOOGLE_CLIENT_ID` (and `VITE_ADMIN_PATH` if you use it), then deploy.
+
+## Who signs in, and how
+
+| Section | Address | Sign-in |
 | --- | --- | --- |
-| **Demo** (default) | no `.env.local` | built-in sample shops/orders in the browser, no server needed |
-| **API** | `VITE_DATA_SOURCE=api` | the Zevio API (`zevio-apis`) |
+| Customer app | `/` | Google |
+| Shop panel | `/shop-panel` | Google (the owner's account, or the email on the shop) |
+| Delivery partner app | `/delivery` | Google |
+| Admin panel | `/admin` (or `VITE_ADMIN_PATH`) | email + password, checked by the API |
 
-**Local setup:** copy `.env.example` to `.env.local` and fill in the key:
+Customers, shop owners and partners share one screen: **who are you** →
+**Continue with Google** → a short form the first time. New **shops and delivery
+partners start switched off** until the admin approves them (Admin → Shops /
+Delivery partners); customers can order straight away.
 
-```
-VITE_DATA_SOURCE=api
-ZEVIO_API_URL=https://zevio-apis.vercel.app     # or http://127.0.0.1:2222 for a local API
-ZEVIO_API_KEY=<the API_KEY from the API's secrets.env>
-```
+The admin account comes from `migration.sql` — the password is in the API's
+README, which also shows how to change it. More admins:
+`POST /api/admin/add/` with the API key (not reachable from the website).
 
-Then `npm run dev`. The key **never goes to the browser**: the app calls `/api/...` on its own address, and the dev server forwards the call with `X-API-Key` (see `vite.config.js`). This also avoids CORS.
+**Log out / delete account:** customer → Profile; shop owner → Shop → Settings;
+partner → Account. Deleting is refused while an order is still in progress.
 
-**Netlify:** `netlify.toml` already sets `VITE_DATA_SOURCE=api` and `netlify/edge-functions/api.js` does the forwarding. In Netlify → Site configuration → Environment variables, add `ZEVIO_API_URL` and `ZEVIO_API_KEY`. The edge function only lets through the endpoints the app uses.
-
-**What uses the API now**
-
-- Customer: login (creates a profile), shops, menus, search, cart → place order, my orders, tracking, cancel.
-- Shop panel: login, new orders, accept / ready / reject, products (add, edit, price, in-stock, delete), open/closed, settings.
-- Admin: dashboard, orders, shops (add, edit, active on/off).
-
-**Still on demo data** (the API has no endpoints for these yet): delivery partner app, partner assignment, admin customers/partners lists, saved addresses (kept on the phone), platform settings (delivery fee, places, platform UPI).
-
-Some fields have no column in the API yet (shop category, UPI ID, timings, veg/non-veg, payment method, instructions…). For now they are saved inside the description and address text, so every phone sees them. The exact fixes and columns the backend needs are in **[BACKEND-CHANGES.md](BACKEND-CHANGES.md)**. Two bugs there (ids of new shops/products) must be fixed before shop owners can add products.
-
-Code: `src/services/api/` (client, mappers, API calls). Screens did not change: each service function picks the API or the demo data (API records have UUID ids, demo ones have short ids like `s1`).
-
-## Order statuses (same as the API README)
+## Order statuses
 
 `Pending → Confirmed → Preparing → Out for delivery → Delivered`, or `Cancelled`.
-Shop: Accept = Confirmed, Start preparing = Preparing, Reject = Cancelled (with a reason). Partner: Picked up = Out for delivery.
-The app sends these to the API as-is (`pending`, `confirmed`, `preparing`, `out_for_delivery`, `delivered`, `cancelled`).
+Shop: Accept = Confirmed, Start preparing = Preparing, Reject = Cancelled (with a
+reason). Partner: Picked up = Out for delivery, then Delivered. The API records
+the time of every step, so each phone shows the same timeline.
 
-## Sign in, sign up, log out, delete account
-
-Customers, shop owners and delivery partners use **one sign-in screen** (shown on `/`, `/shop-panel` and `/delivery` when not signed in):
-
-1. **Who are you?** — Customer / Shop owner / Delivery partner (the section you opened is pre-selected).
-2. **Continue with Google** — the only way to sign in. No passwords, no phone OTP.
-3. **First time only** — a short sign-up form:
-   - Customer: name (from Google) + mobile number.
-   - Shop owner: owner name, mobile, shop name, type (hotel/bakery), place, address, UPI ID. The shop starts **switched off and closed**; the owner sees "Waiting for approval" until the admin turns it on (Admin → Shops → Active).
-   - Delivery partner: name, mobile, vehicle number, base place. Starts **switched off**; cannot go online until the admin turns it on (Admin → Delivery partners).
-4. **Log out** — Profile (customer), Shop → Settings (shop owner), Account (partner).
-5. **Delete account** — same pages, under the log-out button. The person must type `DELETE`. It is refused while they have orders in progress. Past orders are kept for the shop/platform accounts.
-
-**Google sign-in setup:** without `VITE_GOOGLE_CLIENT_ID` a *demo* Google account chooser appears (pick a demo person or "Use another account"). For real Google sign-in, create an OAuth client ID (Web application) in Google Cloud Console → APIs & Services → Credentials, add `http://localhost:5173` and your Netlify address to *Authorized JavaScript origins*, and put the ID in `.env.local` / Netlify as `VITE_GOOGLE_CLIENT_ID`.
-
-With the API, the same Google account always maps to the same profile id, so a customer gets the same account on any phone; shop owners are found by their profile or by the shop's email. The admin panel keeps its own login at `/admin`.
-
-## Phase status
-
-- [x] **Phase 1** — setup, CSS variables, contexts, English text system, services + mock data, reusable UI components
-- [x] **Phase 2** — Customer app
-- [x] **Phase 3** — Shop panel
-- [x] **Phase 4** — Delivery partner app
-- [x] **Phase 5** — Admin panel
-- [x] **Phase 6** — Performance & polish
-
-## Testing in dev
-
-- A small dark **`</>`** tab (right edge, middle of the screen) switches role: Customer / Shop / Delivery / Admin, resets demo data and opens the **UI kit** at `/dev/ui`.
-- The UI kit shows every component plus loading, empty and error states. "Simulate error" makes the next service call fail.
-- Mock data is saved in localStorage (`zevio.mockdb`), so an order placed as a customer is still there when you switch to the shop role. Use "Reset demo data" to start fresh.
-
-## Customer app (Phase 2)
+## Customer app
 
 | Route | Screen |
 | --- | --- |
@@ -102,11 +87,13 @@ With the API, the same Google account always maps to the same profile id, so a c
 | `/profile` | Addresses, help (WhatsApp/call), about, logout |
 | `/not-serviceable` | Shown when "My place is not listed" is picked |
 
-- Sign-in: see "Sign in, sign up, log out, delete account" above.
-- In dev, the tracking page moves the order to the next status every 5 seconds (toggle on the page).
-- UPI payments cannot be verified without a backend, so the user taps "I have paid".
+- Tracking refreshes every 15 seconds while an order is active.
+- UPI cannot be verified without a payment gateway, so the customer taps "I have
+  paid" and the order is recorded as paid. Cash on Delivery is marked paid on delivery.
+- Saved addresses stay on the phone that typed them (the order itself carries a
+  copy, so history is never affected).
 
-## Shop panel (Phase 3)
+## Shop panel
 
 | Route | Screen |
 | --- | --- |
@@ -117,12 +104,11 @@ With the API, the same Google account always maps to the same profile id, so a c
 | `/shop-panel/settings` | Timings, phone, UPI ID, photo preview, subscription card, logout |
 
 - The panel checks for new orders every 8 seconds. A new order plays a double beep, vibrates the phone, shows a toast and a red **NEW** card. Sound only works after the owner has tapped the screen once (browser rule).
-- Subscription banner: red when expired, amber when 7 days or less are left (try shop "New Royal Bakes & Sweets" — expired, or "Kaveri Tiffin Centre" — ending soon).
-- DEV: "simulate a new order" button at the bottom of the dashboard.
-- Testing tip: open the customer app in one tab and the shop panel in another — tabs share the demo data, so the shop rings when the customer orders. (Both tabs share one login, so log in again after switching roles.)
-- Photos are preview only for now; nothing is uploaded.
+- Subscription banner: red when expired, amber when 7 days or less are left. The
+  admin sets the plan and dates in Admin → Shops.
+- Photos are preview only for now; nothing is uploaded (see "Still to do").
 
-## Delivery partner app (Phase 4)
+## Delivery partner app
 
 | Route | Screen |
 | --- | --- |
@@ -131,61 +117,63 @@ With the API, the same Google account always maps to the same profile id, so a c
 | `/delivery/history` | Past orders grouped by date with daily totals |
 | `/delivery/account` | Partner details, call support, logout (sets Offline) |
 
-- Orders reach a partner when the admin assigns them (Phase 5). Until then use the DEV button "assign me an order" on the delivery home, or the customer tracking page's auto-progress, which assigns an online partner when the order is Preparing.
+- Orders reach a partner when the admin assigns them (Admin → Orders → open an
+  order → assign).
 - "Picked up" works only once the shop has marked the order Preparing.
 - Earnings = delivered orders × per-order incentive (Settings, default ₹10). Cash to hand over = COD totals delivered today.
 - A newly assigned order beeps and vibrates, like the shop panel.
 
-## Admin panel (Phase 5)
+## Admin panel
 
 Desktop-first with a sidebar; on phones the sidebar becomes a ☰ menu and tables scroll sideways inside their box.
 
 | Route | Screen |
 | --- | --- |
-| `/admin` | Login (any password), then dashboard — today's orders, delivered, cancelled, delivery-fee revenue, active shops, partners online, orders needing a partner; 7-day bar chart (plain divs); recent orders |
+| `/admin` | Email + password sign-in, then dashboard — today's orders, delivered, cancelled, delivery-fee revenue, active shops, partners online, orders needing a partner; 7-day bar chart (plain divs); recent orders |
 | `/admin/orders` | Table with filters (status, shop, place, date, "only without partner") and search. Click an order → drawer with details, **assign / reassign partner**, **manual status change** (with confirm), timeline. `?open=<id>` opens a drawer directly |
 | `/admin/shops` | Table, add/edit drawer (details, category Hotels / Bakery, timings, UPI, photo preview, **subscription plan / status / start / end**), activate / deactivate switch |
-| `/admin/partners` | List with online status and today's deliveries, add / edit, activate / deactivate (deactivating also sets Offline) |
+| `/admin/partners` | List with online status and today's deliveries, add / edit, activate / deactivate (deactivating also sets Offline). A partner added here signs in with the Google address you enter. |
 | `/admin/customers` | List with order count, search, block / unblock (blocked customers cannot log in or order) |
 | `/admin/settings` | Delivery fee, partner incentive, support phone / WhatsApp, platform UPI ID + name, **service area places** (add, rename, remove — a place with shops cannot be removed) |
 
 - The dashboard refreshes every 30 seconds; the partners page every 20 seconds.
-- Settings changes apply everywhere at once (customer bill, address forms, partner earnings).
+- Settings live in the API, so a change reaches every phone (customer bill,
+  address forms, partner earnings).
 
-## Performance & quality (Phase 6)
+## Speed on a cheap phone
 
-Measured on the production build with Chrome throttled to **"Fast 3G" + 4× slower CPU** (≈ a cheap Android phone), 360 px wide:
+Measured on the production build with Chrome throttled to **"Fast 3G" + 4× slower
+CPU**, 360 px wide: first paint **1.4 s**, 7–8 files on the first visit, no layout shift.
 
-| | Before | After |
-| --- | --- | --- |
-| First thing on screen | 3.0 s | **1.4 s** |
-| Files downloaded on first visit | 13–20 | **7–8** |
-| Total download (customer home) | 110 KB | 109 KB |
-| Layout shift (CLS) | 0 | 0 |
+- **Instant loading screen** in `index.html`, so something appears as soon as the HTML arrives.
+- **Few files**: shared code in one `common` file; React + router in a `vendor` file
+  that stays cached between app updates; one lazy chunk per role, so customers
+  never download the admin panel.
+- **Customer section preloaded** next to the main file (`vite.config.js` plugin).
+- **Font doesn't block** the first paint (system font until Inter arrives).
+- **Crash screen** (`ErrorBoundary`) instead of a blank page; a dropped chunk retries once.
+- **Accessibility**: axe-core (WCAG 2.1 AA) across 19 screens — 0 violations.
 
-What changed:
-- **Instant loading screen** written in `index.html`, so something appears as soon as the HTML arrives.
-- **Fewer files**: shared code is merged into one `common` file; React + router sit in a `vendor` file that stays cached across app updates.
-- **Customer section and demo data preloaded** next to the main file (`vite.config.js` plugin) — saves a network round trip.
-- **Demo data lazy-loaded** (`services/request.js` → `db.js`), so it is not in the first download.
-- **Font doesn't block** the first paint (system font shows until Inter arrives).
-- **Crash screen** (`ErrorBoundary`): a crash or a dropped download shows "Reload app" instead of a blank page; section downloads retry once automatically.
-- **Accessibility**: axe-core (WCAG 2.1 AA) check of 19 screens across all roles — 0 violations. Greyed-out items (closed shops, out of stock) keep readable text contrast.
-- **Production build** has no DEV tools (role switcher, UI kit, simulate/assign buttons, auto-progress).
+**Browsers:** Android Chrome / WebView 88+ (2021) and recent iOS Safari.
 
-The remaining wait to real content is mostly the **fake 300–600 ms delay** in the mock services; a real backend will have its own latency instead.
+## Still to do
 
-**Browsers:** Android Chrome / WebView 88+ (2021) and recent iOS Safari. Older phones need a Chrome update.
-
-## Before going live (not in this frontend)
-
-1. **Backend** — connected to the Zevio API (see above). The remaining gaps are listed in `BACKEND-CHANGES.md`.
-2. **Real login** — Google sign-in is in the app; the backend must still verify the Google ID token and enforce who can change what (BACKEND-CHANGES.md). Admin login is still a demo.
-3. **Payments** — UPI "I have paid" is trust-based. Add shop/admin confirmation of UPI payments, or a payment gateway later.
-4. **New-order alerts** — polling every 8–10 s only works while the page is open; real-time listeners (Firestore `onSnapshot`) and later push notifications (out of scope now).
-5. **Photos** — product/shop photos are preview-only; add Firebase Storage + image compression.
-6. **Hosting** — for **Netlify** it is ready (`netlify.toml`): set `ZEVIO_API_URL` + `ZEVIO_API_KEY` in Netlify — `public/_redirects` already sends every path to `index.html`, so `/shop-panel`, `/admin` etc. work on refresh. (Firebase Hosting: add the same rewrite in `firebase.json`.)
-7. **Data to fill in** — real village list (Admin → Settings), support phone/WhatsApp, platform UPI ID, real hotels / bakeries and their menus.
+1. **Real security.** Everyone shares one API key through the proxy, so the API
+   cannot yet tell one person from another. `POST /api/auth/google` proves who
+   someone is; the next step is a session token the other endpoints check, so a
+   shop owner can only change their own shop. The admin path (`VITE_ADMIN_PATH`)
+   hides the panel, it does not protect it — the password and the API's own
+   checks do. See `BACKEND-CHANGES.md`.
+2. **Payments.** UPI is trust-based ("I have paid"). Add shop/admin confirmation
+   or a payment gateway.
+3. **New-order alerts.** Polling every 8–10 s only works while the page is open;
+   push notifications would be the next step.
+4. **Photos.** Shop and product photos are preview-only; nothing is uploaded yet.
+5. **Saved addresses** stay on one phone until the app uses the API's `addresses`
+   table (the endpoints already exist).
+6. **Fill in the real data.** Admin → Settings: villages, delivery fee, partner
+   incentive, support phone / WhatsApp and the platform UPI id. Then approve your
+   first shops.
 
 ## Rules of the codebase
 
@@ -193,14 +181,17 @@ The remaining wait to real content is mostly the **fake 300–600 ms delay** in 
 | --- | --- |
 | Brand colours, spacing, fonts, radius | `src/styles/variables.css` only |
 | Every UI string | `src/i18n/en.js`, used via `t('key')` |
-| Data access | `src/services/*.js` (async). Components never import `src/data/` |
+| Data access | `src/services/*.js` (async). Screens never call `src/services/api/` directly |
 | Order statuses, roles, storage keys | `src/utils/constants.js` |
 | Money | `formatPrice()` / `<PriceTag>` (₹, en-IN) |
 | Dates | `formatDate()` → DD/MM/YYYY |
 
 ### Changing the backend
 
-Only `src/services/` changes. Each function keeps its name, arguments and return shape. API field mapping lives in `src/services/api/mappers.js`.
+Only `src/services/` changes. Each function keeps its name, arguments and return
+shape. `src/services/api/` holds the client, the calls and `mappers.js`, which
+turns API records into the shapes screens use — when the API gains a column,
+usually only `mappers.js` changes.
 
 ## Folder structure
 
@@ -209,24 +200,28 @@ src/
   components/ui/       Button, Input, Select, Card, Badge, BottomSheet, Modal, Toast, Skeleton,
                        EmptyState, ErrorState, StatusTimeline, PriceTag, QuantityStepper, Toggle,
                        VegDot, SmartImage, Spinner, ConfirmDialog, Drawer
-  components/layout/   OfflineBanner, ErrorBoundary, DevRoleSwitcher, PageLoader, PageHeader, TabBar
+  components/layout/   OfflineBanner, ErrorBoundary, PageLoader, PageHeader, TabBar
   components/customer/ customer-only pieces (ShopCard, ProductCard, CartBar, AddressForm…)
   components/shop/     shop-panel pieces (ShopOrderCard, ShopTabBar, SubscriptionBanner)
   components/delivery/ delivery pieces (DeliveryOrderCard, DeliveryTabBar)
   components/admin/    admin pieces (AdminLayout, DataTable, StatCard, BarChart, AdminOrderDrawer, ShopFormDrawer)
   components/icons/    Inline SVG icons
+  pages/auth/          one sign-in screen for customers, shops and partners
   pages/{customer,shop,delivery,admin}/   one lazy-loaded section per role
-  pages/dev/           UiKit (dev only)
   context/             Settings, Auth, Cart (useReducer), Toast, Customer, ShopPanel, Delivery
-  services/            shop, product, order, user, settings, auth (mock)
-  data/                mock shops, products, users, orders, settings
+  services/            shop, product, order, user, settings, account, auth — all screens use these
+  services/api/        client, mappers and one file per area (shops, orders, users,
+                       account, settings, auth); addressBook.js keeps addresses on the phone
   i18n/                en.js + t()
   hooks/               useAsync, useOnlineStatus, useOverlay, useDebounce, useAddToCart
-  utils/               constants, format, storage, mock helpers, links (tel/WhatsApp/UPI), alerts (beep/vibrate), orders (cash/delivered helpers)
+  utils/               constants, format, storage, errors, links (tel/WhatsApp/UPI), alerts (beep/vibrate), orders (cash/delivered helpers)
   styles/              variables.css, global.css, page.module.css, login.module.css
 ```
 
 ## Open items
 
-- **Service area list** — `src/data/settings.js` has Papanasam, Rajagiri, Pandaravadai, Pasupathikoil, Ayyampettai. Confirm/extend the exact villages.
-- Support phone/WhatsApp and platform UPI ID in `src/data/settings.js` are fake placeholders.
+- **Confirm the village list** in Admin → Settings (it starts as Papanasam,
+  Rajagiri, Pandaravadai, Pasupathikoil, Ayyampettai).
+- **Support phone / WhatsApp and the platform UPI id** must be set in
+  Admin → Settings before launch; until then the help buttons and the UPI step
+  have nothing to point at.

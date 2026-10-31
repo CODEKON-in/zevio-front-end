@@ -1,122 +1,98 @@
 # Zevio API — state of the backend
 
-The admin panel runs entirely on the database now. Every list, number and toggle in
-`/admin` is a row the API read or wrote — there is no demo data behind those screens.
+The whole app runs on the database now: every list, number and toggle in the
+customer app, the shop panel, the delivery app and `/admin` is a row the API read
+or wrote. There is no demo data left anywhere.
 
-Getting there needed a migration and new endpoints. This file records what was done
-and what is still missing.
-
----
-
-## Deploy order (important)
-
-The new API code reads columns that do not exist yet, so **run the migration before
-deploying the API**. Pushing first would break the live customer app: `PUBLIC_COLUMNS`
-in `profile.py` selects `is_blocked`, `vehicle`, `base_place`, `is_active` and
-`is_online`, and Supabase errors on an unknown column, so every `/api/user/<uid>`
-call would answer 500.
-
-1. Supabase → SQL Editor → run `Zevio-delivery-app/database/migrations/001_admin_real_data.sql`
-   (safe to run more than once).
-2. Push `zevio-api` so Vercel redeploys.
-3. Create the first admin — the API hashes the password:
-   ```bash
-   curl -X POST https://zevio-apis.vercel.app/api/admin/add/ \
-     -H "X-API-Key: $ZEVIO_API_KEY" \
-     -d "name=Admin" -d "email=admin@zevio.in" -d "phone=9876500100" -d "password=choose-a-strong-one"
-   ```
-   `/api/admin/add/` is deliberately **not** in the frontend proxy's allowlist: making
-   an admin stays a server-side call with the API key, never something a browser can do.
-4. Add the places you serve in admin → Settings (or insert into `service_places`).
-   Partners and shops cannot be filed under a place until this list exists.
-5. Create `zevio-front-end/.env.local` from `.env.example` with `VITE_DATA_SOURCE=api`,
-   `ZEVIO_API_URL` and `ZEVIO_API_KEY`. Without it the app still runs on demo data.
+This file records what the backend does, what you must do once, and what is
+still missing.
 
 ---
 
-## A. Done
+## Do this once, in this order
 
-### Bugs fixed in the API
+The API reads columns that do not exist in the original tables, so **run the
+migration before deploying the API**. The other way round breaks the live app:
+Supabase errors on an unknown column, so `/api/user/<uid>` would answer 500.
 
-| | Was | Now |
-|---|---|---|
-| `shop.py`, `product.py` | ids built as `token_hex(8)+'-'+token_hex(4)+…` → **16-8-8-8-24** characters, not a UUID, so every later endpoint rejected the new record | `uuid4()`, and the new id comes back as `data.id` |
-| `profile.py` | `users.data[0]` on an unknown id → `IndexError` → **500** | **404 `user not found`** |
-| `shops.postal_code` | `NOT NULL`, but `/api/shop/add/` never sent one, so inserts failed | the migration drops that `NOT NULL` |
-| `order.py` | items inserted one at a time; a failing item left half an order | one insert for all lines, and the order row is removed again if it fails |
-| `main.py` | `quantity: true` accepted as `1` | **400** (a bool is an int in Python — checked explicitly) |
-| `main.py` | update / toggle / cancel on a missing id answered **200 `ok`** | **404** |
-
-### Columns added, text-field hacks removed
-
-The app used to hide data the schema lacked inside existing text fields. All of it is
-real columns now, and `src/services/api/mappers.js` reads them directly:
-
-- `shops.description` no longer carries a `#zevio {json}` line. `category`, `owner_name`,
-  `upi_id`, `open_time`, `close_time`, `delivery_time`, `is_active` and the four
-  `subscription_*` columns exist.
-- `products.description` no longer carries one either: `section` and `is_veg` are columns.
-- `orders.delivery_address` is just the street. `landmark`, `directions`, `instructions`,
-  `payment_method` and `payment_status` are columns, so it is no longer packed as
-  `street | Landmark: … | Pay: COD`.
-- `orders.delivery_partner_id` is a real foreign key. The assignment used to live in one
-  browser's `localStorage`, so only the device that made it could see it.
-- One timestamp per status (`confirmed_at` … `cancelled_at`) plus `reject_reason`, so the
-  tracking timeline and the reason an order was rejected read the same on every phone.
-- `profiles.is_blocked`, and `vehicle` / `base_place` / `is_active` / `is_online` for
-  delivery partners.
-- `platform_settings` (one row) and `service_places` replace the per-device settings.
-
-### Endpoints added
-
-```
-GET  /api/users/?user_type=                 admin Customers and Partners lists
-GET  /api/user/by-phone/<phone>
-POST /api/admin/add/                        create an admin (API key only)
-POST /api/auth/admin                        admin login, password checked against the hash
-GET  /api/orders/?status=&date=             every order, for the admin list + dashboard
-GET  /api/orders/by-partner/<id>
-GET  /api/order/items/?order_ids=a,b,c      items for a whole list in one call
-POST /api/order/assign-partner/
-POST /api/order/mark-paid/
-POST /api/shop/set-active/                  admin show/hide, separate from toggle-orders
-GET/POST /api/settings/
-GET  /api/places/   POST /api/place/add|update|delete/
-```
-
-`/api/user/update/`, `/api/shop/update/` and `/api/product/update/` now validate values
-the same way the add endpoints do, and the shop/product ones accept either one
-`attr`/`attr_value` pair or any number of columns in a single request.
-
-`password_hash` is never returned by any endpoint.
-
-Admins are `profiles` rows with `user_type = 'admin'`; the migration widens the
-`user_type` CHECK to allow it.
+1. **Supabase → SQL Editor → run `zevio-apis-main/migration.sql`** (safe to run
+   more than once). It adds every column and table below, fixes the order-status
+   rule, loads the five villages, and creates the admin account.
+2. **Push `zevio-apis-main`** to `CODEKON-in/zevio-apis` so Vercel redeploys.
+3. **Check the API's environment variables** (Vercel → the API project →
+   Settings → Environment Variables), then redeploy:
+   - `API_KEY` — exactly that name, same value as `ZEVIO_API_KEY` in the app.
+   - `SUPABASE_URL`, `SUPABASE_SECRET_KEY`.
+   - `GOOGLE_CLIENT_ID` — the same OAuth client id the app uses. Without it
+     `/api/auth/google` answers 404 and the app falls back to trusting the
+     browser's own reading of the Google token.
+4. **Sign in to `/admin`** with the account `migration.sql` created (the password
+   is in the API's README) and change that password.
+5. **Admin → Settings:** the villages you serve, delivery fee, partner incentive,
+   support phone / WhatsApp, platform UPI id. Shops and partners cannot be filed
+   under a village until that list is right.
 
 ---
 
-## B. Still missing
+## What the API has
 
-Nothing the admin panel shows depends on these, but the rest of the app does:
+### Sign-in
+- `POST /api/auth/google` — checks the Google ID token's signature, issuer,
+  audience and expiry against Google's keys, then returns the person **and**
+  their profile. A profile is found by `google_sub`; an account created earlier
+  (or by the admin) is claimed by matching `email`.
+- `POST /api/auth/admin` — email + password against a hash in `profiles`
+  (Werkzeug PBKDF2/scrypt). Wrong details answer 401 without saying which.
+- `POST /api/admin/add/` — creates an admin. Deliberately **not** in the app's
+  proxy allowlist: it is a server-side call with the API key, never something a
+  browser can do.
+
+### Real columns instead of text-field hacks
+Earlier versions packed data the database lacked into existing text fields (shop
+extras as a `#zevio {json}` line inside `description`, order extras as tags
+inside `delivery_address`). Those are gone — what a screen shows is what the
+database holds:
+
+| Table | Columns added |
+| --- | --- |
+| `shops` | `category`, `owner_name`, `upi_id`, `open_time`, `close_time`, `delivery_time`, `is_active`, `subscription_plan/_status/_start/_end` |
+| `products` | `section`, `is_veg` |
+| `orders` | `delivery_partner_id`, `payment_method`, `payment_status`, `landmark`, `directions`, `instructions`, `reject_reason`, `confirmed_at`, `preparing_at`, `out_for_delivery_at`, `delivered_at`, `cancelled_at` |
+| `profiles` | `email`, `google_sub`, `password_hash`, `is_blocked`, `is_active`, `is_online`, `vehicle`, `base_place` |
+| new tables | `places` (the service area), `settings` (one row), `addresses` |
+
+### Endpoints the app uses
+`/api/users/?user_type=…`, `/api/places/` + `/api/place/{add,update,delete}/`,
+`/api/settings/` (GET and POST), `/api/shop/set-active/`, `/api/orders/` with
+`status` and `date` filters, `/api/orders/by-partner/<id>`,
+`/api/order/assign-partner/`, `/api/order/mark-paid/`, `/api/order/items/`
+(the items of up to 200 orders in one call), and `/api/user/<id>/addresses/`
+with `/api/address/{add,update,delete}/`.
+
+Deleting a customer or shop no longer fails because of their old orders:
+`orders.customer_id` and `orders.shop_id` are `ON DELETE SET NULL`, so finished
+orders stay as records with the personal link emptied.
+
+---
+
+## What is still missing
 
 | Needed for | What |
-|---|---|
-| Real sign-in | `POST /api/auth/google` verifying the Google ID token server-side. Today the app derives the profile id from the Google account in the browser, which **identifies** someone without **proving** who they are. Add `email` + `google_sub` (unique) to `profiles`. |
-| Saved addresses | An `addresses` table + `GET/POST /api/user/<id>/addresses`. Customer addresses are still per-device, which is why the admin Customers table shows the place of a customer's most recent **order** instead of a saved address. |
-| Photos | Image upload (Supabase Storage) returning a URL for `logo_url` / `image_url`. The shop and product forms preview a chosen file but cannot upload it. |
-| Delete account | `orders.customer_id` / `shop_id` are `ON DELETE RESTRICT`, so deleting fails while old orders exist. Prefer a soft delete (`deleted_at` + clear the personal fields); shops need their order history. |
-| Status rules | `update-status` still accepts any status. The app enforces the flow, but the API should refuse impossible moves (`delivered` → `pending`). |
+| --- | --- |
+| **Real security** | The API key says *an app* is calling, not *who*. `/api/auth/google` proves identity; the next step is a session token the other endpoints check, so a shop owner can only change their own shop and a customer only see their own orders (Supabase Row Level Security is the usual route). |
+| **Trusted prices** | `/api/order/place/` takes `unit_price` and the totals from the caller. The app re-reads prices before sending, but the API should read them from `products` and compute the totals itself. |
+| **Status rules** | `update-status` accepts any status. The app enforces the flow; the API should refuse impossible moves (`delivered` → `pending`). |
+| **Photos** | No upload endpoint: `logo_url` / `image_url` take links only, so the shop and product forms can preview a photo but not upload it. |
+| **Saved addresses** | The `addresses` table and its endpoints exist, but the app still keeps addresses on the phone (`src/services/addressBook.js`). Moving to the API is a change in that one file. |
+| **`csrf`** | The value in every reply is random and nothing checks it — make it real or drop it. |
 
-## C. Security
+---
 
-- **The API key is never in the browser.** The app calls same-site `/api/...` and a proxy
-  adds `X-API-Key` (Vite in dev, `netlify/edge-functions/api.js` in production). The proxy
-  passes only the endpoints the app uses.
-- Anyone can still call the app's public `/api/...` the way the app does. Real protection
-  needs per-user authorisation **in the API**: a shop owner able to change only their own
-  shop, a customer able to see only their own orders. Supabase Auth + Row Level Security is
-  the usual route. Admin login is a password check, not a session — there is no token, so
-  the admin endpoints are protected by the proxy allowlist and the API key, not by who is
-  signed in.
-- The `csrf` value in every reply is random and nothing checks it. Either implement real
-  CSRF checks or drop the field.
+## Notes
+
+- The admin path can be moved off `/admin` with `VITE_ADMIN_PATH` in the app.
+  That **hides** the panel; it does not protect it (the value ships in the
+  JavaScript bundle, because the browser has to know where to route). The
+  password and the API's own checks are the real gate.
+- `Zevio-delivery-app-main/database/*.sql` is the original schema. It is older
+  than the live database — `migration.sql` is what brings a database up to date.

@@ -10,9 +10,8 @@
  * their most recent order instead, which is real order data.
  */
 import { apiGet, apiPost } from './client.js';
-import { newUuid } from './config.js';
 import { getPlaces, placeIdFromCity, toCustomer, toPartner } from './mappers.js';
-import { ServiceError } from '../../utils/mock.js';
+import { ServiceError, newUuid } from '../../utils/errors.js';
 import { ORDER_STATUS } from '../../utils/constants.js';
 import { isSameDay } from '../../utils/format.js';
 

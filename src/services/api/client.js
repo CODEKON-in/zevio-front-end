@@ -7,7 +7,7 @@
  *
  * API replies look like { status: 'ok' | '<error text>', data?, csrf }.
  */
-import { ServiceError } from '../../utils/mock.js';
+import { ServiceError } from '../../utils/errors.js';
 
 const TIMEOUT_MS = 15000;
 

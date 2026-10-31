@@ -5,31 +5,27 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { Button, Input } from '../../components/ui/index.js';
 import { SlidersIcon } from '../../components/icons/Icons.jsx';
 import { ROLES } from '../../utils/constants.js';
-import { USE_API } from '../../services/api/config.js';
 import s from '../../styles/login.module.css';
 
 /**
- * Admin login. In API mode the email and password are checked against the
- * admin's row in the database (POST /api/auth/admin); the demo build keeps the
- * old password-less login.
+ * Admin login. The email and password are checked against the
+ * admin's row in the database (POST /api/auth/admin).
  */
 export default function AdminLogin() {
   const { login } = useAuth();
   const { showToast } = useToast();
-  const [email, setEmail] = useState(USE_API ? '' : 'admin@zevio.in');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
-    if (USE_API) {
-      const er = {};
-      if (!email.trim()) er.email = t('admin.common.required');
-      if (!password) er.password = t('admin.common.required');
-      setErrors(er);
-      if (Object.keys(er).length) return;
-    }
+    const er = {};
+    if (!email.trim()) er.email = t('admin.common.required');
+    if (!password) er.password = t('admin.common.required');
+    setErrors(er);
+    if (Object.keys(er).length) return;
     setBusy(true);
     try {
       await login(ROLES.ADMIN, { email: email.trim(), password });
@@ -58,7 +54,7 @@ export default function AdminLogin() {
             autoComplete="username"
             autoCapitalize="none"
             spellCheck={false}
-            required={USE_API}
+            required
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
@@ -70,7 +66,7 @@ export default function AdminLogin() {
             label={t('admin.login.passwordLabel')}
             type="password"
             autoComplete="current-password"
-            required={USE_API}
+            required
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -82,7 +78,6 @@ export default function AdminLogin() {
             {t('admin.login.submit')}
           </Button>
         </form>
-        {!USE_API && <p className={s.note}>{t('admin.login.mockNote')}</p>}
       </section>
     </main>
   );

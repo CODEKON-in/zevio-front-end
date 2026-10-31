@@ -1,8 +1,7 @@
 /** Shops and products from the Zevio API. */
 import { apiGet, apiPost } from './client.js';
-import { newUuid } from './config.js';
 import { getPlaces, makeSlug, productColumns, shopColumns, toProduct, toShop } from './mappers.js';
-import { ServiceError } from '../../utils/mock.js';
+import { ServiceError, newUuid } from '../../utils/errors.js';
 
 /* Short caches so one screen does not ask for the same list many times. */
 const SHOPS_TTL = 15000;

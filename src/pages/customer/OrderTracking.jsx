@@ -3,24 +3,22 @@ import { useParams } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
-import { assignPartner, cancelOrder, getOrderById, updateOrderStatus } from '../../services/orderService.js';
-import { getPartnerById, getPartners } from '../../services/userService.js';
+import { cancelOrder, getOrderById } from '../../services/orderService.js';
+import { getPartnerById } from '../../services/userService.js';
 import {
-  Badge, Button, Card, ConfirmDialog, ErrorState, PriceTag, Skeleton, SkeletonList, StatusTimeline, Toggle, VegDot, statusTone,
+  Badge, Button, Card, ConfirmDialog, ErrorState, PriceTag, Skeleton, SkeletonList, StatusTimeline, VegDot, statusTone,
 } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import BillDetails from '../../components/customer/BillDetails.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
 import { BikeIcon, PhoneIcon, StoreIcon } from '../../components/icons/Icons.jsx';
-import { ACTIVE_STATUSES, IS_DEV, ORDER_FLOW, ORDER_STATUS } from '../../utils/constants.js';
+import { ACTIVE_STATUSES, ORDER_STATUS } from '../../utils/constants.js';
 import { formatDateTime } from '../../utils/format.js';
 import { telLink } from '../../utils/links.js';
 import p from '../../styles/page.module.css';
-import { USE_API } from '../../services/api/config.js';
 import s from './OrderTracking.module.css';
 
 const POLL_MS = 15000; // refresh status in the background
-const DEV_STEP_MS = 5000; // DEV auto-progress speed
 
 /** Order tracking + order details. */
 export default function OrderTracking() {
@@ -31,7 +29,6 @@ export default function OrderTracking() {
   const partner = useAsync(() => (o?.partnerId ? getPartnerById(o.partnerId) : Promise.resolve(null)), [o?.partnerId]);
   const [confirmCancel, setConfirmCancel] = useState(false);
   // Off by default with the real API, so testing never moves real orders by itself.
-  const [autoProgress, setAutoProgress] = useState(!USE_API);
 
   const active = o && ACTIVE_STATUSES.includes(o.status);
 
@@ -41,25 +38,6 @@ export default function OrderTracking() {
     const timer = setInterval(order.reload, POLL_MS);
     return () => clearInterval(timer);
   }, [active, order.reload]);
-
-  // DEV ONLY: move the order to the next status every few seconds.
-  useEffect(() => {
-    if (!IS_DEV || !autoProgress || !active) return undefined;
-    const timer = setTimeout(async () => {
-      try {
-        const next = ORDER_FLOW[ORDER_FLOW.indexOf(o.status) + 1];
-        if (next === ORDER_STATUS.PREPARING && !o.partnerId) {
-          const online = (await getPartners()).find((pt) => pt.isOnline);
-          if (online) await assignPartner(o.id, online.id);
-        }
-        await updateOrderStatus(o.id, next);
-        order.reload();
-      } catch {
-        /* ignore in dev */
-      }
-    }, DEV_STEP_MS);
-    return () => clearTimeout(timer);
-  }, [autoProgress, active, o, order.reload]);
 
   const doCancel = async () => {
     try {
@@ -106,11 +84,6 @@ export default function OrderTracking() {
                 history={o.statusHistory}
                 extra={o.rejectReason ? t('tracking.rejectedReason', { reason: t(`rejectReasons.${o.rejectReason}`) }) : null}
               />
-              {IS_DEV && active && (
-                <div className={s.dev}>
-                  <Toggle label={t('tracking.devAuto')} checked={autoProgress} onChange={setAutoProgress} />
-                </div>
-              )}
             </Card>
 
             <div className={s.callRow}>

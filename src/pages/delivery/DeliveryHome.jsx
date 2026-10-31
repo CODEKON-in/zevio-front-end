@@ -4,11 +4,10 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useDelivery } from '../../context/DeliveryContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { assignOrderTo } from '../../services/devService.js';
 import { Button, EmptyState, ErrorState, PriceTag, Skeleton, SkeletonList, Toggle } from '../../components/ui/index.js';
 import DeliveryOrderCard from '../../components/delivery/DeliveryOrderCard.jsx';
 import { BikeIcon, WifiOffIcon } from '../../components/icons/Icons.jsx';
-import { ACTIVE_STATUSES, IS_DEV, ORDER_STATUS } from '../../utils/constants.js';
+import { ACTIVE_STATUSES, ORDER_STATUS } from '../../utils/constants.js';
 import { formatPrice, isToday } from '../../utils/format.js';
 import { cashToCollect, deliveredAt } from '../../utils/orders.js';
 import p from '../../styles/page.module.css';
@@ -25,7 +24,6 @@ export default function DeliveryHome() {
   const { settings } = useSettings();
   const { showToast } = useToast();
   const [toggling, setToggling] = useState(false);
-  const [assigning, setAssigning] = useState(false);
 
   const active = useMemo(
     () =>
@@ -56,17 +54,6 @@ export default function DeliveryHome() {
     }
   };
 
-  const devAssign = async () => {
-    setAssigning(true);
-    try {
-      await assignOrderTo(user.partnerId);
-      await reloadOrders();
-    } catch {
-      showToast(t('delivery.home.devNone'), { type: 'error' });
-    } finally {
-      setAssigning(false);
-    }
-  };
 
   return (
     <main className={p.page}>
@@ -133,12 +120,6 @@ export default function DeliveryHome() {
           </ul>
         )}
       </section>
-
-      {IS_DEV && (
-        <Button variant="ghost" block loading={assigning} onClick={devAssign} className={s.dev}>
-          {t('delivery.home.devAssign')}
-        </Button>
-      )}
     </main>
   );
 }

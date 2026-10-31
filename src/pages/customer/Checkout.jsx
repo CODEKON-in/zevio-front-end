@@ -23,7 +23,7 @@ import s from './Checkout.module.css';
 /**
  * Checkout: choose UPI or Cash on Delivery, then place the order.
  * UPI is two payments: item amount → shop's UPI ID, delivery fee → platform UPI ID.
- * MOCK: we cannot verify UPI payments, so the user taps "I have paid".
+ * UPI cannot be verified without a payment gateway, so the customer taps "I have paid".
  */
 export default function Checkout() {
   const navigate = useNavigate();

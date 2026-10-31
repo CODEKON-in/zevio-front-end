@@ -12,7 +12,6 @@ import Toggle from '../ui/Toggle.jsx';
 import { CategoryIcon, ImageIcon } from '../icons/Icons.jsx';
 import { SHOP_CATEGORIES, SUBSCRIPTION_STATUS } from '../../utils/constants.js';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
-import { USE_API } from '../../services/api/config.js';
 import a from '../../pages/admin/admin.module.css';
 
 const EMAIL_PATTERN = /^[\w.-]+@[\w.-]+\.\w{2,}$/;
@@ -76,8 +75,8 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
     if (!values.name.trim()) er.name = req;
     if (!values.ownerName.trim()) er.ownerName = req;
     if (!isValidPhone(values.phone)) er.phone = t('admin.common.phoneError');
-    // The API needs an email for every shop; the demo does not.
-    if (values.email.trim() ? !EMAIL_PATTERN.test(values.email.trim()) : USE_API) er.email = t('admin.shopForm.emailError');
+    // Every shop needs an email: it is how its owner claims the account with Google.
+    if (!EMAIL_PATTERN.test(values.email.trim())) er.email = t('admin.shopForm.emailError');
     if (!values.placeId) er.placeId = req;
     if (!values.address.trim()) er.address = req;
     if (!UPI_PATTERN.test(values.upiId.trim())) er.upiId = t('admin.common.upiError');
@@ -177,7 +176,7 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
           <Input label={t('admin.shopForm.owner')} required value={values.ownerName} onChange={set('ownerName')} error={errors.ownerName} />
           <Input label={t('admin.shopForm.phone')} required prefix="+91" type="tel" inputMode="numeric" value={values.phone} onChange={set('phone')} error={errors.phone} />
         </div>
-        <Input label={t('admin.shopForm.email')} required={USE_API} type="email" autoCapitalize="none" spellCheck={false} value={values.email} onChange={set('email')} error={errors.email} />
+        <Input label={t('admin.shopForm.email')} required type="email" autoCapitalize="none" spellCheck={false} value={values.email} onChange={set('email')} error={errors.email} />
         <Input label={t('admin.shopForm.upi')} required autoCapitalize="none" spellCheck={false} value={values.upiId} onChange={set('upiId')} error={errors.upiId} />
         <div className={a.twoCols}>
           <Input label={t('admin.shopForm.openTime')} type="time" value={values.open} onChange={set('open')} />

@@ -3,7 +3,8 @@ import { apiGet, apiPost } from './client.js';
 import { cityFromPlaceId, getPlaces, toApiStatus, toOrder } from './mappers.js';
 import { fetchShops, getProductsByShop, getShopById } from './apiShops.js';
 import { fetchRawSettings } from './apiSettings.js';
-import { ServiceError } from '../../utils/mock.js';
+import { forgetOrderCounts } from './apiUsers.js';
+import { ServiceError } from '../../utils/errors.js';
 import { ALLOWED_TRANSITIONS, ORDER_STATUS } from '../../utils/constants.js';
 import { isSameDay } from '../../utils/format.js';
 
@@ -128,6 +129,7 @@ export async function placeOrder({ customer, cart, address, paymentMethod }) {
     items: JSON.stringify(lines),
   });
   if (!data?.order_id) throw new ServiceError('SERVER');
+  forgetOrderCounts();
   return getOrderById(data.order_id);
 }
 
@@ -141,6 +143,7 @@ export async function updateOrderStatus(id, status, options = {}) {
     status: toApiStatus(status),
     ...(status === ORDER_STATUS.CANCELLED && options.reason ? { reject_reason: options.reason } : {}),
   });
+  forgetOrderCounts();
   return getOrderById(id);
 }
 
@@ -151,11 +154,13 @@ export function cancelOrder(id) {
 /** Assign or reassign a delivery partner (admin). Pass null to unassign. */
 export async function assignPartner(orderId, partnerId) {
   await apiPost('/order/assign-partner/', { order_id: orderId, partner_id: partnerId || '' });
+  forgetOrderCounts();
   return getOrderById(orderId);
 }
 
 export async function markOrderPaid(orderId) {
   await apiPost('/order/mark-paid/', { order_id: orderId });
+  forgetOrderCounts();
   return getOrderById(orderId);
 }
 

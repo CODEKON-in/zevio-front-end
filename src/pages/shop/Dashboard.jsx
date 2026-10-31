@@ -4,13 +4,12 @@ import { t } from '../../i18n/index.js';
 import { useShopPanel } from '../../context/ShopPanelContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { updateOrderStatus } from '../../services/orderService.js';
-import { simulateOrder } from '../../services/devService.js';
 import { Button, EmptyState, ErrorState, PriceTag, Skeleton, SkeletonList, Toggle } from '../../components/ui/index.js';
 import ShopOrderCard from '../../components/shop/ShopOrderCard.jsx';
 import PendingApproval from '../../components/account/PendingApproval.jsx';
 import SubscriptionBanner from '../../components/shop/SubscriptionBanner.jsx';
 import { OrdersIcon } from '../../components/icons/Icons.jsx';
-import { IS_DEV, ORDER_STATUS } from '../../utils/constants.js';
+import { ORDER_STATUS } from '../../utils/constants.js';
 import { isToday } from '../../utils/format.js';
 import p from '../../styles/page.module.css';
 import s from './Dashboard.module.css';
@@ -32,7 +31,6 @@ export default function Dashboard() {
   const tab = TAB_KEYS.includes(params.get('tab')) ? params.get('tab') : 'new';
   const [toggling, setToggling] = useState(false);
   const [busyId, setBusyId] = useState(null);
-  const [simulating, setSimulating] = useState(false);
 
   const stats = useMemo(() => {
     const today = (orders || []).filter((o) => isToday(o.createdAt));
@@ -75,17 +73,6 @@ export default function Dashboard() {
     }
   };
 
-  const simulate = async () => {
-    setSimulating(true);
-    try {
-      await simulateOrder(shop.id);
-      await reloadOrders();
-    } catch (e) {
-      showToast(t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
-    } finally {
-      setSimulating(false);
-    }
-  };
 
   if (shopError && !shop) return <ErrorState error={shopError} onRetry={reloadShop} />;
 
@@ -161,11 +148,6 @@ export default function Dashboard() {
       </section>
 
       {tab === 'new' && <p className={s.hint}>{t('shopPanel.dashboard.soundHint')}</p>}
-      {IS_DEV && shop && (
-        <Button variant="ghost" block loading={simulating} onClick={simulate} className={s.dev}>
-          {t('shopPanel.dashboard.simulate')}
-        </Button>
-      )}
     </main>
   );
 }
