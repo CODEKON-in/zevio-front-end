@@ -16,25 +16,43 @@ import { fetchShops, forgetShops, saveShop } from './apiShops.js';
 import { getOrders } from './apiOrders.js';
 import { getPlaces, toShop } from './mappers.js';
 import { newUuid } from './config.js';
+import { profileIdFromGoogle } from '../google.js';
 import { loadDb } from '../request.js';
 import { ServiceError } from '../../utils/mock.js';
 import { ACTIVE_STATUSES, ROLES, SUBSCRIPTION_STATUS } from '../../utils/constants.js';
 import { cleanPhone } from '../../utils/format.js';
 
 /**
- * Verifies the Google ID token with the API.
- * @returns {{google:{sub,email,name,picture}, profile:object|null}}
+ * Who this Google sign-in belongs to.
+ *
+ * Preferred path: POST /api/auth/google, where the API checks the token's
+ * signature against Google's keys. The deployed API does not have that endpoint
+ * yet, so when it answers 404 we fall back to trusting the token the browser
+ * decoded and deriving the profile id from its `sub`.
+ *
+ * The fallback IDENTIFIES a person without PROVING who they are — a forged
+ * token would pass. It disappears on its own the moment the API gains the
+ * endpoint, with no frontend change needed.
+ *
+ * @returns {{google:object, profile:object|null, verified:boolean}}
  */
 async function verifyGoogle(google) {
-  if (!google?.credential) throw new ServiceError('GOOGLE_FAILED');
-  try {
-    return await apiPost('/auth/google', { credential: google.credential });
-  } catch (e) {
-    // 401/403 from this endpoint means the token did not check out, or the
-    // account is blocked — not that our own API key is wrong.
-    if (e.code === 'API_AUTH') throw new ServiceError('GOOGLE_REJECTED');
-    throw e;
+  if (!google?.sub || !google?.email) throw new ServiceError('GOOGLE_FAILED');
+
+  if (google.credential) {
+    try {
+      const data = await apiPost('/auth/google', { credential: google.credential });
+      return { ...data, verified: true };
+    } catch (e) {
+      // NOT_FOUND = the API has no such endpoint, so use the fallback below.
+      // Anything else is a real failure and must not be swallowed.
+      if (e.code === 'API_AUTH') throw new ServiceError('GOOGLE_REJECTED');
+      if (e.code !== 'NOT_FOUND') throw e;
+    }
   }
+
+  const profile = await getProfile(profileIdFromGoogle(google.sub));
+  return { google, profile, verified: false };
 }
 
 async function getProfile(uid) {
@@ -92,13 +110,18 @@ export async function signIn(role, googleFromBrowser) {
 }
 
 /**
- * The profile for a verified Google account, creating it the first time.
- * google_sub is stored so the next sign-in finds this row directly.
+ * The profile for this Google account, creating it the first time.
+ *
+ * The id matters: on the verified path any UUID works, because google_sub is
+ * what finds the row later. On the fallback path the id MUST be derived from
+ * the Google account — that derivation is the only way the next sign-in can
+ * find this profile again, and a random id would strand the person on the
+ * sign-up screen every time.
  */
 async function ensureProfile(google, name, phone, userType) {
-  const { profile } = await verifyGoogle(google);
+  const { profile, verified } = await verifyGoogle(google);
   if (profile) return profile;
-  const uid = newUuid();
+  const uid = verified ? newUuid() : profileIdFromGoogle(google.sub);
   await apiPost('/user/add/', {
     uid,
     name,

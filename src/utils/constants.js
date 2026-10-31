@@ -99,8 +99,10 @@ export const DEFAULT_SETTINGS = Object.freeze({
   platformUpiName: '',
 });
 
-// API mode keeps its own session/cart so demo logins (ids like "c1") never reach the real API.
-const STORAGE_PREFIX = import.meta.env.VITE_DATA_SOURCE === 'api' ? 'zevio.api.' : 'zevio.';
+// API mode keeps its own session/cart so demo logins (ids like "c1") never reach
+// the real API. Must agree with USE_API in services/api/config.js, where the API
+// is the default and demo data is opt-in via VITE_DATA_SOURCE=mock.
+const STORAGE_PREFIX = import.meta.env.VITE_DATA_SOURCE !== 'mock' ? 'zevio.api.' : 'zevio.';
 
 export const STORAGE_KEYS = Object.freeze({
   SESSION: `${STORAGE_PREFIX}session`,

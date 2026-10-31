@@ -1,12 +1,13 @@
 /**
  * Where the app gets its data from.
- *   VITE_DATA_SOURCE=api  → the Zevio API (through the /api proxy, which adds the API key)
- *   anything else         → the built-in demo data (no server needed)
+ *   VITE_DATA_SOURCE=mock → the built-in demo data (no server needed)
+ *   anything else         → the Zevio API, through the /api proxy that adds the key
  *
- * Even in API mode, the parts the API does not have yet (delivery partners,
- * customer addresses, platform settings…) stay on demo data. See BACKEND-CHANGES.md.
+ * The real API is the DEFAULT. It used to be the other way round, which meant a
+ * host where the build-time variable was never set — as production was — quietly
+ * served invented shops, orders and customers. Demo data is now opt-in.
  */
-export const USE_API = import.meta.env.VITE_DATA_SOURCE === 'api';
+export const USE_API = import.meta.env.VITE_DATA_SOURCE !== 'mock';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
