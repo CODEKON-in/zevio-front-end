@@ -107,8 +107,37 @@ async function readBody(req) {
 }
 
 export default async function handler(req, res) {
-  const base = (process.env.ZEVIO_API_URL || '').replace(/\/+$/, '');
-  const key = process.env.ZEVIO_API_KEY;
+  // Accept the obvious spellings: the API project calls the key API_KEY, so that
+  // is the name most likely to have been pasted into this project by mistake.
+  // One misnamed variable should not take the whole shop down.
+  const base = (process.env.ZEVIO_API_URL || process.env.API_URL || 'https://zevio-apis.vercel.app').replace(/\/+$/, '');
+  const key = process.env.ZEVIO_API_KEY || process.env.API_KEY || process.env.VITE_ZEVIO_API_KEY;
+
+  // GET /api/health/ — says whether this deployment is wired up, WITHOUT ever
+  // revealing the key. Open it in a browser to tell the three failures apart:
+  // function not deployed (Vercel's own 404), key missing (configured: false),
+  // or the key not matching the API (upstream: 401).
+  if (req.method === 'GET' && /^\/api\/health\/?$/.test(new URL(req.url || '/', 'http://p.local').pathname)) {
+    let upstream = null;
+    if (base && key) {
+      try {
+        const probe = await fetch(`${base}/api/settings/`, { headers: { 'X-API-Key': key, Accept: 'application/json' } });
+        upstream = probe.status;
+      } catch {
+        upstream = 'unreachable';
+      }
+    }
+    return send(res, 200, {
+      status: 'ok',
+      proxy: 'deployed',
+      api_url: base || null,
+      key_configured: Boolean(key),
+      key_name: process.env.ZEVIO_API_KEY ? 'ZEVIO_API_KEY' : process.env.API_KEY ? 'API_KEY' : process.env.VITE_ZEVIO_API_KEY ? 'VITE_ZEVIO_API_KEY' : null,
+      key_fingerprint: key ? `${key.slice(0, 6)}…${key.slice(-4)} (${key.length} chars)` : null,
+      upstream_settings_status: upstream,
+    });
+  }
+
   if (!base || !key) {
     return send(res, 500, { status: 'server not configured: set ZEVIO_API_URL and ZEVIO_API_KEY' });
   }
