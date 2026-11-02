@@ -113,11 +113,29 @@ export default async function handler(req, res) {
   const base = (process.env.ZEVIO_API_URL || process.env.API_URL || 'https://zevio-apis.vercel.app').replace(/\/+$/, '');
   const key = process.env.ZEVIO_API_KEY || process.env.API_KEY || process.env.VITE_ZEVIO_API_KEY;
 
+  // The path being asked for.
+  //
+  // This file is reached through a rewrite in vercel.json, which hands the real
+  // path over as ?path=... . That rewrite exists because a file named
+  // api/[...path].js is NOT treated as a catch-all here: it matched /api/one
+  // but never /api/auth/google, so every two-segment call — sign-in, sign-up,
+  // every POST the app makes — fell through to Vercel's own 404 and the app
+  // reported "We could not find that". One static filename plus one rewrite
+  // removes that whole class of failure, at any depth, with or without a
+  // trailing slash.
+  const parsed = new URL(typeof req.url === 'string' ? req.url : '/', 'http://proxy.local');
+  const routed = parsed.searchParams.get('path') ?? (typeof req.query?.path === 'string' ? req.query.path : null);
+  const pathname = routed === null
+    ? parsed.pathname                               // the function hit directly
+    : `/api/${routed.replace(/^\/+/, '')}`;         // the usual: through the rewrite
+  parsed.searchParams.delete('path');
+  const search = parsed.searchParams.toString();
+
   // GET /api/health/ — says whether this deployment is wired up, WITHOUT ever
   // revealing the key. Open it in a browser to tell the three failures apart:
   // function not deployed (Vercel's own 404), key missing (configured: false),
   // or the key not matching the API (upstream: 401).
-  if (req.method === 'GET' && /^\/api\/health\/?$/.test(new URL(req.url || '/', 'http://p.local').pathname)) {
+  if (req.method === 'GET' && /^\/api\/health\/?$/.test(pathname)) {
     let upstream = null;
     if (base && key) {
       try {
@@ -140,28 +158,6 @@ export default async function handler(req, res) {
 
   if (!base || !key) {
     return send(res, 500, { status: 'server not configured: set ZEVIO_API_URL and ZEVIO_API_KEY' });
-  }
-
-  // Prefer the original URL: it keeps the trailing slash, which most of these
-  // endpoints require. Vercel's catch-all param splits on "/" and drops it, so
-  // rebuilding from it alone turns /api/settings/ into /api/settings.
-  let pathname;
-  let search = '';
-  const original = typeof req.url === 'string' ? req.url : '';
-  if (original.startsWith('/api/')) {
-    const parsed = new URL(original, 'http://proxy.local');
-    pathname = parsed.pathname;
-    parsed.searchParams.delete('path');
-    search = parsed.searchParams.toString();
-  } else {
-    const parts = req.query.path;
-    pathname = `/api/${Array.isArray(parts) ? parts.join('/') : parts || ''}`;
-    const qs = new URLSearchParams();
-    for (const [k, v] of Object.entries(req.query)) {
-      if (k === 'path') continue;
-      for (const one of Array.isArray(v) ? v : [v]) qs.append(k, one);
-    }
-    search = qs.toString();
   }
 
   // Match with and without the trailing slash, so neither spelling is refused.
