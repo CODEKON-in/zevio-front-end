@@ -292,6 +292,10 @@ const en = {
     atShop: 'at {shop}',
     clear: 'Clear search',
   },
+  product: {
+    viewDetails: 'See details',
+    detailsAria: 'See details of {name}',
+  },
   shopPage: {
     timings: 'Timings: {open} – {close}',
     call: 'Call shop',
@@ -562,6 +566,10 @@ const en = {
     productForm: {
       newTitle: 'Add product',
       editTitle: 'Edit product',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Describe this item — taste, ingredients, quantity, spice level…',
+      descriptionCount: '{count}/{max}',
+      descriptionNudge: 'Tip: a short description helps customers decide faster.',
       nameLabel: 'Product name',
       namePlaceholder: 'e.g. Masala Dosa',
       priceLabel: 'Price (₹)',

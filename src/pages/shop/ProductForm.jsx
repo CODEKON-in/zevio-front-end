@@ -9,8 +9,12 @@ import { deleteProduct, getProductsByShop, saveProduct } from '../../services/pr
 import { Button, Card, ConfirmDialog, ErrorState, Input, Select, SkeletonList, SmartImage, Toggle } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import { CategoryIcon, ImageIcon, TrashIcon } from '../../components/icons/Icons.jsx';
+import { toPlainText } from '../../utils/text.js';
 import p from '../../styles/page.module.css';
 import s from './ProductForm.module.css';
+
+/** A description is a short, plain sentence or two — not an essay, not markup. */
+export const DESCRIPTION_MAX = 200;
 
 const toFoodType = (isVeg) => (isVeg === false ? 'nonVeg' : 'veg');
 const fromFoodType = (v) => v !== 'nonVeg';
@@ -33,6 +37,7 @@ export default function ProductForm() {
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [nudge, setNudge] = useState(false);
   const [preview, setPreview] = useState(null); // object URL of a chosen photo (preview only)
   const fileRef = useRef(null);
 
@@ -41,6 +46,7 @@ export default function ProductForm() {
     if (values || !data.data) return;
     setValues({
       name: product?.name ?? '',
+      description: product?.description ?? '',
       price: product ? String(product.price) : '',
       section: product?.section ?? '',
       foodType: product ? toFoodType(product.isVeg) : 'veg',
@@ -56,7 +62,9 @@ export default function ProductForm() {
   );
 
   const set = (field) => (e) => {
-    setValues((v) => ({ ...v, [field]: e.target.value }));
+    const value = field === 'description' ? e.target.value.slice(0, DESCRIPTION_MAX) : e.target.value;
+    setValues((v) => ({ ...v, [field]: value }));
+    if (field === 'description') setNudge(false);
     if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
@@ -79,12 +87,15 @@ export default function ProductForm() {
       e.currentTarget.querySelector('[aria-invalid="true"]')?.focus();
       return;
     }
+    if (!values.description.trim()) setNudge(true);  // a tip, not a blocker
     setSaving(true);
     try {
       await saveProduct({
         ...(isNew ? {} : { id }),
         shopId: user.shopId,
         name: values.name.trim(),
+        // Stored as plain text: no markup, no stray line breaks.
+        description: toPlainText(values.description, DESCRIPTION_MAX),
         price: Math.round(price * 100) / 100,
         section: values.section.trim(),
         isVeg: fromFoodType(values.foodType),
@@ -152,6 +163,21 @@ export default function ProductForm() {
               onChange={set('name')}
               error={errors.name}
             />
+            <div className={s.descriptionField}>
+              <Input
+                label={`${t('shopPanel.productForm.descriptionLabel')} (${t('common.optional')})`}
+                placeholder={t('shopPanel.productForm.descriptionPlaceholder')}
+                multiline
+                rows={3}
+                maxLength={DESCRIPTION_MAX}
+                value={values.description}
+                onChange={set('description')}
+              />
+              <p className={s.counter} aria-live="polite">
+                {t('shopPanel.productForm.descriptionCount', { count: values.description.length, max: DESCRIPTION_MAX })}
+              </p>
+              {nudge && <p className={s.nudge}>{t('shopPanel.productForm.descriptionNudge')}</p>}
+            </div>
             <Input
               label={t('shopPanel.productForm.priceLabel')}
               required

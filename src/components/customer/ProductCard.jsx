@@ -16,25 +16,50 @@ import s from './ProductCard.module.css';
  *  - qty: number currently in cart
  *  - canOrder: boolean — false when the shop is closed
  *  - onAdd(product), onIncrement(productId), onDecrement(productId)
+ *  - onOpen(product) — tapping the name or photo opens the detail sheet
+ *
+ * The card stays compact so a long menu is quick to scan: the description is
+ * one line here, in full in the sheet.
  */
-function ProductCard({ product, category, qty, canOrder, onAdd, onIncrement, onDecrement }) {
+function ProductCard({ product, category, qty, canOrder, onAdd, onIncrement, onDecrement, onOpen }) {
   const unavailable = !product.inStock;
 
   return (
     <article className={`${s.card} ${unavailable ? s.unavailable : ''}`}>
       <div className={s.info}>
         <VegDot isVeg={product.isVeg} />
-        <h3 className={s.name}>{product.name}</h3>
+        <h3 className={s.name}>
+          {onOpen ? (
+            <button type="button" className={s.nameButton} onClick={() => onOpen(product)} aria-label={t('product.detailsAria', { name: product.name })}>
+              {product.name}
+            </button>
+          ) : (
+            product.name
+          )}
+        </h3>
+        {/* One line only — nothing at all when the shop has written no description. */}
+        {product.description && <p className={s.description}>{product.description}</p>}
         <PriceTag amount={product.price} />
         {unavailable && <p className={s.oos}>{t('common.outOfStock')}</p>}
       </div>
       <div className={s.side}>
-        <SmartImage
-          src={product.image}
-          alt={t('common.imageAlt', { name: product.name })}
-          ratio="4 / 3"
-          fallback={<CategoryIcon category={category} size={28} />}
-        />
+        {onOpen ? (
+          <button type="button" className={s.photoButton} onClick={() => onOpen(product)} tabIndex={-1} aria-hidden="true">
+            <SmartImage
+              src={product.image}
+              alt={t('common.imageAlt', { name: product.name })}
+              ratio="4 / 3"
+              fallback={<CategoryIcon category={category} size={28} />}
+            />
+          </button>
+        ) : (
+          <SmartImage
+            src={product.image}
+            alt={t('common.imageAlt', { name: product.name })}
+            ratio="4 / 3"
+            fallback={<CategoryIcon category={category} size={28} />}
+          />
+        )}
         {!unavailable &&
           (qty > 0 ? (
             <QuantityStepper

@@ -30,3 +30,25 @@
   align-self: flex-start;
   color: var(--color-danger);
 }
+
+.descriptionField {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.counter {
+  margin: 0;
+  text-align: right;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* A tip when the description is left empty — the form still saves. */
+.nudge {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-info-light);
+  color: var(--color-info);
+  font-size: var(--font-size-sm);
+}

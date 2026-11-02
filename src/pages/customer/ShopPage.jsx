@@ -11,6 +11,7 @@ import { getProductsByShop } from '../../services/productService.js';
 import { Badge, Button, EmptyState, ErrorState, Skeleton, SkeletonList } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import ProductCard from '../../components/customer/ProductCard.jsx';
+import ProductDetailSheet from '../../components/customer/ProductDetailSheet.jsx';
 import CartBar from '../../components/customer/CartBar.jsx';
 import { AlertIcon, ClockIcon, LocationIcon, PhoneIcon, SearchIcon } from '../../components/icons/Icons.jsx';
 import { formatClock } from '../../utils/format.js';
@@ -34,6 +35,7 @@ export default function ShopPage() {
   const { getPlace } = useSettings();
   const cart = useCart();
   const [query, setQuery] = useState('');
+  const [detail, setDetail] = useState(null);   // the item whose sheet is open
   const q = useDebounce(query.trim().toLowerCase(), 150);
 
   const { data, loading, error, reload } = useAsync(async () => {
@@ -152,6 +154,7 @@ export default function ShopPage() {
                       onAdd={addProduct}
                       onIncrement={cart.increment}
                       onDecrement={cart.decrement}
+                      onOpen={setDetail}
                     />
                   ))}
                 </section>
@@ -162,6 +165,21 @@ export default function ShopPage() {
       </main>
 
       <CartBar />
+      {detail && (
+        <ProductDetailSheet
+          product={detail}
+          category={shop?.category}
+          qty={qtyFor(detail.id)}
+          canOrder={shop?.isOpen}
+          onClose={() => setDetail(null)}
+          onAdd={(prod) => {
+            addProduct(prod);
+            setDetail(null);
+          }}
+          onIncrement={cart.increment}
+          onDecrement={cart.decrement}
+        />
+      )}
       {conflictSheet}
     </>
   );
