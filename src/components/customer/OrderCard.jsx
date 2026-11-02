@@ -7,14 +7,18 @@ import PriceTag from '../ui/PriceTag.jsx';
 import { ChevronRightIcon, RefreshIcon } from '../icons/Icons.jsx';
 import { formatDateTime } from '../../utils/format.js';
 import { FINISHED_STATUSES } from '../../utils/constants.js';
+import { canCancelOrder } from '../../utils/orderRules.js';
 import s from './OrderCard.module.css';
 
 /**
  * OrderCard — order summary in the customer's order list.
- * Props: order, onReorder(order) (shown for finished orders), reordering (boolean)
+ * Props: order, onReorder(order) (finished orders), reordering,
+ *        onCancel(order) (while the order can still be cancelled), cancelling
  */
-export default function OrderCard({ order, onReorder, reordering = false }) {
+export default function OrderCard({ order, onReorder, reordering = false, onCancel, cancelling = false }) {
   const finished = FINISHED_STATUSES.includes(order.status);
+  // Same rule as the tracking page — cancel without opening the order first.
+  const cancellable = canCancelOrder(order);
   const itemsText = order.items.map((i) => `${i.name} × ${i.qty}`).join(', ');
 
   return (
@@ -42,6 +46,21 @@ export default function OrderCard({ order, onReorder, reordering = false }) {
         <div className={s.actions}>
           <Button variant="secondary" size="sm" block iconLeft={<RefreshIcon size={18} />} loading={reordering} onClick={() => onReorder(order)}>
             {t('orders.reorder')}
+          </Button>
+        </div>
+      )}
+      {cancellable && onCancel && (
+        <div className={s.actions}>
+          <Button
+            variant="ghost"
+            size="sm"
+            block
+            loading={cancelling}
+            className={s.cancel}
+            aria-label={t('orders.cancelAria', { number: order.number })}
+            onClick={() => onCancel(order)}
+          >
+            {t('orders.cancel')}
           </Button>
         </div>
       )}

@@ -7,6 +7,7 @@ import Button from '../ui/Button.jsx';
 import PriceTag from '../ui/PriceTag.jsx';
 import { ChevronRightIcon, ClockIcon, LocationIcon } from '../icons/Icons.jsx';
 import { ORDER_STATUS } from '../../utils/constants.js';
+import { isTooLateToCancel } from '../../utils/orderRules.js';
 import { formatTime, minutesSince } from '../../utils/format.js';
 import s from './ShopOrderCard.module.css';
 
@@ -57,6 +58,8 @@ function ShopOrderCard({ order, fresh = false, onQuickAction, busy = false }) {
           </span>
         </div>
       </Link>
+      {/* Once it is out for delivery the customer's Cancel button is gone — tell the shop. */}
+      {isTooLateToCancel(order) && <p className={s.noCancel}>{t('shopPanel.orderCard.noCancel')}</p>}
       {quickLabel && onQuickAction && (
         <div className={s.actions}>
           <Button variant={order.status === ORDER_STATUS.PENDING ? 'success' : 'primary'} block loading={busy} onClick={() => onQuickAction(order)}>

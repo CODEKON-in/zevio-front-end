@@ -6,6 +6,7 @@ import { fetchRawSettings } from './apiSettings.js';
 import { forgetOrderCounts } from './apiUsers.js';
 import { ServiceError } from '../../utils/errors.js';
 import { ALLOWED_TRANSITIONS, ORDER_STATUS } from '../../utils/constants.js';
+import { canCancelOrder } from '../../utils/orderRules.js';
 import { isSameDay } from '../../utils/format.js';
 
 /* ---------- items (never change after the order is placed → cached) ---------- */
@@ -147,8 +148,16 @@ export async function updateOrderStatus(id, status, options = {}) {
   return getOrderById(id);
 }
 
-export function cancelOrder(id) {
-  return updateOrderStatus(id, ORDER_STATUS.CANCELLED);
+/**
+ * Customer cancel. Reads the order again first, so an order that went out for
+ * delivery a moment ago is refused with NOT_CANCELLABLE rather than cancelled.
+ */
+export async function cancelOrder(id, reason) {
+  const current = await getOrderById(id);
+  if (!canCancelOrder(current)) throw new ServiceError('NOT_CANCELLABLE');
+  await apiPost('/order/cancel/', { order_id: id, ...(reason ? { reject_reason: reason } : {}) });
+  forgetOrderCounts();
+  return getOrderById(id);
 }
 
 /** Assign or reassign a delivery partner (admin). Pass null to unassign. */

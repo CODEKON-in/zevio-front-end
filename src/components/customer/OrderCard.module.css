@@ -61,3 +61,7 @@
 .actions {
   padding: 0 var(--space-4) var(--space-4);
 }
+
+.cancel {
+  color: var(--color-danger);
+}

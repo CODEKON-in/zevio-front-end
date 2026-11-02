@@ -94,3 +94,11 @@
 .actions {
   padding: 0 var(--space-4) var(--space-3);
 }
+
+/* Informational only: the customer can no longer cancel this order. */
+.noCancel {
+  margin: 0;
+  padding: 0 var(--space-3) var(--space-3);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}

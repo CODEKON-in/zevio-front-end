@@ -13,6 +13,7 @@ import BillDetails from '../../components/customer/BillDetails.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
 import { BikeIcon, PhoneIcon, StoreIcon } from '../../components/icons/Icons.jsx';
 import { ACTIVE_STATUSES, ORDER_STATUS } from '../../utils/constants.js';
+import { canCancelOrder, isTooLateToCancel } from '../../utils/orderRules.js';
 import { formatDateTime } from '../../utils/format.js';
 import { telLink } from '../../utils/links.js';
 import p from '../../styles/page.module.css';
@@ -28,6 +29,7 @@ export default function OrderTracking() {
   const o = order.data;
   const partner = useAsync(() => (o?.partnerId ? getPartnerById(o.partnerId) : Promise.resolve(null)), [o?.partnerId]);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   // Off by default with the real API, so testing never moves real orders by itself.
 
   const active = o && ACTIVE_STATUSES.includes(o.status);
@@ -40,15 +42,29 @@ export default function OrderTracking() {
   }, [active, order.reload]);
 
   const doCancel = async () => {
+    // The shop may have handed the order over while this dialog was open, so
+    // check once more before asking the server to cancel it.
+    if (!canCancelOrder(o)) {
+      setConfirmCancel(false);
+      showToast(t('tracking.cancelTooLate'), { type: 'error' });
+      order.reload();
+      return;
+    }
+    setCancelling(true);
+    const before = o;
+    // Show it as cancelled straight away; put the old order back if it fails.
+    order.setData({ ...o, status: ORDER_STATUS.CANCELLED });
+    setConfirmCancel(false);
     try {
-      await cancelOrder(id);
+      const updated = await cancelOrder(id);
+      order.setData(updated);
       showToast(t('tracking.cancelled'), { type: 'success' });
-      setConfirmCancel(false);
-      order.reload();
     } catch (e) {
-      setConfirmCancel(false);
-      showToast(t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
+      order.setData(before);
+      showToast(e.code === 'NOT_CANCELLABLE' ? t('tracking.cancelTooLate') : t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
       order.reload();
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -138,12 +154,20 @@ export default function OrderTracking() {
         )}
       </main>
 
-      {o?.status === ORDER_STATUS.PENDING && (
+      {o && canCancelOrder(o) && (
         <div className={p.footerBar}>
           <div className={p.footerInner}>
-            <Button variant="outline" block onClick={() => setConfirmCancel(true)} className={s.cancelBtn}>
+            <Button variant="outline" block loading={cancelling} onClick={() => setConfirmCancel(true)} className={s.cancelBtn}>
               {t('tracking.cancel')}
             </Button>
+          </div>
+        </div>
+      )}
+      {/* Out for delivery: the button is gone, so say why. */}
+      {o && isTooLateToCancel(o) && (
+        <div className={p.footerBar}>
+          <div className={p.footerInner}>
+            <p className={s.tooLate}>{t('tracking.tooLate')}</p>
           </div>
         </div>
       )}

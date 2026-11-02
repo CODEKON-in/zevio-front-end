@@ -5,13 +5,14 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
-import { getOrders } from '../../services/orderService.js';
+import { cancelOrder, getOrders } from '../../services/orderService.js';
 import { getShopById } from '../../services/shopService.js';
 import { getProductsByShop } from '../../services/productService.js';
 import { Button, ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '../../components/ui/index.js';
 import OrderCard from '../../components/customer/OrderCard.jsx';
 import { OrdersIcon } from '../../components/icons/Icons.jsx';
-import { ACTIVE_STATUSES } from '../../utils/constants.js';
+import { ACTIVE_STATUSES, ORDER_STATUS } from '../../utils/constants.js';
+import { canCancelOrder } from '../../utils/orderRules.js';
 import p from '../../styles/page.module.css';
 
 /** Order history: active orders first, then past orders with Reorder. */
@@ -23,6 +24,8 @@ export default function Orders() {
   const orders = useAsync(() => getOrders({ customerId: user.customerId }), [user.customerId]);
   const [reordering, setReordering] = useState(null);
   const [pendingReorder, setPendingReorder] = useState(null);
+  const [pendingCancel, setPendingCancel] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
 
   const active = orders.data?.filter((o) => ACTIVE_STATUSES.includes(o.status)) || [];
   const past = orders.data?.filter((o) => !ACTIVE_STATUSES.includes(o.status)) || [];
@@ -50,6 +53,32 @@ export default function Orders() {
       showToast(t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
     } finally {
       setReordering(null);
+    }
+  };
+
+  /** Cancel straight from the list, with the same rule the tracking page uses. */
+  const doCancel = async () => {
+    const order = pendingCancel;
+    setPendingCancel(null);
+    if (!order) return;
+    // It may have gone out for delivery while the dialog was open.
+    if (!canCancelOrder(order)) {
+      showToast(t('tracking.cancelTooLate'), { type: 'error' });
+      orders.reload();
+      return;
+    }
+    setCancelling(order.id);
+    orders.setData((list) => list.map((o) => (o.id === order.id ? { ...o, status: ORDER_STATUS.CANCELLED } : o)));
+    try {
+      const updated = await cancelOrder(order.id);
+      orders.setData((list) => list.map((o) => (o.id === updated.id ? updated : o)));
+      showToast(t('tracking.cancelled'), { type: 'success' });
+    } catch (e) {
+      orders.setData((list) => list.map((o) => (o.id === order.id ? order : o)));
+      showToast(e.code === 'NOT_CANCELLABLE' ? t('tracking.cancelTooLate') : t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
+      orders.reload();
+    } finally {
+      setCancelling(null);
     }
   };
 
@@ -84,7 +113,7 @@ export default function Orders() {
               <h2 id="active-orders" className={p.sectionTitle}>{t('orders.active')}</h2>
               <ul className={p.list}>
                 {active.map((o) => (
-                  <OrderCard key={o.id} order={o} />
+                  <OrderCard key={o.id} order={o} onCancel={setPendingCancel} cancelling={cancelling === o.id} />
                 ))}
               </ul>
             </section>
@@ -101,6 +130,17 @@ export default function Orders() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingCancel)}
+        title={t('tracking.cancelTitle')}
+        message={t('tracking.cancelBody')}
+        confirmLabel={t('tracking.cancelConfirm')}
+        cancelLabel={t('tracking.keep')}
+        tone="danger"
+        onClose={() => setPendingCancel(null)}
+        onConfirm={doCancel}
+      />
 
       <ConfirmDialog
         open={Boolean(pendingReorder)}

@@ -17,3 +17,4 @@ export { default as SmartImage } from './SmartImage.jsx';
 export { default as Spinner } from './Spinner.jsx';
 export { default as ConfirmDialog } from './ConfirmDialog.jsx';
 export { default as Drawer } from './Drawer.jsx';
+export { default as InfoNote } from './InfoNote.jsx';

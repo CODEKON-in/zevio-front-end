@@ -9,7 +9,7 @@ import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { getShopById } from '../../services/shopService.js';
 import { placeOrder } from '../../services/orderService.js';
-import { Button, Card, ErrorState, Skeleton } from '../../components/ui/index.js';
+import { Button, Card, ErrorState, InfoNote, Skeleton } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import BillDetails from '../../components/customer/BillDetails.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
@@ -159,6 +159,8 @@ export default function Checkout() {
 
       <div className={p.footerBar}>
         <div className={p.footerInner}>
+          {/* The cancellation rule, before they pay — never hidden away. */}
+          <InfoNote className={s.cancelNote}>{t('checkout.cancelNote')}</InfoNote>
           <Button size="lg" variant="success" block disabled={!canPlace} loading={placing} onClick={submit}>
             {placing ? t('checkout.placing') : t('checkout.placeOrder', { total: formatPrice(total) })}
           </Button>

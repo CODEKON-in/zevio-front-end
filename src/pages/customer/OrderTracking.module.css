@@ -81,3 +81,11 @@
   color: var(--color-danger);
   border-color: var(--color-danger);
 }
+
+/* Shown instead of the Cancel button once the order is out for delivery. */
+.tooLate {
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
