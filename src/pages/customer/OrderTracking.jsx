@@ -88,7 +88,10 @@ export default function OrderTracking() {
                   <p className={p.muted}>{t('tracking.placedAt', { date: formatDateTime(o.createdAt) })}</p>
                   <h1 className={s.shop}>{o.shopName}</h1>
                 </div>
-                <Badge tone={statusTone(o.status)} solid>{t(`orderStatus.${o.status}`)}</Badge>
+                <span className={s.headBadges}>
+                  {o.isGiftOrder && <Badge tone="warning" size="sm">{t('gift.badgeFor', { name: o.customerName })}</Badge>}
+                  <Badge tone={statusTone(o.status)} solid>{t(`orderStatus.${o.status}`)}</Badge>
+                </span>
               </div>
               {o.status === ORDER_STATUS.DELIVERED && <p className={s.delivered}>{t('tracking.deliveredTitle')}</p>}
             </Card>
@@ -163,11 +166,11 @@ export default function OrderTracking() {
           </div>
         </div>
       )}
-      {/* Out for delivery: the button is gone, so say why. */}
-      {o && isTooLateToCancel(o) && (
+      {/* No Cancel button: say why, rather than leaving a gap. */}
+      {o && !canCancelOrder(o) && (isTooLateToCancel(o) || o.isGiftOrder) && (
         <div className={p.footerBar}>
           <div className={p.footerInner}>
-            <p className={s.tooLate}>{t('tracking.tooLate')}</p>
+            <p className={s.tooLate}>{o.isGiftOrder ? t('gift.cannotCancel') : t('tracking.tooLate')}</p>
           </div>
         </div>
       )}

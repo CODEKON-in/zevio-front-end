@@ -14,9 +14,13 @@ export const CANCELLABLE_STATUSES = Object.freeze([
   ORDER_STATUS.PREPARING,
 ]);
 
-/** @param {{status?: string}} order */
+/** @param {{status?: string, isGiftOrder?: boolean}} order */
 export function canCancelOrder(order) {
-  return Boolean(order) && CANCELLABLE_STATUSES.includes(order.status);
+  if (!order) return false;
+  // A gift order is paid by UPI before it is sent, so there is nothing to
+  // give back and nobody at this end to give it to.
+  if (order.isGiftOrder) return false;
+  return CANCELLABLE_STATUSES.includes(order.status);
 }
 
 /**

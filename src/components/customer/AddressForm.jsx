@@ -4,12 +4,17 @@ import { useSettings } from '../../context/SettingsContext.jsx';
 import Input from '../ui/Input.jsx';
 import Select from '../ui/Select.jsx';
 import Button from '../ui/Button.jsx';
+import UseMyLocationButton from '../location/UseMyLocationButton.jsx';
 import { PLACE_NOT_LISTED } from '../../utils/constants.js';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
 import s from './AddressForm.module.css';
 
 /**
  * AddressForm — Name, Phone, Place (service-area dropdown), Street/House, Landmark (required), Notes.
+ *
+ * "Use my location" fills in the village only. The door number, street,
+ * landmark and notes are always typed by the person: GPS cannot know them, and
+ * a guessed address is a failed delivery.
  * Props:
  *  - initial: address object to edit (optional)
  *  - defaults: { name, phone } — prefilled for new addresses
@@ -28,6 +33,7 @@ export default function AddressForm({ initial, defaults = {}, onSubmit, onNotLis
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [outOfArea, setOutOfArea] = useState(false);
 
   const set = (field) => (e) => {
     const value = e.target.value;
@@ -94,6 +100,23 @@ export default function AddressForm({ initial, defaults = {}, onSubmit, onNotLis
         onChange={set('phone')}
         error={errors.phone}
       />
+      <UseMyLocationButton
+        onDetected={({ place }) => {
+          setOutOfArea(false);
+          // Only the village is filled in; everything else stays as typed.
+          setValues((v) => ({ ...v, placeId: settings.servicePlaces.some((pl) => pl.id === place) ? place : v.placeId }));
+          setErrors((er) => ({ ...er, placeId: undefined }));
+        }}
+        onOutOfArea={() => {
+          setOutOfArea(true);
+          setValues((v) => ({ ...v, placeId: '' }));
+        }}
+      />
+      {outOfArea && (
+        <p className={s.outOfArea} role="alert">
+          {t('location.outOfRangeAddress')}
+        </p>
+      )}
       <Select
         label={t('address.placeLabel')}
         required

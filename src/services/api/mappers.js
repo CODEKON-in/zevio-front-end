@@ -229,6 +229,7 @@ export function toOrder(raw, items, shop, places = []) {
     instructions: raw.instructions || '',
     status,
     statusHistory: history.filter((h) => h.at !== null || h.status === status),
+    isGiftOrder: raw.is_gift_order === true,
     partnerId: raw.delivery_partner_id || null,
     rejectReason: raw.reject_reason || null,
     createdAt: raw.created_at,

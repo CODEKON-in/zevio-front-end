@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { SettingsProvider } from './context/SettingsContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
+import { LocationProvider } from './context/LocationContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 import App from './App.jsx';
 import './styles/variables.css';
@@ -15,9 +16,11 @@ createRoot(document.getElementById('root')).render(
       <SettingsProvider>
         <AuthProvider>
           <CartProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
+            <LocationProvider>
+              <ToastProvider>
+                <App />
+              </ToastProvider>
+            </LocationProvider>
           </CartProvider>
         </AuthProvider>
       </SettingsProvider>

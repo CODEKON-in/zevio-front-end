@@ -4,6 +4,7 @@ import { t } from '../../i18n/index.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useCustomer } from '../../context/CustomerContext.jsx';
+import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
@@ -22,6 +23,10 @@ import s from './Checkout.module.css';
 
 /**
  * Checkout: choose UPI or Cash on Delivery, then place the order.
+ *
+ * A customer who is outside the delivery area may still order for someone
+ * inside it. That is a gift order: paid by UPI up front (nobody is there to
+ * take cash), and not cancellable — both stated here, before they pay.
  * UPI is two payments: item amount → shop's UPI ID, delivery fee → platform UPI ID.
  * UPI cannot be verified without a payment gateway, so the customer taps "I have paid".
  */
@@ -32,6 +37,7 @@ export default function Checkout() {
   const { selectedAddress, customer, loading: customerLoading } = useCustomer();
   const { settings } = useSettings();
   const { showToast } = useToast();
+  const { isOutOfRange, placeInServiceArea, location } = useLocationStatus();
 
   const [method, setMethod] = useState(PAYMENT_METHODS.COD);
   const [paidShop, setPaidShop] = useState(false);
@@ -60,7 +66,15 @@ export default function Checkout() {
   const deliveryFee = settings.deliveryFee;
   const total = cart.itemTotal + deliveryFee;
   const upiReady = paidShop && paidFee;
-  const canPlace = shop.data?.isOpen && (method === PAYMENT_METHODS.COD || upiReady);
+
+  // The customer is outside the area, but the order goes to an address inside it.
+  const deliveryInArea = placeInServiceArea(selectedAddress?.placeId);
+  const isGiftOrder = isOutOfRange && deliveryInArea;
+  // Outside the area, sending to an address that is also outside it: nobody can deliver.
+  const bothOutOfArea = isOutOfRange && !deliveryInArea;
+  const payment = isGiftOrder ? PAYMENT_METHODS.UPI : method;
+
+  const canPlace = shop.data?.isOpen && !bothOutOfArea && (payment === PAYMENT_METHODS.COD || upiReady);
 
   const submit = async () => {
     setPlacing(true);
@@ -73,7 +87,8 @@ export default function Checkout() {
           instructions: cart.cart.instructions,
         },
         address: selectedAddress,
-        paymentMethod: method,
+        paymentMethod: payment,
+        isGiftOrder,
       });
       cart.clearCart();
       cart.setInstructions('');
@@ -101,6 +116,25 @@ export default function Checkout() {
           <BillDetails itemTotal={cart.itemTotal} deliveryFee={deliveryFee} />
         </Card>
 
+        {isGiftOrder && (
+          <Card className={s.gift}>
+            <h2 className={s.title}>{t('gift.bannerTitle')}</h2>
+            <p className={p.muted}>
+              {location?.place
+                ? t('gift.bannerBody', { place: location.place })
+                : t('gift.bannerBodyNoPlace')}
+            </p>
+          </Card>
+        )}
+
+        {bothOutOfArea && (
+          <InfoNote tone="warning" className={s.blocked}>{t('gift.bothOutOfRange')}</InfoNote>
+        )}
+
+        {isGiftOrder ? (
+          // Cash on Delivery is not offered at all — and the reason is on screen.
+          <InfoNote tone="warning" className={s.codNote}>{t('gift.codUnavailable')}</InfoNote>
+        ) : (
         <fieldset className={s.methods}>
           <legend className={s.title}>{t('checkout.payWith')}</legend>
           {[
@@ -123,8 +157,9 @@ export default function Checkout() {
             </label>
           ))}
         </fieldset>
+        )}
 
-        {method === PAYMENT_METHODS.UPI && (
+        {payment === PAYMENT_METHODS.UPI && (
           <Card className={s.upi}>
             <h2 className={s.title}>{t('checkout.upiStepsTitle')}</h2>
             <p className={p.muted}>{t('checkout.upiStepsIntro', { platform: settings.platformUpiName })}</p>
@@ -160,7 +195,9 @@ export default function Checkout() {
       <div className={p.footerBar}>
         <div className={p.footerInner}>
           {/* The cancellation rule, before they pay — never hidden away. */}
-          <InfoNote className={s.cancelNote}>{t('checkout.cancelNote')}</InfoNote>
+          <InfoNote tone={isGiftOrder ? 'warning' : 'info'} className={s.cancelNote}>
+            {isGiftOrder ? t('gift.nonReturnableNote') : t('checkout.cancelNote')}
+          </InfoNote>
           <Button size="lg" variant="success" block disabled={!canPlace} loading={placing} onClick={submit}>
             {placing ? t('checkout.placing') : t('checkout.placeOrder', { total: formatPrice(total) })}
           </Button>

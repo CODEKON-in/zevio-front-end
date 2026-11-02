@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { CustomerProvider } from '../../context/CustomerContext.jsx';
+import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { ErrorState } from '../../components/ui/index.js';
 import { ROLES } from '../../utils/constants.js';
 import CustomerLayout from './CustomerLayout.jsx';
@@ -18,6 +19,8 @@ import OrderTracking from './OrderTracking.jsx';
 import Orders from './Orders.jsx';
 import Profile from './Profile.jsx';
 import NotServiceable from './NotServiceable.jsx';
+import LocationGate from '../../components/location/LocationGate.jsx';
+import OutOfRangeNotice from '../../components/location/OutOfRangeNotice.jsx';
 
 /** Scroll to the top whenever the page (path) changes. */
 function ScrollToTop() {
@@ -35,6 +38,7 @@ function ScrollToTop() {
 export default function CustomerApp() {
   const { user } = useAuth();
   const { status, error, reload } = useSettings();
+  const location = useLocationStatus();
   const booted = useRef(false);
 
   if (status === 'ready') booted.current = true;
@@ -42,6 +46,10 @@ export default function CustomerApp() {
   if (!booted.current && status === 'error') return <ErrorState error={error} onRetry={reload} />;
 
   if (user?.role !== ROLES.CUSTOMER) return <SignIn role={ROLES.CUSTOMER} />;
+
+  // Signed in: ask once where they are, and say so plainly if we cannot deliver there.
+  if (location.status === 'unknown') return <LocationGate />;
+  if (location.status === 'out_of_range' && !location.acknowledged) return <OutOfRangeNotice />;
 
   return (
     <CustomerProvider>

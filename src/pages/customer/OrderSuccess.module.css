@@ -55,3 +55,7 @@
   color: var(--color-text-muted);
   font-size: var(--font-size-sm);
 }
+
+.giftBadge {
+  margin: 0 0 var(--space-3);
+}

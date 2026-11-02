@@ -92,7 +92,7 @@ export async function getOrderById(id) {
 }
 
 /** Place an order. Prices and stock are re-read from the API (never trust the cart). */
-export async function placeOrder({ customer, cart, address, paymentMethod }) {
+export async function placeOrder({ customer, cart, address, paymentMethod, isGiftOrder = false }) {
   if (!cart?.items?.length) throw new ServiceError('CART_EMPTY');
   const [shop, products, places, settings, profile] = await Promise.all([
     getShopById(cart.shopId),
@@ -124,6 +124,7 @@ export async function placeOrder({ customer, cart, address, paymentMethod }) {
     directions: address.notes || undefined,
     instructions: cart.instructions || undefined,
     payment_method: paymentMethod,
+    ...(isGiftOrder ? { is_gift_order: true } : {}),
     subtotal,
     delivery_fee: deliveryFee,
     total_amount: subtotal + deliveryFee,

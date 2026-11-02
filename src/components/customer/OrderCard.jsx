@@ -31,7 +31,10 @@ export default function OrderCard({ order, onReorder, reordering = false, onCanc
               {t('orders.orderNo', { number: order.number })} · {formatDateTime(order.createdAt)}
             </p>
           </div>
-          <Badge tone={statusTone(order.status)}>{t(`orderStatus.${order.status}`)}</Badge>
+          <span className={s.badges}>
+            {order.isGiftOrder && <Badge tone="warning" size="sm">{t('gift.badge')}</Badge>}
+            <Badge tone={statusTone(order.status)}>{t(`orderStatus.${order.status}`)}</Badge>
+          </span>
         </div>
         <p className={s.items}>{itemsText}</p>
         <div className={s.bottom}>

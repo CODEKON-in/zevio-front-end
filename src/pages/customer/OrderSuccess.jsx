@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { getOrderById } from '../../services/orderService.js';
-import { Button, ErrorState, Spinner } from '../../components/ui/index.js';
+import { Badge, Button, ErrorState, Spinner } from '../../components/ui/index.js';
 import { CheckIcon } from '../../components/icons/Icons.jsx';
 import s from './OrderSuccess.module.css';
 
@@ -32,6 +32,11 @@ export default function OrderSuccess() {
       {order.data ? (
         <>
           <p className={s.message}>{t('success.message', { number: order.data.number, shop: order.data.shopName })}</p>
+          {order.data.isGiftOrder && (
+            <p className={s.giftBadge}>
+              <Badge tone="warning">{t('gift.badgeFor', { name: order.data.customerName })}</Badge>
+            </p>
+          )}
           <div className={s.actions}>
             <Button as={Link} to={`/orders/${id}`} replace size="lg" block>
               {t('success.track')}
