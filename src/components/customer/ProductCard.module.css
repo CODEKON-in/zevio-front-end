@@ -35,11 +35,19 @@
 
 .control {
   width: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* The stepper fills the 120px column; the remove button, which only appears
+   once − is spent, drops onto its own line underneath rather than squeezing
+   the taps narrower than a thumb. */
+.control > div:first-child {
+  width: 100%;
   justify-content: space-between;
 }
 
-/* stepper fits exactly in 120px */
-.control > span {
+.control > div:first-child > span {
   min-width: 20px;
 }
 
@@ -81,4 +89,11 @@
   border: 0;
   background: none;
   cursor: pointer;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }

@@ -9,9 +9,9 @@ import s from './Badge.module.css';
  *  - icon: ReactNode (optional, shown before text)
  *  - solid: boolean — filled background with white text
  */
-export default function Badge({ tone = 'neutral', size = 'md', icon, solid = false, className, children }) {
+export default function Badge({ tone = 'neutral', size = 'md', icon, solid = false, className, children, ...rest }) {
   return (
-    <span className={cx(s.badge, s[tone], s[size], solid && s.solid, className)}>
+    <span className={cx(s.badge, s[tone], s[size], solid && s.solid, className)} {...rest}>
       {icon}
       {children}
     </span>

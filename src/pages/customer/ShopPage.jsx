@@ -154,6 +154,7 @@ export default function ShopPage() {
                       onAdd={addProduct}
                       onIncrement={cart.increment}
                       onDecrement={cart.decrement}
+                      onRemove={cart.removeItem}
                       onOpen={setDetail}
                     />
                   ))}
@@ -178,6 +179,7 @@ export default function ShopPage() {
           }}
           onIncrement={cart.increment}
           onDecrement={cart.decrement}
+          onRemove={cart.removeItem}
         />
       )}
       {conflictSheet}

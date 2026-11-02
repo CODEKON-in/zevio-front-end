@@ -120,6 +120,12 @@ function clean(columns) {
 
 /* ---------------- products ---------------- */
 
+/** A whole count, never below 1 — whatever the column or the form gave us. */
+export function toMinOrderQty(value) {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) && n > 1 ? n : 1;
+}
+
 export function toProduct(raw) {
   return {
     id: raw.id,
@@ -130,6 +136,8 @@ export function toProduct(raw) {
     price: Number(raw.price) || 0,
     section: raw.section || '',
     isVeg: typeof raw.is_veg === 'boolean' ? raw.is_veg : null,
+    // 1 means "no minimum". Older rows have no column at all, so they read as 1.
+    minOrderQty: toMinOrderQty(raw.min_order_qty),
     inStock: raw.is_available !== false,
     image: raw.image_url || null,
   };
@@ -143,6 +151,7 @@ export function productColumns(product) {
     section: product.section,
   };
   if (typeof product.isVeg === 'boolean') columns.is_veg = product.isVeg;
+  if (product.minOrderQty !== undefined) columns.min_order_qty = toMinOrderQty(product.minOrderQty);
   if (typeof product.inStock === 'boolean') columns.is_available = product.inStock;
   if (isWebUrl(product.image)) columns.image_url = product.image;
   return clean(columns);

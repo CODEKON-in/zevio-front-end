@@ -164,6 +164,8 @@ const en = {
     increase: 'Add one more {name}',
     decrease: 'Remove one {name}',
     quantity: 'Quantity of {name}: {count}',
+    remove: 'Remove {name} from your cart',
+    removeShort: 'Remove',
   },
   toggle: {
     on: 'On',
@@ -295,6 +297,9 @@ const en = {
   product: {
     viewDetails: 'See details',
     detailsAria: 'See details of {name}',
+    minOrder: 'Min {count}',
+    minOrderAria: 'Minimum order {count} units',
+    minOrderLine: 'Minimum order: {count} units',
   },
   shopPage: {
     timings: 'Timings: {open} – {close}',
@@ -340,6 +345,8 @@ const en = {
     clear: 'Clear cart',
     clearConfirmTitle: 'Clear cart?',
     clearConfirmBody: 'All items will be removed from your cart.',
+    minCorrected: 'Quantity for {name} was updated to meet the shop\'s minimum order ({count}).',
+    minCorrectedMany: 'Some quantities were updated to meet the shop\'s minimum order.',
   },
   address: {
     title: 'Delivery address',
@@ -573,6 +580,9 @@ const en = {
       nameLabel: 'Product name',
       namePlaceholder: 'e.g. Masala Dosa',
       priceLabel: 'Price (₹)',
+      minQtyLabel: 'Minimum order quantity',
+      minQtyHint: "Customers must order at least this many. Leave as 1 if there's no minimum.",
+      minQtyError: 'Enter a whole number of 1 or more.',
       sectionLabel: 'Category in your shop',
       sectionHint: 'e.g. Tiffin, Biryani, Cakes. Pick one or type a new one.',
       foodTypeLabel: 'Food type',

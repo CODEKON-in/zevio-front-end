@@ -16,6 +16,20 @@ import s from './ProductForm.module.css';
 /** A description is a short, plain sentence or two — not an essay, not markup. */
 export const DESCRIPTION_MAX = 200;
 
+/**
+ * Reads the minimum-order field the way a shop owner is likely to type it:
+ * blank means "no minimum" (1), a decimal is rounded, and anything that is not
+ * a number at all is rejected rather than quietly turned into 1.
+ */
+export function readMinQty(raw) {
+  const text = String(raw ?? '').trim();
+  if (!text) return 1;
+  const n = Number(text);
+  if (!Number.isFinite(n)) return null;
+  const whole = Math.round(n);
+  return whole >= 1 ? whole : null;
+}
+
 const toFoodType = (isVeg) => (isVeg === false ? 'nonVeg' : 'veg');
 const fromFoodType = (v) => v !== 'nonVeg';
 
@@ -48,6 +62,7 @@ export default function ProductForm() {
       name: product?.name ?? '',
       description: product?.description ?? '',
       price: product ? String(product.price) : '',
+      minOrderQty: String(product?.minOrderQty ?? 1),
       section: product?.section ?? '',
       foodType: product ? toFoodType(product.isVeg) : 'veg',
       inStock: product?.inStock ?? true,
@@ -82,6 +97,8 @@ export default function ProductForm() {
     if (!values.name.trim()) er.name = t('shopPanel.productForm.nameError');
     if (!(price > 0)) er.price = t('shopPanel.productForm.priceError');
     if (!values.section.trim()) er.section = t('shopPanel.productForm.sectionError');
+    const minOrderQty = readMinQty(values.minOrderQty);
+    if (minOrderQty === null) er.minOrderQty = t('shopPanel.productForm.minQtyError');
     setErrors(er);
     if (Object.keys(er).length) {
       e.currentTarget.querySelector('[aria-invalid="true"]')?.focus();
@@ -97,6 +114,7 @@ export default function ProductForm() {
         // Stored as plain text: no markup, no stray line breaks.
         description: toPlainText(values.description, DESCRIPTION_MAX),
         price: Math.round(price * 100) / 100,
+        minOrderQty,
         section: values.section.trim(),
         isVeg: fromFoodType(values.foodType),
         inStock: values.inStock,
@@ -188,6 +206,17 @@ export default function ProductForm() {
               value={values.price}
               onChange={set('price')}
               error={errors.price}
+            />
+            <Input
+              label={t('shopPanel.productForm.minQtyLabel')}
+              hint={t('shopPanel.productForm.minQtyHint')}
+              type="number"
+              inputMode="numeric"
+              min="1"
+              step="1"
+              value={values.minOrderQty}
+              onChange={set('minOrderQty')}
+              error={errors.minOrderQty}
             />
             <Input
               label={t('shopPanel.productForm.sectionLabel')}

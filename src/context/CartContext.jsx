@@ -1,18 +1,27 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { readStorage, writeStorage } from '../utils/storage.js';
 import { MAX_ITEM_QTY, STORAGE_KEYS } from '../utils/constants.js';
+import { lineMin } from '../utils/productRules.js';
 
 const CartContext = createContext(null);
 
 const EMPTY_CART = { shopId: null, shopName: '', items: [], instructions: '', addressId: null };
 
-const toLine = (product) => ({
-  productId: product.id,
-  name: product.name,
-  price: product.price,
-  isVeg: product.isVeg,
-  qty: 1,
-});
+// The minimum travels with the line: the cart screen has no products loaded,
+// only what was saved here, and it still has to keep the floor.
+const toLine = (product) => {
+  const minQty = lineMin(product);
+  return {
+    productId: product.id,
+    name: product.name,
+    price: product.price,
+    isVeg: product.isVeg,
+    minQty,
+    qty: minQty,
+  };
+};
+
+const clampQty = (qty, minQty) => Math.max(minQty || 1, Math.min(qty, MAX_ITEM_QTY));
 
 function cartReducer(state, action) {
   switch (action.type) {
@@ -32,11 +41,19 @@ function cartReducer(state, action) {
       };
     }
     case 'SET_QTY': {
-      const qty = Math.max(0, Math.min(action.qty, MAX_ITEM_QTY));
+      // 0 still means "take it out"; anything above that is held at the minimum.
       const items = state.items
-        .map((i) => (i.productId === action.productId ? { ...i, qty } : i))
+        .map((i) => (i.productId === action.productId ? { ...i, qty: action.qty <= 0 ? 0 : clampQty(action.qty, i.minQty) } : i))
         .filter((i) => i.qty > 0);
       return items.length ? { ...state, items } : { ...EMPTY_CART, addressId: state.addressId };
+    }
+    case 'SET_MINS': {
+      // Fresh minimums from the shop: raise anything that now falls short.
+      const items = state.items.map((i) => {
+        const minQty = action.mins[i.productId] ?? i.minQty ?? 1;
+        return { ...i, minQty, qty: clampQty(i.qty, minQty) };
+      });
+      return { ...state, items };
     }
     case 'REPLACE':
       return cartReducer({ ...EMPTY_CART, addressId: state.addressId }, { type: 'ADD', product: action.product, shop: action.shop });
@@ -47,7 +64,10 @@ function cartReducer(state, action) {
         addressId: state.addressId,
         shopId: action.shop.id,
         shopName: action.shop.name,
-        items: action.lines.map(({ product, qty }) => ({ ...toLine(product), qty: Math.min(qty, MAX_ITEM_QTY) })),
+        items: action.lines.map(({ product, qty }) => {
+          const line = toLine(product);
+          return { ...line, qty: clampQty(qty, line.minQty) };
+        }),
       };
     case 'SET_INSTRUCTIONS':
       return { ...state, instructions: action.value };
@@ -68,13 +88,15 @@ function loadCart() {
 
 /**
  * Provides:
- *  - cart: { shopId, shopName, items:[{productId,name,price,isVeg,qty}], instructions, addressId }
+ *  - cart: { shopId, shopName, items:[{productId,name,price,isVeg,minQty,qty}], instructions, addressId }
  *  - itemCount, itemTotal
  *  - isFromOtherShop(product) → true if adding would break the one-shop rule
  *  - addItem(product, shop) → 'added' | 'conflict'
  *  - replaceWith(product, shop) — clear cart and add (after user confirms)
  *  - loadItems(shop, [{ product, qty }]) — replace the cart (used by Reorder)
  *  - increment(productId), decrement(productId), setQty(productId, qty), removeItem(productId)
+ *  - applyMinimums({ [productId]: minQty }) — re-floor a stale cart
+ *  - getMinQty(productId)
  *  - getQty(productId), setInstructions(text), setAddress(addressId), clearCart()
  */
 export function CartProvider({ children }) {
@@ -116,6 +138,7 @@ export function CartProvider({ children }) {
         if (line) dispatch({ type: 'SET_QTY', productId, qty: line.qty - 1 });
       },
       removeItem: (productId) => dispatch({ type: 'SET_QTY', productId, qty: 0 }),
+      applyMinimums: (mins) => dispatch({ type: 'SET_MINS', mins: mins || {} }),
       setInstructions: (value) => dispatch({ type: 'SET_INSTRUCTIONS', value }),
       setAddress: (addressId) => dispatch({ type: 'SET_ADDRESS', addressId }),
       clearCart: () => dispatch({ type: 'CLEAR' }),
@@ -125,11 +148,13 @@ export function CartProvider({ children }) {
 
   const value = useMemo(() => {
     const qtyById = Object.fromEntries(cart.items.map((i) => [i.productId, i.qty]));
+    const minById = Object.fromEntries(cart.items.map((i) => [i.productId, i.minQty || 1]));
     return {
       cart,
       itemCount: cart.items.reduce((sum, i) => sum + i.qty, 0),
       itemTotal: cart.items.reduce((sum, i) => sum + i.qty * i.price, 0),
       getQty: (productId) => qtyById[productId] || 0,
+      getMinQty: (productId) => minById[productId] || 1,
       ...actions,
     };
   }, [cart, actions]);

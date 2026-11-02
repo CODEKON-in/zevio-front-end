@@ -6,17 +6,19 @@ import QuantityStepper from '../ui/QuantityStepper.jsx';
 import SmartImage from '../ui/SmartImage.jsx';
 import VegDot from '../ui/VegDot.jsx';
 import { CategoryIcon, PlusIcon } from '../icons/Icons.jsx';
+import { lineMin } from '../../utils/productRules.js';
 import s from './ProductDetailSheet.module.css';
 
 /**
  * A closer look at one item: bigger photo and the full description.
  *
  * Opening this is never required — Add on the card still works on its own.
- * Props: product, category, qty, canOrder, onClose, onAdd, onIncrement, onDecrement
+ * Props: product, category, qty, canOrder, onClose, onAdd, onIncrement, onDecrement, onRemove
  */
-export default function ProductDetailSheet({ product, category, qty = 0, canOrder, onClose, onAdd, onIncrement, onDecrement }) {
+export default function ProductDetailSheet({ product, category, qty = 0, canOrder, onClose, onAdd, onIncrement, onDecrement, onRemove }) {
   if (!product) return null;
   const unavailable = !product.inStock;
+  const minQty = lineMin(product);
 
   return (
     <BottomSheet open onClose={onClose} title={product.name}>
@@ -39,14 +41,19 @@ export default function ProductDetailSheet({ product, category, qty = 0, canOrde
         {/* No empty heading when the shop has not written one yet. */}
         {product.description && <p className={s.description}>{product.description}</p>}
 
+        {/* Said in full here, so Add holding 3 units is not a surprise. */}
+        {minQty > 1 && <p className={s.minOrder}>{t('product.minOrderLine', { count: minQty })}</p>}
+
         {unavailable ? (
           <p className={s.oos}>{t('common.outOfStock')}</p>
         ) : qty > 0 ? (
           <QuantityStepper
             value={qty}
+            min={minQty}
             itemName={product.name}
             onIncrement={() => onIncrement(product.id)}
             onDecrement={() => onDecrement(product.id)}
+            onRemove={onRemove && (() => onRemove(product.id))}
           />
         ) : (
           <Button size="lg" block disabled={!canOrder} iconLeft={<PlusIcon size={18} strokeWidth={2.5} />} onClick={() => onAdd(product)}>
