@@ -19,7 +19,7 @@
   margin-bottom: var(--space-3);
   border-radius: 50%;
   background: var(--color-success);
-  color: #fff;
+  color: var(--color-text-inverse);
   box-shadow: 0 0 0 12px var(--color-success-light);
   animation: pop 400ms ease-out;
 }

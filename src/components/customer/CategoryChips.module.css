@@ -34,7 +34,7 @@
 
 .active,
 .active:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-edge);
   background: var(--color-primary);
   color: var(--color-on-primary);
 }

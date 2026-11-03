@@ -31,7 +31,7 @@
 }
 
 .active {
-  color: var(--color-primary);
+  color: var(--color-primary-ink);
 }
 
 .active svg {
@@ -53,7 +53,7 @@
   padding: 0 5px;
   border-radius: var(--radius-pill);
   background: var(--color-danger);
-  color: #fff;
+  color: var(--color-text-inverse);
   font-size: 12px;
   font-weight: var(--font-weight-bold);
   line-height: 20px;

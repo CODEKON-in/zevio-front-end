@@ -24,7 +24,7 @@
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--color-success);
-  color: #fff;
+  color: var(--color-text-inverse);
   text-decoration: none;
   box-shadow: var(--shadow-lg);
   pointer-events: auto;

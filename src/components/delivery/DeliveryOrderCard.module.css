@@ -55,7 +55,7 @@
 }
 
 .pickupIcon {
-  color: var(--color-primary);
+  color: var(--color-primary-ink);
 }
 
 .dropIcon {
@@ -106,7 +106,7 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  color: var(--color-primary);
+  color: var(--color-primary-ink);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
   text-align: right;

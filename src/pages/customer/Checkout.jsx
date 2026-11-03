@@ -8,6 +8,7 @@ import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
+import { useCartMinimums } from '../../hooks/useCartMinimums.js';
 import { getShopById } from '../../services/shopService.js';
 import { placeOrder } from '../../services/orderService.js';
 import { Button, Card, ErrorState, InfoNote, Skeleton } from '../../components/ui/index.js';
@@ -38,6 +39,7 @@ export default function Checkout() {
   const { settings } = useSettings();
   const { showToast } = useToast();
   const { isOutOfRange, placeInServiceArea, location } = useLocationStatus();
+  const { revalidate } = useCartMinimums();
 
   const [method, setMethod] = useState(PAYMENT_METHODS.COD);
   const [paidShop, setPaidShop] = useState(false);
@@ -78,6 +80,15 @@ export default function Checkout() {
 
   const submit = async () => {
     setPlacing(true);
+    // Last word before the order exists. Paying by UPI means leaving the app and
+    // coming back, and a refresh can land someone here without passing the cart,
+    // so the shop's minimums are checked once more against what it says now.
+    // Anything raised stops the order: the new total has to be seen first.
+    const raised = await revalidate();
+    if (raised.length) {
+      setPlacing(false);
+      return;
+    }
     try {
       const order = await placeOrder({
         customer: { id: user.customerId, name: user.name, phone: user.phone },

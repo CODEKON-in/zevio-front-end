@@ -39,7 +39,7 @@
   min-height: 3px;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: var(--color-primary-light);
-  border: 2px solid var(--color-primary);
+  border: 2px solid var(--color-primary-edge);
   border-bottom: 0;
   transition: height var(--transition);
 }

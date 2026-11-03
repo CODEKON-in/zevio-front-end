@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useCart } from '../../context/CartContext.jsx';
@@ -6,9 +6,7 @@ import { useCustomer } from '../../context/CustomerContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { getShopById } from '../../services/shopService.js';
-import { getProductsByShop } from '../../services/productService.js';
-import { useToast } from '../../context/ToastContext.jsx';
-import { lineMin } from '../../utils/productRules.js';
+import { useCartMinimums } from '../../hooks/useCartMinimums.js';
 import { Badge, Button, Card, ConfirmDialog, EmptyState, Input, PriceTag, QuantityStepper, VegDot } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import BillDetails from '../../components/customer/BillDetails.jsx';
@@ -24,47 +22,10 @@ export default function Cart() {
   const cart = useCart();
   const { selectedAddress } = useCustomer();
   const { settings } = useSettings();
-  const { showToast } = useToast();
+  const { revalidate } = useCartMinimums();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [checking, setChecking] = useState(false);
-  const toldAbout = useRef(new Set());
-
-  /**
-   * A cart can sit in this browser for days, and a shop can raise a minimum in
-   * the meantime. So before the cart is trusted — on arrival, and again on the
-   * way to payment — the quantities are checked against what the shop says now
-   * and nudged up where they fall short. Never quietly: each item gets said
-   * once, and the trip to checkout waits so the new total is seen first.
-   */
-  const revalidate = useCallback(async () => {
-    const { shopId, items } = cart.cart;
-    if (!shopId || !items.length) return [];
-    let fresh;
-    try {
-      fresh = await getProductsByShop(shopId);
-    } catch {
-      return []; // Offline is not a reason to block the order.
-    }
-    const mins = {};
-    fresh.forEach((product) => {
-      mins[product.id] = lineMin(product);
-    });
-    const raised = items.filter((item) => mins[item.productId] > item.qty);
-    if (!raised.length) {
-      cart.applyMinimums(mins); // keeps the stored floors in step either way
-      return [];
-    }
-    cart.applyMinimums(mins);
-    const unsaid = raised.filter((item) => !toldAbout.current.has(item.productId));
-    unsaid.forEach((item) => toldAbout.current.add(item.productId));
-    if (unsaid.length === 1) {
-      showToast(t('cart.minCorrected', { name: unsaid[0].name, count: mins[unsaid[0].productId] }), { type: 'info' });
-    } else if (unsaid.length > 1) {
-      showToast(t('cart.minCorrectedMany'), { type: 'info' });
-    }
-    return raised;
-  }, [cart, showToast]);
 
   useEffect(() => {
     revalidate();

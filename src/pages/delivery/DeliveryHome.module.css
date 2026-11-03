@@ -70,8 +70,8 @@
   margin-bottom: var(--space-3);
   padding: var(--space-3);
   border-radius: var(--radius-md);
-  background: #2b2b33;
-  color: #fff;
+  background: var(--color-inverse-surface);
+  color: var(--color-text-inverse);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
 }

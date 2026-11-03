@@ -25,7 +25,7 @@
   min-width: 2.6em;
   font-weight: var(--font-weight-bold);
   font-family: var(--font-en);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-ink);
 }
 
 .itemName {

@@ -19,7 +19,7 @@ export function ToastProvider({ children }) {
   }, []);
 
   const showToast = useCallback(
-    (message, { type = 'info', duration = 3000 } = {}) => {
+    (message, { type = 'info', duration = 2500 } = {}) => {
       const id = nextId++;
       setToasts((list) => [...list.slice(-2), { id, message, type }]);
       timers.current[id] = setTimeout(() => dismiss(id), duration);

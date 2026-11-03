@@ -67,7 +67,7 @@
 }
 
 .tabActive {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-edge);
   background: var(--color-primary);
   color: var(--color-on-primary);
 }
@@ -85,7 +85,7 @@
 
 .countNew {
   background: var(--color-danger);
-  color: #fff;
+  color: var(--color-text-inverse);
 }
 
 .panel {

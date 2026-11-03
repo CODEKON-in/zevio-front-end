@@ -1,41 +1,73 @@
 /*
  * Design tokens — change the brand here and the whole app follows.
- * Colours are chosen for high contrast on low-end, dim phone screens.
+ * No component hardcodes a colour; everything below is referenced by name.
+ *
+ * Theme: mango yellow on white. Yellow is a *fill* colour — it is brilliant
+ * behind dark text and nearly invisible as text itself (#FFC107 on white is
+ * 1.6:1, where readable body text needs 4.5:1). So the brand has three jobs
+ * and three tokens: --color-primary fills, --color-primary-ink writes, and
+ * --color-primary-edge draws lines. Every pairing below was measured; the
+ * ratio is noted wherever it is the reason for the value.
+ *
+ * Checked against WCAG 2.1 AA: 4.5:1 for body text, 3:1 for UI boundaries.
  */
 :root {
-  /* Brand */
-  --color-primary: #5b3cc4;
-  --color-primary-dark: #452b9e;
-  --color-primary-light: #eeeafb;
-  --color-on-primary: #ffffff;
+  /* ---- Brand ------------------------------------------------------------ */
+  --color-primary: #ffc107;          /* mango — fills: buttons, bars, dots    */
+  --color-primary-dark: #e6a800;     /* pressed/hover fill                    */
+  --color-primary-light: #ffe9a8;    /* tinted backgrounds, chips             */
+  --color-primary-contrast: #3d2b00; /* text ON mango — 8.3:1, warm near-black
+                                        (white on mango is 1.6:1 — never use) */
+  --color-primary-ink: #8a6000;      /* brand as TEXT/icon on white — 5.6:1   */
+  --color-primary-edge: #b38600;     /* brand as a LINE on white — 3.3:1      */
 
-  /* Meaning colours */
-  --color-success: #15803d;        /* success + veg */
-  --color-success-light: #dcfce7;
-  --color-danger: #c62828;         /* errors + non-veg */
+  /* Text sitting on a primary-coloured fill. */
+  --color-on-primary: var(--color-primary-contrast);
+
+  /* ---- Meaning ----------------------------------------------------------- */
+  /* Status colours stay green/red/amber whatever the brand is, so an order's
+     state is never a shade of the theme. Text tones are darkened to clear
+     4.5:1; the brighter -accent tones are for fills and dots only. */
+  --color-success: #2e7d32;          /* 5.1:1 on white — veg dot, delivered   */
+  --color-success-light: #e3f3e4;
+  --color-danger: #d32f2f;           /* 5.0:1 — errors, non-veg, cancelled    */
   --color-danger-light: #fdecec;
-  --color-warning: #a45a00;        /* pending (amber, darkened for text contrast) */
-  --color-warning-light: #fff1d6;
-  --color-info: #0b63a3;
-  --color-info-light: #e2f1fc;
+  --color-warning: #bc5600;          /* 4.7:1 as text (spec amber was 3.1:1)  */
+  --color-warning-accent: #ed6c02;   /* the brighter amber, for fills only    */
+  --color-warning-light: #fff1de;
+  --color-info: #0277bd;             /* 4.8:1 as text (spec blue was 3.9:1)   */
+  --color-info-accent: #0288d1;
+  --color-info-light: #e3f2fb;
 
   --color-veg: var(--color-success);
   --color-nonveg: var(--color-danger);
 
-  /* Neutrals */
-  --color-text: #17171c;
-  --color-text-muted: #52525b;
+  /* ---- Neutrals ---------------------------------------------------------- */
+  --color-text: #2b2416;             /* warm near-black, 15.4:1 — never #000  */
+  --color-text-muted: #7a6f57;       /* 5.0:1 on white, 4.9:1 on card         */
   --color-text-inverse: #ffffff;
-  --color-bg: #f4f4f6;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f9f9fb;
-  --color-border: #dcdce2;
-  --color-border-strong: #a9a9b3;
-  --color-placeholder: #e9e6f2;
-  --color-overlay: rgba(10, 10, 20, 0.55);
-  --color-focus: #1d4ed8;
+  --color-bg: #ffffff;               /* page                                   */
+  --color-surface: #fffdf7;          /* cards — a warm white half a step up   */
+  --color-surface-muted: #fdf8ea;
+  --color-border: #f0e6cc;           /* warm hairline                          */
+  --color-border-strong: #d8c79b;
+  --color-placeholder: #f6eed9;
+  --color-overlay: rgba(43, 36, 22, 0.55);
+  --color-inverse-surface: #2b2b33;  /* toasts, offline banner — dark slab    */
+  --color-inverse-surface-danger: #3a1416;
+  --color-on-inverse-success: #6ee7a0;
+  --color-on-inverse-danger: #ff9b9b;
+  --color-on-inverse-info: #9cc9ff;
+  --color-skeleton-base: #f3ecdc;    /* warm, so loading blocks match the page */
+  --color-skeleton-sheen: #fbf6ea;
+  --color-focus: #8a6000;            /* the ink: visible on white and on mango */
+  /* A disabled control is drawn flat rather than dimmed: opacity over mango
+     takes a label to ~2.6:1, and a greyed-out cart total is unreadable
+     outdoors. This pair reads as inert and still clears AA at 5.3:1.        */
+  --color-disabled-surface: #f5eee0;
+  --color-disabled-ink: #6b6145;
 
-  /* Spacing (4px scale) */
+  /* ---- Spacing (4px scale) ----------------------------------------------- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -45,45 +77,75 @@
   --space-7: 32px;
   --space-8: 48px;
 
-  /* Radius */
+  /* ---- Radius ------------------------------------------------------------ */
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
+  --radius-full: var(--radius-pill);
 
-  /* Typography */
-  --font-en: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-size-xs: 13px;
-  --font-size-sm: 14px;
-  --font-size-md: 16px;
-  --font-size-lg: 18px;
-  --font-size-xl: 22px;
-  --font-size-2xl: 28px;
+  /* ---- Typography -------------------------------------------------------- */
+  /* Fredoka sets the brand voice on headings and prices; Inter carries
+     everything that has to stay legible at 13px on a dim screen. */
+  --font-display: 'Fredoka', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-en: var(--font-body);       /* older name, still referenced          */
+
+  /* rem, not px: the whole UI then grows with the phone's font-size setting. */
+  --font-size-xs: 0.8125rem;  /* 13px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-md: 1rem;       /* 16px — body never goes below this            */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.375rem;   /* 22px */
+  --font-size-2xl: 1.75rem;   /* 28px */
+  --fs-xs: var(--font-size-xs);
+  --fs-sm: var(--font-size-sm);
+  --fs-base: var(--font-size-md);
+  --fs-lg: var(--font-size-lg);
+  --fs-xl: var(--font-size-xl);
+  --fs-2xl: var(--font-size-2xl);
+
   --font-weight-normal: 400;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
   --line-height: 1.5;
 
-  /* Sizing */
+  /* ---- Sizing ------------------------------------------------------------ */
   --tap-target: 48px;
   --header-height: 56px;
   --bottom-nav-height: 64px;
   --container-max: 640px;
   --admin-sidebar-width: 240px;
 
-  /* Effects */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.18);
+  /* ---- Effects ----------------------------------------------------------- */
+  /* Shadows are tinted with the brand's brown rather than black, so a card
+     edge reads as warm shade instead of grey smudge on a white page. */
+  --shadow-sm: 0 1px 3px rgba(61, 43, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(61, 43, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(61, 43, 0, 0.16);
   --transition-fast: 150ms ease;
   --transition: 220ms ease;
 
-  /* Layers */
+  /* ---- Layers ------------------------------------------------------------ */
   --z-header: 10;
   --z-bottom-nav: 20;
   --z-sheet: 50;
   --z-modal: 60;
   --z-toast: 70;
-  --z-dev: 45; /* below sheets/modals so it never covers them */
+  --z-dev: 45;
   --z-offline: 90;
+}
+
+/*
+ * Spec names kept as aliases so either spelling works in new code.
+ * Breakpoints (plain CSS has no config file, so they live here as the one
+ * reference every media query is written against):
+ *   mobile   up to 599px   — the primary target, designed from 320px up
+ *   tablet   600–1023px
+ *   desktop  1024px and above — mainly the admin panel
+ */
+:root {
+  --color-text-primary: var(--color-text);
+  --color-text-secondary: var(--color-text-muted);
+  --color-error: var(--color-danger);
 }

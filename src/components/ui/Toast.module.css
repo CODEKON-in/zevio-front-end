@@ -14,24 +14,26 @@
 }
 
 .toast {
+  touch-action: pan-y;
+  will-change: transform;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
-  background: #1f1f26;
+  background: var(--color-inverse-surface);
   color: var(--color-text-inverse);
   box-shadow: var(--shadow-lg);
   pointer-events: auto;
   animation: toast-in 200ms ease-out;
 }
 
-.success svg:first-child { color: #6ee7a0; }
-.error svg:first-child { color: #ff9b9b; }
-.info svg:first-child { color: #9cc9ff; }
+.success svg:first-child { color: var(--color-on-inverse-success); }
+.error svg:first-child { color: var(--color-on-inverse-danger); }
+.info svg:first-child { color: var(--color-on-inverse-info); }
 
 .error {
-  background: #3a1416;
+  background: var(--color-inverse-surface-danger);
 }
 
 .message {

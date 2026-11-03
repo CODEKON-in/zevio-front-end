@@ -18,8 +18,8 @@
   font-size: var(--font-size-xs);
 }
 
-.neutral { background: #ececf0; color: var(--color-text); }
-.primary { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.neutral { background: var(--color-surface-muted); color: var(--color-text); }
+.primary { background: var(--color-primary-light); color: var(--color-primary-ink); }
 .success { background: var(--color-success-light); color: var(--color-success); }
 .danger { background: var(--color-danger-light); color: var(--color-danger); }
 .warning { background: var(--color-warning-light); color: var(--color-warning); }

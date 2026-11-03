@@ -7,12 +7,15 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* The root of the rem scale. Everything sizes from here, so a phone set to
+     larger text grows the whole interface instead of only parts of it. */
+  font-size: 100%;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: var(--font-en);
+  font-family: var(--font-body);
   font-size: var(--font-size-md);
   line-height: var(--line-height);
   color: var(--color-text);
@@ -27,6 +30,15 @@ h3,
 h4,
 p {
   margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.01em;
 }
 
 h1 { font-size: var(--font-size-xl); line-height: 1.3; }
@@ -52,7 +64,7 @@ button {
 }
 
 a {
-  color: var(--color-primary);
+  color: var(--color-primary-ink);
 }
 
 ul,
@@ -93,4 +105,27 @@ ol {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/*
+ * Motion is a preference, not a decoration. When the OS says "reduce", every
+ * animation and transition collapses to something instant — the interface
+ * still works, it just stops moving.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Nothing may push the page sideways — a horizontal scrollbar on a phone is
+   always a bug, and at 320px it is the easiest one to introduce. */
+html,
+body {
+  overflow-x: hidden;
 }

@@ -12,7 +12,7 @@
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--color-success);
-  color: #fff;
+  color: var(--color-text-inverse);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
 }

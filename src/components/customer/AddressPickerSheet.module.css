@@ -28,7 +28,7 @@
 }
 
 .active {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-edge);
   background: var(--color-primary-light);
 }
 
@@ -42,5 +42,5 @@
   height: 28px;
   border-radius: 50%;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-primary);
 }

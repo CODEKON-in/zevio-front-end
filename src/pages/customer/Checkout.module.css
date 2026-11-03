@@ -43,7 +43,7 @@
 
 .methodActive,
 .methodActive:hover {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-edge);
   background: var(--color-primary-light);
 }
 
@@ -57,7 +57,7 @@
   height: 22px;
   margin: 0;
   flex-shrink: 0;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-primary-ink);
 }
 
 .radio:focus-visible {

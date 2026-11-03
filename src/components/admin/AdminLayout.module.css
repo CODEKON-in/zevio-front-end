@@ -39,7 +39,7 @@
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-ink);
   font-size: var(--font-size-xs);
   vertical-align: middle;
 }
@@ -85,7 +85,7 @@
 .active,
 .active:hover {
   background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-ink);
 }
 
 @media (min-width: 900px) {

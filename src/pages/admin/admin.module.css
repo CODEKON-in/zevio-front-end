@@ -46,7 +46,7 @@
 .check input {
   width: 20px;
   height: 20px;
-  accent-color: var(--color-primary);
+  accent-color: var(--color-primary-ink);
 }
 
 .resultsRow {
@@ -74,7 +74,7 @@
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--color-primary-dark);
+  color: var(--color-primary-ink);
   font-family: var(--font-en);
   font-weight: var(--font-weight-bold);
   text-decoration: underline;

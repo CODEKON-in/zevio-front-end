@@ -4,7 +4,7 @@
   flex-shrink: 0;
   border: 2px solid currentColor;
   border-radius: 3px;
-  background: #fff;
+  background: var(--color-text-inverse);
 }
 
 .dot {

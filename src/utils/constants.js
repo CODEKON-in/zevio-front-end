@@ -57,7 +57,10 @@ export const ROLES = Object.freeze({
  * bundle can find it. Treat it as a speed bump against scanners and curious
  * visitors. The real gate is the admin login and the API's own checks.
  */
-export const ADMIN_PATH = (import.meta.env.VITE_ADMIN_PATH || 'admin').replace(/^\/+|\/+$/g, '') || 'admin';
+/* `import.meta.env` is Vite's, so it is undefined when this module is imported
+   by plain node — which scripts/check-rules.mjs does, to check the order rules
+   against the real constants rather than copies of them. */
+export const ADMIN_PATH = (import.meta.env?.VITE_ADMIN_PATH || 'admin').replace(/^\/+|\/+$/g, '') || 'admin';
 export const ADMIN_BASE = `/${ADMIN_PATH}`;
 
 /** Root path of each role's section. */

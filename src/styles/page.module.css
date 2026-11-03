@@ -1,3 +1,17 @@
+/*
+ * Page arrival: opacity only, ~160ms. Sliding or scaling a whole screen is
+ * what makes a cheap phone look broken, so neither is used anywhere.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .page {
+    animation: pageFade 160ms ease-out both;
+  }
+  @keyframes pageFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+}
+
 /* Shared layout styles for customer pages */
 .page {
   width: 100%;

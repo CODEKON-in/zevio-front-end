@@ -48,7 +48,7 @@
 
 .about > svg {
   flex-shrink: 0;
-  color: var(--color-primary);
+  color: var(--color-primary-ink);
 }
 
 .logout {

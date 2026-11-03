@@ -36,7 +36,7 @@
 }
 
 .addressChip:focus-visible {
-  outline-color: #fff;
+  outline-color: var(--color-on-primary);
 }
 
 .pin {
@@ -74,7 +74,7 @@
 }
 
 .cartBtn:focus-visible {
-  outline-color: #fff;
+  outline-color: var(--color-on-primary);
 }
 
 .cartCount {
@@ -106,5 +106,5 @@
 }
 
 .searchBar:focus-visible {
-  outline-color: #fff;
+  outline-color: var(--color-on-primary);
 }

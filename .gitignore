@@ -1,9 +1,6 @@
-node_modules
-dist
+node_modules/
+dist/
+.env
 .env.local
-.env.*.local
-.netlify
-
-# local-only files (not part of the app)
-_to_delete/
-*.rar
+.vercel/
+*.tgz

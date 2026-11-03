@@ -1,0 +1,76 @@
+Add min_order_qty to the products API
+=====================================
+
+Why: the frontend reads `min_order_qty` off every product and writes it when a
+shop owner edits one, but the API's column allowlist silently drops it. So a
+shop can type "minimum 3" into the form, get a success toast, and no customer
+ever sees a minimum. Three small additive changes close it. Nothing existing
+changes behaviour: products without the column keep defaulting to 1.
+
+
+1. Supabase — run once in the SQL editor
+----------------------------------------
+
+    alter table products
+      add column if not exists min_order_qty integer not null default 1
+      check (min_order_qty >= 1 and min_order_qty <= 99);
+
+
+2. product.py — add the column to the editable list
+---------------------------------------------------
+
+    -EDITABLE_COLUMNS = ('name', 'slug', 'description', 'price', 'image_url',
+    -                    'is_available', 'section', 'is_veg')
+    +EDITABLE_COLUMNS = ('name', 'slug', 'description', 'price', 'image_url',
+    +                    'is_available', 'section', 'is_veg', 'min_order_qty')
+
+
+3. main.py — validate it
+------------------------
+
+Add this validator next to the other validators (just above `_product_fields`):
+
+    def min_qty_validator(raw):
+        """A product's minimum sale quantity: a whole number, at least 1, capped
+        so a typo in the shop's form cannot put an unsellable number in front of
+        a customer."""
+        try:
+            n = int(str(raw).strip())
+        except (TypeError, ValueError):
+            return None
+        if n < 1 or n > 99:
+            return None
+        return n
+
+In `_product_fields`, immediately before the `if present('is_veg'):` block:
+
+    +    if present('min_order_qty'):
+    +        value = min_qty_validator(get_field(body, 'min_order_qty'))
+    +        if value is None:
+    +            return None, 'min_order_qty must be a whole number of 1 or more'
+    +        fields['min_order_qty'] = value
+
+In `_update_product`, in the single-attribute branch, before the
+`elif attr in ('is_available', 'is_veg'):` line:
+
+    +        elif attr == 'min_order_qty':
+    +            attr_value = min_qty_validator(attr_value)
+    +            if attr_value is None:
+    +                return response('min_order_qty must be a whole number of 1 or more', code=400)
+
+Without the `elif`, the value would fall through to `sanitize_str` and be
+stored as the string "3", which Postgres rejects on an integer column.
+
+
+Verifying
+---------
+
+    curl -s -H "X-API-Key: $API_KEY" \
+      -d "shop_id=<shop>&slug=veg-puff&name=Veg Puff&price=20&min_order_qty=5" \
+      https://<api-host>/api/product/add/
+
+    curl -s -H "X-API-Key: $API_KEY" \
+      https://<api-host>/api/products/by-shop/<shop> | grep min_order_qty
+
+The second call should show `"min_order_qty": 5`. The customer menu then shows
+a "Min 5" badge and the cart's minus button stops at 5.

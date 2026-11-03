@@ -19,7 +19,7 @@
 }
 
 .btn:active:not(.inactive) {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
 .label {
@@ -59,25 +59,25 @@
 
 .secondary {
   background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  color: var(--color-primary-ink);
 }
 .secondary:hover:not(.inactive) {
-  border-color: var(--color-primary);
+  border-color: var(--color-primary-edge);
 }
 
 .outline {
-  background: var(--color-surface);
-  border-color: var(--color-border-strong);
+  background: var(--color-bg);
+  border-color: var(--color-primary-edge);
   color: var(--color-text);
 }
 .outline:hover:not(.inactive) {
-  border-color: var(--color-primary);
-  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
+  color: var(--color-primary-ink);
 }
 
 .ghost {
   background: transparent;
-  color: var(--color-primary-dark);
+  color: var(--color-primary-ink);
 }
 .ghost:hover:not(.inactive) {
   background: var(--color-primary-light);
@@ -99,7 +99,16 @@
   filter: brightness(0.92);
 }
 
+/* "Not ready yet", not "faded out". Dimming the whole button with opacity took
+   the primary's label from 8.3:1 down to 2.6:1, because the veil lightens the
+   text and the fill together. The disabled button this matters most on is the
+   checkout one, which carries the cart total — the customer has to be able to
+   read ₹370 in sunlight while they go off to add an address. So the inactive
+   state is a flat, inert colour pair at full opacity instead of a veil. */
 .inactive {
-  opacity: 0.55;
+  background: var(--color-disabled-surface);
+  border-color: transparent;
+  color: var(--color-disabled-ink);
+  box-shadow: none;
   cursor: not-allowed;
 }

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import Card from '../ui/Card.jsx';
@@ -15,7 +16,7 @@ import s from './OrderCard.module.css';
  * Props: order, onReorder(order) (finished orders), reordering,
  *        onCancel(order) (while the order can still be cancelled), cancelling
  */
-export default function OrderCard({ order, onReorder, reordering = false, onCancel, cancelling = false }) {
+function OrderCard({ order, onReorder, reordering = false, onCancel, cancelling = false }) {
   const finished = FINISHED_STATUSES.includes(order.status);
   // Same rule as the tracking page — cancel without opening the order first.
   const cancellable = canCancelOrder(order);
@@ -70,3 +71,7 @@ export default function OrderCard({ order, onReorder, reordering = false, onCanc
     </Card>
   );
 }
+
+/* The order list re-renders on every poll of the tracking status, so a card
+   whose own order has not changed should not re-render with it. */
+export default memo(OrderCard);

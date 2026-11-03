@@ -28,6 +28,6 @@
   inset: 0;
   display: grid;
   place-items: center;
-  color: var(--color-primary);
+  color: var(--color-primary-ink);
   opacity: 0.55;
 }
