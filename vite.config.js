@@ -36,6 +36,23 @@ function preloadCustomerSection() {
    */
   function apiProxy(env) {
     const target = (env.ZEVIO_API_URL || 'http://127.0.0.1:2222').replace(/\/+$/, '');
+
+    // Say so at startup rather than letting every call come back as a generic
+    // "something went wrong" in the browser. A missing .env.local is the most
+    // common way this app breaks locally, and it looks exactly like a server
+    // outage from the inside.
+    if (!env.ZEVIO_API_KEY || !env.ZEVIO_API_URL) {
+      const missing = [
+        !env.ZEVIO_API_URL && 'ZEVIO_API_URL',
+        !env.ZEVIO_API_KEY && 'ZEVIO_API_KEY',
+      ].filter(Boolean);
+      console.warn(
+        `\n  Zevio: .env.local is missing ${missing.join(' and ')}.\n` +
+        `  Every /api call will fail and the app will show "Something went wrong".\n` +
+        `  Copy .env.example to .env.local, fill it in, and restart this server.\n`,
+      );
+    }
+
     return {
       '/api': {
         target,
