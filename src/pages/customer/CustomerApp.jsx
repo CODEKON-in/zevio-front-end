@@ -45,7 +45,7 @@ export default function CustomerApp() {
   if (!booted.current && status === 'loading') return <Splash />;
   if (!booted.current && status === 'error') return <ErrorState error={error} onRetry={reload} />;
 
-  if (user?.role !== ROLES.CUSTOMER) return <SignIn role={ROLES.CUSTOMER} />;
+  if (user?.role !== ROLES.CUSTOMER) return <SignIn />;
 
   // Signed in: ask once where they are, and say so plainly if we cannot deliver there.
   if (location.status === 'unknown') return <LocationGate />;

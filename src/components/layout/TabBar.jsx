@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import s from './TabBar.module.css';
 
 /**
- * TabBar — fixed bottom navigation (customer, shop and delivery apps).
+ * TabBar — fixed bottom navigation for the customer app.
  * Props:
  *  - label: accessible name for the <nav>
  *  - items: Array<{ to, label, Icon, end?, badge? }>  badge = number shown on the icon

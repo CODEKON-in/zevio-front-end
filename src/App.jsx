@@ -10,10 +10,8 @@ function lazyRetry(load) {
   return lazy(() => load().catch(() => new Promise((resolve) => setTimeout(resolve, 1500)).then(load)));
 }
 
-// Each role is its own chunk, so customers never download the admin panel.
+// Each section is its own chunk, so customers never download the admin panel.
 const CustomerApp = lazyRetry(() => import('./pages/customer/CustomerApp.jsx'));
-const ShopPanelApp = lazyRetry(() => import('./pages/shop/ShopPanelApp.jsx'));
-const DeliveryApp = lazyRetry(() => import('./pages/delivery/DeliveryApp.jsx'));
 const AdminApp = lazyRetry(() => import('./pages/admin/AdminApp.jsx'));
 
 export default function App() {
@@ -25,10 +23,6 @@ export default function App() {
       <ErrorBoundary resetKey={pathname}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Shop panel handles its own login screen. */}
-            <Route path="/shop-panel/*" element={<ShopPanelApp />} />
-            {/* Delivery app handles its own login screen. */}
-            <Route path="/delivery/*" element={<DeliveryApp />} />
             {/* Admin panel handles its own login screen. Its path comes from
                 VITE_ADMIN_PATH; anything else falls through to the customer app. */}
             <Route path={`${ADMIN_BASE}/*`} element={<AdminApp />} />

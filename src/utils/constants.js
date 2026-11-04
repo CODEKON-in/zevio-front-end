@@ -40,10 +40,13 @@ export const FINISHED_STATUSES = ['DELIVERED', 'CANCELLED'];
 /** A shop's "Reject" is a cancel with a reason. */
 export const isRejected = (order) => order?.status === ORDER_STATUS.CANCELLED && Boolean(order.rejectReason);
 
+/**
+ * The two kinds of person who sign in. Shops and delivery partners are still
+ * real records the admin manages, but they have no app of their own any more,
+ * so they are not roles anyone signs in as.
+ */
 export const ROLES = Object.freeze({
   CUSTOMER: 'customer',
-  SHOP: 'shop',
-  DELIVERY: 'delivery',
   ADMIN: 'admin',
 });
 
@@ -66,8 +69,6 @@ export const ADMIN_BASE = `/${ADMIN_PATH}`;
 /** Root path of each role's section. */
 export const ROLE_HOME = Object.freeze({
   customer: '/',
-  shop: '/shop-panel',
-  delivery: '/delivery',
   admin: ADMIN_BASE,
 });
 
