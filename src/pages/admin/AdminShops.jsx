@@ -1,14 +1,15 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
-import { getShops, setShopActive } from '../../services/shopService.js';
+import { getShops, setShopActive, setShopOpen } from '../../services/shopService.js';
 import { Badge, Button, EmptyState, ErrorState, Input, Select, SkeletonList, Toggle } from '../../components/ui/index.js';
 import DataTable from '../../components/admin/DataTable.jsx';
 import ShopFormDrawer from '../../components/admin/ShopFormDrawer.jsx';
-import { EditIcon, PlusIcon, StoreIcon } from '../../components/icons/Icons.jsx';
-import { SHOP_CATEGORIES, SUBSCRIPTION_STATUS } from '../../utils/constants.js';
+import { BagIcon, EditIcon, PlusIcon, StoreIcon } from '../../components/icons/Icons.jsx';
+import { ADMIN_BASE, SHOP_CATEGORIES, SUBSCRIPTION_STATUS } from '../../utils/constants.js';
 import { daysUntil, formatDate } from '../../utils/format.js';
 import a from './admin.module.css';
 
@@ -22,7 +23,8 @@ export default function AdminShops() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [editing, setEditing] = useState(null); // null | 'new' | shop
-  const [busyId, setBusyId] = useState(null);
+  const [busyId, setBusyId] = useState(null);     // the active (approval) switch
+  const [openBusyId, setOpenBusyId] = useState(null); // the accepting-orders switch
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -44,6 +46,27 @@ export default function AdminShops() {
       showToast(t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
     } finally {
       setBusyId(null);
+    }
+  };
+
+  /**
+   * "Accepting orders right now", which the shop owner used to switch from
+   * their own panel. It is not the same thing as the approval switch below:
+   * an approved shop that has run out of dosa batter for the evening should
+   * stop taking orders without being deactivated and losing its listing.
+   */
+  const toggleOpen = async (shop, isOpen) => {
+    setOpenBusyId(shop.id);
+    try {
+      await setShopOpen(shop.id, isOpen);
+      shops.setData((list) => list.map((x) => (x.id === shop.id ? { ...x, isOpen } : x)));
+      showToast(isOpen ? t('admin.shops.opened', { name: shop.name }) : t('admin.shops.closed', { name: shop.name }), {
+        type: isOpen ? 'success' : 'info',
+      });
+    } catch (e) {
+      showToast(t(`errors.${e.code || 'NETWORK'}`), { type: 'error' });
+    } finally {
+      setOpenBusyId(null);
     }
   };
 
@@ -77,7 +100,16 @@ export default function AdminShops() {
     {
       key: 'open',
       header: t('admin.shops.col.open'),
-      render: (x) => <Badge tone={x.isOpen ? 'success' : 'neutral'} size="sm">{x.isOpen ? t('common.open') : t('common.closed')}</Badge>,
+      render: (x) => (
+        <Toggle
+          label=""
+          ariaLabel={t('admin.shops.openAria', { name: x.name })}
+          checked={x.isOpen}
+          loading={openBusyId === x.id}
+          disabled={!x.isActive}
+          onChange={(v) => toggleOpen(x, v)}
+        />
+      ),
     },
     {
       key: 'sub',
@@ -113,9 +145,21 @@ export default function AdminShops() {
       header: t('admin.common.actions'),
       align: 'right',
       render: (x) => (
-        <Button variant="ghost" size="sm" iconLeft={<EditIcon size={16} />} aria-label={t('admin.shops.editAria', { name: x.name })} onClick={() => setEditing(x)}>
-          {t('admin.common.edit')}
-        </Button>
+        <span className={a.rowActions}>
+          <Button
+            as={Link}
+            to={`${ADMIN_BASE}/shops/${x.id}/products`}
+            variant="ghost"
+            size="sm"
+            iconLeft={<BagIcon size={16} />}
+            aria-label={t('admin.shops.productsAria', { name: x.name })}
+          >
+            {t('admin.shops.products')}
+          </Button>
+          <Button variant="ghost" size="sm" iconLeft={<EditIcon size={16} />} aria-label={t('admin.shops.editAria', { name: x.name })} onClick={() => setEditing(x)}>
+            {t('admin.common.edit')}
+          </Button>
+        </span>
       ),
     },
   ];

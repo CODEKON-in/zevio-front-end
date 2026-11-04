@@ -13,3 +13,21 @@ export function lineMin(product) {
   if (!Number.isFinite(n) || n <= 1) return 1;
   return Math.min(n, MAX_ITEM_QTY);
 }
+
+/** A description is a short, plain sentence or two — not an essay, not markup. */
+export const DESCRIPTION_MAX = 200;
+
+/**
+ * Reads the minimum-order field the way it is likely to be typed: blank means
+ * "no minimum" (1), a decimal is rounded, and anything that is not a number at
+ * all is rejected rather than quietly becoming 1 — silently saving 1 when
+ * someone meant 10 is the mistake nobody notices until an order arrives.
+ */
+export function readMinQty(raw) {
+  const text = String(raw ?? '').trim();
+  if (!text) return 1;
+  const n = Number(text);
+  if (!Number.isFinite(n)) return null;
+  const whole = Math.round(n);
+  return whole >= 1 ? whole : null;
+}

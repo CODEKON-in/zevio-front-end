@@ -6,13 +6,15 @@ import AdminLogin from './AdminLogin.jsx';
 import AdminDashboard from './AdminDashboard.jsx';
 import AdminOrders from './AdminOrders.jsx';
 import AdminShops from './AdminShops.jsx';
+import AdminProducts from './AdminProducts.jsx';
 import AdminPartners from './AdminPartners.jsx';
 import AdminCustomers from './AdminCustomers.jsx';
 import AdminSettings from './AdminSettings.jsx';
 
 /**
  * Admin panel (lazy-loaded, desktop-first with a sidebar; works on phones).
- * Routes, under VITE_ADMIN_PATH: /  /orders  /shops  /partners  /customers  /settings
+ * Routes, under VITE_ADMIN_PATH:
+ *   /  /orders  /shops  /shops/:shopId/products  /partners  /customers  /settings
  */
 export default function AdminApp() {
   const { user } = useAuth();
@@ -24,6 +26,7 @@ export default function AdminApp() {
         <Route index element={<AdminDashboard />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="shops" element={<AdminShops />} />
+        <Route path="shops/:shopId/products" element={<AdminProducts />} />
         <Route path="partners" element={<AdminPartners />} />
         <Route path="customers" element={<AdminCustomers />} />
         <Route path="settings" element={<AdminSettings />} />

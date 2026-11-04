@@ -117,3 +117,12 @@
   margin-bottom: var(--space-3);
   font-size: var(--font-size-md);
 }
+
+/* Two ghost buttons in one table cell. They wrap on a narrow admin window
+   rather than pushing the table into a horizontal scroll. */
+.rowActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
