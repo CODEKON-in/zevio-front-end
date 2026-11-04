@@ -24,7 +24,32 @@ import { ServiceError } from '../utils/errors.js';
  */
 const DEFAULT_CLIENT_ID = '238941476634-p3kk1h8bgaosgkku7rm3omun16o83qt5.apps.googleusercontent.com';
 
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || DEFAULT_CLIENT_ID;
+/**
+ * Every Google client ID looks like <digits>-<hash>.apps.googleusercontent.com.
+ * Checking the shape costs nothing and catches the mistake that actually
+ * happens: something other than the ID ends up in the variable — a file path,
+ * the client *secret*, a quoted string, a stray trailing comment. Sent on to
+ * Google, any of those come back as "Error 401: invalid_client", which reads
+ * like the OAuth client is broken rather than like a typo in a .env file.
+ */
+const CLIENT_ID_SHAPE = /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/;
+
+function pickClientId() {
+  const fromEnv = (import.meta.env?.VITE_GOOGLE_CLIENT_ID || '').trim();
+  if (!fromEnv) return DEFAULT_CLIENT_ID;
+  if (CLIENT_ID_SHAPE.test(fromEnv)) return fromEnv;
+  // Not a client ID. Say so once, name the offending value, and carry on with
+  // the known-good default rather than guaranteeing a failed sign-in.
+  console.error(
+    `[Zevio] VITE_GOOGLE_CLIENT_ID is not a Google client ID: "${fromEnv}".\n` +
+    '  It should look like 1234567890-abc123.apps.googleusercontent.com\n' +
+    '  (Google Cloud Console -> APIs & Services -> Credentials -> your Web application client.)\n' +
+    '  Falling back to the built-in client ID for now.',
+  );
+  return DEFAULT_CLIENT_ID;
+}
+
+export const GOOGLE_CLIENT_ID = pickClientId();
 
 let gisPromise = null;
 
