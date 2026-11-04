@@ -30,7 +30,7 @@ export default function GoogleButton({ onSuccess, busy }) {
   const holder = useRef(null);
   const latest = useRef(onSuccess);
   latest.current = onSuccess;
-  const [state, setState] = useState('loading'); // loading | ready | error | unconfigured
+  const [state, setState] = useState('loading'); // loading | ready | error | unconfigured | origin
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -52,6 +52,14 @@ export default function GoogleButton({ onSuccess, busy }) {
             } catch {
               setState('error');
             }
+          },
+          // Without this, Google rejecting the address the app is served from
+          // shows "Error 400: origin_mismatch" inside its own popup and the app
+          // never hears about it — the button just sits there looking fine.
+          // That is a configuration mistake, not a user one, so say which
+          // address needs adding rather than blaming the person's connection.
+          error_callback: (err) => {
+            setState(err?.type === 'unregistered_origin' ? 'origin' : 'error');
           },
         });
         holder.current.innerHTML = '';
@@ -83,6 +91,11 @@ export default function GoogleButton({ onSuccess, busy }) {
       {state === 'unconfigured' && (
         <div className={s.googleError} role="alert">
           <p>{t('errors.GOOGLE_NOT_CONFIGURED')}</p>
+        </div>
+      )}
+      {state === 'origin' && !busy && (
+        <div className={s.googleError} role="alert">
+          <p>{t('errors.GOOGLE_ORIGIN', { origin: typeof window !== 'undefined' ? window.location.origin : '' })}</p>
         </div>
       )}
       {state === 'error' && !busy && (

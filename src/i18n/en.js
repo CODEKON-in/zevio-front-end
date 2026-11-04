@@ -99,6 +99,7 @@ const en = {
     GOOGLE_REJECTED: 'Google could not confirm that sign-in. Please try again.',
     WRONG_ROLE: 'This Google account is already used for a different kind of account.',
     GOOGLE_NOT_CONFIGURED: 'Google sign-in is not set up for this site (missing client ID). Please contact support.',
+    GOOGLE_ORIGIN: 'Google sign-in is not allowed from {origin}. Add this exact address to "Authorised JavaScript origins" on the OAuth client in Google Cloud Console.',
     ACTIVE_ORDERS: 'You have orders in progress. Please finish or cancel them before deleting your account.',
   },
   categories: {
