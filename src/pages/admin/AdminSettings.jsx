@@ -7,6 +7,7 @@ import { getShops } from '../../services/shopService.js';
 import { Button, Card, ErrorState, Input, SkeletonList } from '../../components/ui/index.js';
 import { PlusIcon, TrashIcon } from '../../components/icons/Icons.jsx';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
+import { PLACE_POINTS } from '../../data/serviceArea.js';
 import a from './admin.module.css';
 import s from './AdminSettings.module.css';
 
@@ -45,6 +46,33 @@ export default function AdminSettings() {
     for (const x of shops.data || []) map[x.placeId] = (map[x.placeId] || 0) + 1;
     return map;
   }, [shops.data]);
+
+  /*
+   * Villages the app knows the coordinates of but that are not in this list
+   * yet. Until they are added, GPS can recognise someone standing in one and
+   * still not fill in their address, because the address form only offers
+   * what is here — and with this list empty, nobody can save an address or
+   * place an order at all.
+   */
+  const missingVillages = Object.entries(PLACE_POINTS)
+    .filter(([id]) => !places.some((p) => p.id === id))
+    .map(([id, p]) => ({ id, name: p.name }));
+  const [addingVillages, setAddingVillages] = useState(false);
+
+  /** Adds the known villages with exactly the ids the GPS code uses, and saves at once. */
+  const addKnownVillages = async () => {
+    const merged = [...places, ...missingVillages];
+    setAddingVillages(true);
+    try {
+      await updateSettings({ servicePlaces: merged.map((p) => ({ id: p.id, name: p.name.trim() })) });
+      setPlaces(merged);
+      showToast(t('admin.settings.villagesAdded', { count: missingVillages.length }), { type: 'success' });
+    } catch (err) {
+      showToast(t(`errors.${err.code || 'NETWORK'}`), { type: 'error' });
+    } finally {
+      setAddingVillages(false);
+    }
+  };
 
   const set = (field) => (e) => {
     const isPhone = field === 'supportPhone' || field === 'supportWhatsApp';
@@ -172,6 +200,20 @@ export default function AdminSettings() {
         <Card className={s.areaCard}>
           <h2 className={a.blockTitle} style={{ marginBottom: 'var(--space-1)' }}>{t('admin.settings.area')}</h2>
           <p className={a.muted}>{t('admin.settings.areaHint')}</p>
+
+          {missingVillages.length > 0 && (
+            <div className={places.length === 0 ? s.villagesUrgent : s.villages}>
+              <p className={s.villagesText}>
+                {places.length === 0
+                  ? t('admin.settings.noVillagesYet')
+                  : t('admin.settings.villagesMissing', { names: missingVillages.map((v) => v.name).join(', ') })}
+              </p>
+              <Button variant={places.length === 0 ? 'primary' : 'secondary'} loading={addingVillages} onClick={addKnownVillages}>
+                {t('admin.settings.addKnownVillages', { count: missingVillages.length })}
+              </Button>
+            </div>
+          )}
+
           <ul className={s.places}>
             {places.map((p, i) => (
               <li key={p.id} className={s.place}>
@@ -182,7 +224,11 @@ export default function AdminSettings() {
                   error={errors[`place-${i}`]}
                   onChange={(e) => setPlaces((list) => list.map((x) => (x.id === p.id ? { ...x, name: e.target.value } : x)))}
                 />
-                <span className={s.count}>{t('admin.settings.shopsInPlace', { count: shopsByPlace[p.id] || 0 })}</span>
+                <span className={s.count}>
+                  {t('admin.settings.shopsInPlace', { count: shopsByPlace[p.id] || 0 })}
+                  {/* Typed by hand, so the id may not be one the GPS code knows. */}
+                  {!PLACE_POINTS[p.id] && <span className={s.noGps}> · {t('admin.settings.noGps')}</span>}
+                </span>
                 <Button variant="ghost" aria-label={t('admin.settings.removePlace', { name: p.name })} iconLeft={<TrashIcon size={18} />} onClick={() => removePlace(p)} className={s.remove} />
               </li>
             ))}

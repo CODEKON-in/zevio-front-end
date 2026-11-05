@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { distanceKm, serviceAreaVerdict } from '../utils/geolocation.js';
+import { deviceKind, distanceKm, serviceAreaVerdict } from '../utils/geolocation.js';
 import { PLACE_POINTS, SERVICE_AREA } from '../data/serviceArea.js';
 import s from './LocationCheck.module.css';
 
@@ -20,14 +20,6 @@ import s from './LocationCheck.module.css';
 const fmtKm = (km) => (km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`);
 const fmtAcc = (m) => (m >= 1000 ? `±${(m / 1000).toFixed(1)} km` : `±${Math.round(m)} m`);
 
-/** The likely kind of device, from what the browser exposes. A hint, not a fact. */
-function deviceHint() {
-  if (typeof navigator === 'undefined') return 'unknown';
-  const ua = navigator.userAgent || '';
-  if (/Android|iPhone|iPad|iPod/i.test(ua)) return 'phone';
-  return 'computer';
-}
-
 function nearestVillage(lat, lng) {
   let best = null;
   for (const [id, p] of Object.entries(PLACE_POINTS)) {
@@ -47,7 +39,7 @@ export default function LocationCheck() {
 
   const secure = typeof window !== 'undefined' && window.isSecureContext;
   const supported = typeof navigator !== 'undefined' && Boolean(navigator.geolocation);
-  const device = deviceHint();
+  const device = deviceKind();
 
   useEffect(() => {
     document.title = 'Location check — Zevio';

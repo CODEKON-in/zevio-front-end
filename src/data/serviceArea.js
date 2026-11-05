@@ -14,13 +14,21 @@
  * Adjusting the area later means editing this file only.
  */
 
-/** The villages Zevio serves, with a point near the centre of each. */
+/**
+ * The villages Zevio serves, with a point near the centre of each.
+ *
+ * The key is the village's id, and it must match the id of the same village in
+ * Admin → Settings exactly: that list is what the address form offers, and GPS
+ * detection can only fill in a village that appears there. Settings has a
+ * one-click "add the delivery villages" button that writes these names and
+ * ids, so they cannot drift apart through a typing slip.
+ */
 export const PLACE_POINTS = Object.freeze({
-  papanasam: { lat: 10.9333, lng: 79.2833 },        // Wikipedia
-  rajagiri: { lat: 10.9205, lng: 79.2450 },         // between Papanasam and Pasupathikoil — approximate
-  pandaravadai: { lat: 10.91333, lng: 79.24194 },   // Wikipedia (the earlier value sat 2.6 km west)
-  pasupathikoil: { lat: 10.8876, lng: 79.1859 },    // Wikipedia
-  ayyampettai: { lat: 10.8962, lng: 79.1943 },      // Wikipedia (the earlier value was 1.7 km off)
+  papanasam: { name: 'Papanasam', lat: 10.9333, lng: 79.2833 },          // Wikipedia
+  rajagiri: { name: 'Rajagiri', lat: 10.9205, lng: 79.2450 },            // between Papanasam and Pasupathikoil — approximate
+  pandaravadai: { name: 'Pandaravadai', lat: 10.91333, lng: 79.24194 },  // Wikipedia (the earlier value sat 2.6 km west)
+  pasupathikoil: { name: 'Pasupathikoil', lat: 10.8876, lng: 79.1859 },  // Wikipedia
+  ayyampettai: { name: 'Ayyampettai', lat: 10.8962, lng: 79.1943 },      // Wikipedia (the earlier value was 1.7 km off)
 });
 
 /**

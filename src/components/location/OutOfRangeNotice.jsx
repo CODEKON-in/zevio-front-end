@@ -2,6 +2,7 @@ import { t } from '../../i18n/index.js';
 import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { Button } from '../ui/index.js';
 import { AlertIcon } from '../icons/Icons.jsx';
+import { deviceKind } from '../../utils/geolocation.js';
 import s from './OutOfRangeNotice.module.css';
 
 /**
@@ -53,7 +54,9 @@ export default function OutOfRangeNotice() {
           </Button>
         </div>
 
-        <p className={s.tip}>{t('location.accuracyTip')}</p>
+        <p className={s.tip}>
+          {deviceKind() === 'computer' ? t('location.accuracyTipComputer') : t('location.accuracyTip')}
+        </p>
       </div>
     </main>
   );

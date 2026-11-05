@@ -140,6 +140,24 @@ export function getAccuratePosition({
   });
 }
 
+/**
+ * 'phone' or 'computer', from what the browser says about itself.
+ *
+ * It matters because the two find themselves completely differently. A phone
+ * has GPS. Almost no laptop or desktop does: it guesses from nearby wifi or,
+ * failing that, from the internet provider — which in a village is routinely
+ * a town tens of kilometres away. The advice for each is different, so the
+ * app needs to know which it is talking to. A hint, not a guarantee.
+ */
+export function deviceKind() {
+  if (typeof navigator === 'undefined') return 'phone';
+  const ua = navigator.userAgent || '';
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(ua)) return 'phone';
+  // iPadOS reports itself as a Mac, but a Mac has no touch screen.
+  if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'phone';
+  return 'computer';
+}
+
 const R_EARTH_KM = 6371;
 const toRad = (deg) => (deg * Math.PI) / 180;
 

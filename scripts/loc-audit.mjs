@@ -59,7 +59,7 @@ console.log('\n--- A. permission refused: the reason must be shown, not swallowe
   check('says why it failed', /switched off|Couldn.t get|too long|cannot share/i.test(body), 'no reason shown');
   check('offers no way to type a village by hand', !/village or town/i.test(body), 'manual entry still offered');
   check('offers a retry', /try again/i.test(body), 'no retry');
-  check('says where a phone finds itself best', /outdoors|near a window/i.test(body), 'no guidance');
+  check('says where a phone finds itself best', /outdoors|near a window|Computers have no GPS/i.test(body), 'no guidance');
   check('a refusal is not recorded as an answer', !/"acknowledged":true/.test(stored || ''), `stored=${stored}`);
   check('no console errors', errs.length === 0, errs.join(' | '));
   await page.screenshot({ path: '/root/preview/shots/fix-a-denied.png' });

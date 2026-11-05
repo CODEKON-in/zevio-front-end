@@ -3,6 +3,7 @@ import { t } from '../../i18n/index.js';
 import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { Button } from '../ui/index.js';
 import { LocationIcon } from '../icons/Icons.jsx';
+import { deviceKind } from '../../utils/geolocation.js';
 import s from './LocationGate.module.css';
 
 /**
@@ -72,7 +73,11 @@ export default function LocationGate() {
           )}
         </div>
 
-        {failed && <p className={s.tip}>{t('location.accuracyTip')}</p>}
+        {failed && (
+          <p className={s.tip}>
+            {deviceKind() === 'computer' ? t('location.accuracyTipComputer') : t('location.accuracyTip')}
+          </p>
+        )}
         <p className={s.note}>{t('location.privacyNote')}</p>
       </div>
     </main>

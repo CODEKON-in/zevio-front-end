@@ -3,7 +3,7 @@ import { t } from '../../i18n/index.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import Button from '../ui/Button.jsx';
 import { LocationIcon } from '../icons/Icons.jsx';
-import { locate } from '../../utils/geolocation.js';
+import { deviceKind, locate } from '../../utils/geolocation.js';
 import s from './UseMyLocationButton.module.css';
 
 /**
@@ -38,7 +38,11 @@ export default function UseMyLocationButton({ onDetected, onOutOfArea }) {
       // a conclusion it cannot support. Someone standing in the village gets
       // told the signal was weak, not that we refuse to deliver to them.
       if (reading.verdict === 'unsure') {
-        setMessage({ tone: 'warn', text: t('location.tooVague', { km: Math.round(reading.accuracy / 100) / 10 }) });
+        const km = Math.round(reading.accuracy / 1000);
+        setMessage({
+          tone: 'warn',
+          text: deviceKind() === 'computer' ? t('location.tooVagueComputer', { km }) : t('location.tooVague', { km }),
+        });
         return;
       }
       if (!reading.inServiceArea) {
