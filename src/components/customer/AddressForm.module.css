@@ -13,3 +13,60 @@
   color: var(--color-warning);
   font-size: var(--font-size-sm);
 }
+
+/* The area: either the chip (detected or chosen) or the button + dropdown. */
+.areaBlock {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.areaLabel {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.areaChip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius-md);
+  background: var(--color-success-light);
+}
+
+.chipText {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-success-ink);
+}
+
+.change {
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-primary-ink);
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+}

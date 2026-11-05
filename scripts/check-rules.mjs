@@ -10,8 +10,8 @@
  */
 import { lineMin } from '../src/utils/productRules.js';
 import { MAX_ITEM_QTY } from '../src/utils/constants.js';
-import { isWithinServiceArea, serviceAreaVerdict } from '../src/utils/geolocation.js';
-import { PLACE_POINTS } from '../src/data/serviceArea.js';
+import { detectArea, distanceKm } from '../src/utils/geolocation.js';
+import { SERVICE_AREAS, areaById } from '../src/data/serviceAreas.js';
 
 let failures = 0;
 const check = (name, actual, expected) => {
@@ -71,25 +71,49 @@ check(
   ['puff'],
 );
 
-console.log('\nService area — a village we name must be a village we serve\n');
+console.log('\nService areas — detectArea()\n');
 
-for (const [name, p] of Object.entries(PLACE_POINTS)) {
-  check(`${name} is inside the delivery area`, isWithinServiceArea(p.lat, p.lng), true);
+const at = (lat, lng, accuracy = 10) => detectArea({ lat, lng, accuracy });
+const statusAndArea = (r) => [r.status, r.area?.id ?? r.nearestArea?.id ?? null];
+
+// 1. Standing at each area's centre finds that area.
+for (const a of SERVICE_AREAS) {
+  check(`centre of ${a.name} → ${a.name}`, statusAndArea(at(a.lat, a.lng)), ['IN_AREA', a.id]);
 }
 
-console.log('\nService area — how sure the reading was has to count\n');
+// 2. Between two areas whose circles overlap, the closer centre wins.
+// Rajagiri and Pandaravadai are 0.86 km apart; a point a quarter of the way
+// from Pandaravadai towards Rajagiri is inside both circles.
+const pan = areaById('pandaravadai');
+const raj = areaById('rajagiri');
+const quarter = { lat: pan.lat + (raj.lat - pan.lat) * 0.25, lng: pan.lng + (raj.lng - pan.lng) * 0.25 };
+check('inside two circles → the closer centre (Pandaravadai)', statusAndArea(at(quarter.lat, quarter.lng)), ['IN_AREA', 'pandaravadai']);
+const threeQ = { lat: pan.lat + (raj.lat - pan.lat) * 0.75, lng: pan.lng + (raj.lng - pan.lng) * 0.75 };
+check('inside two circles → the closer centre (Rajagiri)', statusAndArea(at(threeQ.lat, threeQ.lng)), ['IN_AREA', 'rajagiri']);
 
-const pandaravadai = PLACE_POINTS.pandaravadai;
-check('standing in a served village, sharp fix', serviceAreaVerdict(pandaravadai.lat, pandaravadai.lng, 20), 'in');
-check('standing in a served village, vague fix', serviceAreaVerdict(pandaravadai.lat, pandaravadai.lng, 20000), 'in');
-// The reading that caused the trouble: a network fix that lands on the nearest
-// town. Too vague to be trusted, so it must not turn a customer away.
-check('nearby town, fix too vague to trust', serviceAreaVerdict(10.7870, 79.1378, 5000), 'unsure');
-check('nearby town, fix sharp enough to trust', serviceAreaVerdict(10.7870, 79.1378, 50), 'out');
-check('far away with a sharp fix is genuinely out', serviceAreaVerdict(13.0827, 80.2707, 30), 'out');
-check('far away with a vague fix claims nothing', serviceAreaVerdict(13.0827, 80.2707, 30000), 'unsure');
-check('no accuracy reported is taken at face value', serviceAreaVerdict(13.0827, 80.2707, undefined), 'out');
-check('junk coordinates decide nothing', serviceAreaVerdict(undefined, undefined, 10), 'unsure');
+// 3. Far away → out of range, with the nearest area and how far it is.
+const chennai = at(13.0827, 80.2707);
+check('Chennai → OUT_OF_RANGE', chennai.status, 'OUT_OF_RANGE');
+check('Chennai → nearest area named', chennai.nearestArea?.id, 'papanasam');
+check('Chennai → distance reported (250–280 km)', chennai.distanceKm > 250 && chennai.distanceKm < 280, true);
+
+// 4. A rough fix is not trusted, wherever it lands — even the middle of a village.
+check('rough fix in the middle of Pandaravadai → LOW_ACCURACY', at(pan.lat, pan.lng, 1500).status, 'LOW_ACCURACY');
+check('exactly 1000 m is still trusted', at(pan.lat, pan.lng, 1000).status, 'IN_AREA');
+check('rough fix far away → LOW_ACCURACY, not a confident refusal', at(13.0827, 80.2707, 30000).status, 'LOW_ACCURACY');
+check('junk coordinates → LOW_ACCURACY', detectArea({ lat: NaN, lng: undefined, accuracy: 5 }).status, 'LOW_ACCURACY');
+check('no accuracy reported is taken at face value', detectArea({ lat: pan.lat, lng: pan.lng }).status, 'IN_AREA');
+
+// 5. The road between Pandaravadai and Ayyampettai: with the current radii the
+// middle is in no area's circle. This documents the gap rather than hiding it;
+// it should start failing the day the radii are widened to close it.
+const ayy = areaById('ayyampettai');
+const mid = { lat: (pan.lat + ayy.lat) / 2, lng: (pan.lng + ayy.lng) / 2 };
+check(
+  `KNOWN GAP: midway Pandaravadai–Ayyampettai (${distanceKm(pan, mid).toFixed(1)} km from each) is out of range`,
+  at(mid.lat, mid.lng).status,
+  'OUT_OF_RANGE',
+);
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}\n`);
 process.exit(failures === 0 ? 0 : 1);

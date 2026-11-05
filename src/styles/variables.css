@@ -30,6 +30,7 @@
      4.5:1; the brighter -accent tones are for fills and dots only. */
   --color-success: #2e7d32;          /* 5.1:1 on white — veg dot, delivered   */
   --color-success-light: #e3f3e4;
+  --color-success-ink: #276b2c;      /* 5.6:1 on success-light — green text on a green tint; plain success is 4.45:1 there */
   --color-danger: #d32f2f;           /* 5.0:1 — errors, non-veg, cancelled    */
   --color-danger-light: #fdecec;
   --color-warning: #bc5600;          /* 4.7:1 as text (spec amber was 3.1:1)  */

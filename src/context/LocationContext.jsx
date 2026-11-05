@@ -1,8 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { locate } from '../utils/geolocation.js';
+import { detectArea, getCurrentPosition } from '../utils/geolocation.js';
 import { ServiceError } from '../utils/errors.js';
-import { isWithinServiceArea } from '../utils/geolocation.js';
-import { PLACE_POINTS } from '../data/serviceArea.js';
 import { readStorage, removeStorage, writeStorage } from '../utils/storage.js';
 
 const KEY = 'zevio.location';
@@ -12,11 +10,15 @@ const LocationContext = createContext(null);
  * Where the customer is right now — asked once after sign-in, and again only
  * when they open a location screen. Never watched in the background.
  *
+ * Uses detectArea(), the same rule as "Use my location" in the address form,
+ * so the sign-in check and the address form can never disagree about whether
+ * someone is in range.
+ *
  * status:
  *  'unknown'       nobody has asked yet → the app shows the explanation screen
- *  'in_range'      the phone is inside the delivery area
- *  'out_of_range'  the phone is outside it → they may still order for a friend inside
- *  'unavailable'   refused, no GPS, or too vague to use, and they chose to
+ *  'in_range'      the phone is inside one of our areas
+ *  'out_of_range'  the phone is outside all of them → they may still order for someone inside
+ *  'unavailable'   refused, no GPS, or too rough to use, and they chose to
  *                  carry on without one → the app behaves as it always did
  */
 export function LocationProvider({ children }) {
@@ -33,28 +35,30 @@ export function LocationProvider({ children }) {
   const check = useCallback(async (onProgress) => {
     setChecking(true);
     try {
-      const location = await locate({ onProgress });
-      // A reading too vague to decide is not an answer either. Throwing here
-      // puts the gate into exactly the state a refusal produces: it explains
-      // and offers the village list, rather than asserting something the
-      // reading cannot support.
-      if (location.verdict === 'unsure') {
-        setState((s) => ({ ...s, lastError: 'TOO_VAGUE', lastReading: location }));
+      const reading = await getCurrentPosition({ onProgress });
+      const result = detectArea(reading);
+      // Too rough to trust is not an answer. Throwing puts the gate into the
+      // same state a refusal does: it explains and offers to try again,
+      // rather than asserting something the reading cannot support.
+      if (result.status === 'LOW_ACCURACY') {
+        setState((s) => ({ ...s, lastError: 'TOO_VAGUE', lastReading: reading }));
         throw new ServiceError('TOO_VAGUE');
       }
+      const location = {
+        ...reading,
+        source: 'gps',
+        place: result.status === 'IN_AREA' ? result.area.id : null,
+        nearestArea: result.status === 'OUT_OF_RANGE' ? result.nearestArea?.id || null : null,
+        distanceKm: result.distanceKm,
+      };
       return save({
-        status: location.verdict === 'in' ? 'in_range' : 'out_of_range',
+        status: result.status === 'IN_AREA' ? 'in_range' : 'out_of_range',
         location,
         acknowledged: false,
       });
     } catch (e) {
-      // Refused, unsupported or timed out. This used to save 'unavailable' with
-      // acknowledged: true, which counts as an answer — so the gate unmounted
-      // the moment the browser said no, the person landed on Home having been
-      // told nothing, and the error messages below could never appear at all.
-      // A failed reading is not an answer: the status stays 'unknown', so the
-      // gate remains to explain what happened and offer the village list. Only
-      // an explicit skip() ends the question.
+      // A failed reading is not an answer either: the status stays 'unknown'
+      // so the gate remains and says what happened. Only skip() ends it.
       setState((s) => ({ ...s, lastError: e.code || 'POSITION_UNAVAILABLE' }));
       throw e;
     } finally {
@@ -62,13 +66,7 @@ export function LocationProvider({ children }) {
     }
   }, [save]);
 
-  /* setManualPlace is gone on purpose. Letting someone name their own
-     village meant the app accepted a claim it could not check — anyone
-     outside the area could declare themselves inside it, which made the
-     reading decorative. Where an order actually goes is decided by the
-     delivery address. */
-
-  /** Skip the question for now; the app behaves as it always did. */
+  /** Carry on without a location; the app behaves as it always did. */
   const skip = useCallback(() => save({ status: 'unavailable', location: null, acknowledged: true }), [save]);
 
   /** They have read the out-of-range screen and want to carry on. */
@@ -88,12 +86,12 @@ export function LocationProvider({ children }) {
     reset,
     /** The customer's own phone is outside the delivery area. */
     isOutOfRange: state.status === 'out_of_range',
-    /** Does this delivery place sit inside the area? */
-    placeInServiceArea: (placeId) => {
-      const point = PLACE_POINTS[placeId];
-      // A village in the admin's list is served even if it has no coordinates yet.
-      return point ? isWithinServiceArea(point.lat, point.lng) : Boolean(placeId);
-    },
+    /**
+     * Is a saved address one we deliver to? Every area an address can be
+     * given is one we serve — it can only be picked from the served list — so
+     * this asks whether an area was set at all.
+     */
+    placeInServiceArea: (placeId) => Boolean(placeId),
   }), [state, checking, check, skip, acknowledge, reset]);
 
   return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>;

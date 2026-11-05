@@ -3,6 +3,7 @@ import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { Button } from '../ui/index.js';
 import { AlertIcon } from '../icons/Icons.jsx';
 import { deviceKind } from '../../utils/geolocation.js';
+import { areaById } from '../../data/serviceAreas.js';
 import s from './OutOfRangeNotice.module.css';
 
 /**
@@ -36,8 +37,9 @@ export default function OutOfRangeNotice() {
             {t('location.outOfRange.reading', {
               lat: location.lat?.toFixed(4),
               lng: location.lng?.toFixed(4),
-              km: Math.round(location.distanceKm ?? 0),
-              accuracy: Math.round((location.accuracy ?? 0) / 100) / 10,
+              km: Math.round((location.distanceKm ?? 0) * 10) / 10,
+              area: areaById(location.nearestArea)?.name || t('location.outOfRange.ourArea'),
+              accuracy: Math.round(location.accuracy ?? 0),
             })}
           </p>
         )}
