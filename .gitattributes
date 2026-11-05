@@ -1,0 +1,15 @@
+# Store text with LF line endings in the repository, whatever each person's
+# editor uses. Without this, a commit from a Windows checkout rewrote every
+# line of every file it touched, which buried real changes in the diff and
+# made merges between contributors fail on nothing.
+* text=auto
+
+# Never touch these.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

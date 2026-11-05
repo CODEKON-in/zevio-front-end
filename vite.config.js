@@ -1,6 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 
 /**
  * Most visitors are customers, so start downloading the customer section
@@ -64,7 +63,7 @@ function preloadCustomerSection() {
     };
   }
 
-  export default defineConfig(({ mode }) => {
+  export default defineConfig(async ({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
     /*
      * `npm run dev:phone` serves over HTTPS so the app can be tested on a real
@@ -76,8 +75,11 @@ function preloadCustomerSection() {
      * "Advanced → Proceed" is safe on your own network.
      */
     const phone = mode === 'phone';
+    // Loaded only when asked for, so a production build never depends on a
+    // dev-only package being installed.
+    const phonePlugins = phone ? [(await import('@vitejs/plugin-basic-ssl')).default()] : [];
     return {
-    plugins: [react(), preloadCustomerSection(), ...(phone ? [basicSsl()] : [])],
+    plugins: [react(), preloadCustomerSection(), ...phonePlugins],
     server: { host: true, port: 5173, proxy: apiProxy(env) },
     preview: { proxy: apiProxy(env) },
     build: {
