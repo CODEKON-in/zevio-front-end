@@ -49,6 +49,13 @@
   font-size: var(--font-size-sm);
 }
 
+.manual {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  text-align: left;
+}
+
 .actions {
   display: grid;
   gap: var(--space-2);

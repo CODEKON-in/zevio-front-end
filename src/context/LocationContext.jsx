@@ -39,8 +39,14 @@ export function LocationProvider({ children }) {
         acknowledged: false,
       });
     } catch (e) {
-      // Refused, unsupported or timed out: carry on without it, no nagging.
-      save({ status: 'unavailable', location: null, acknowledged: true });
+      // Refused, unsupported or timed out. This used to save 'unavailable' with
+      // acknowledged: true, which counts as an answer — so the gate unmounted
+      // the moment the browser said no, the person landed on Home having been
+      // told nothing, and the error messages below could never appear at all.
+      // A failed reading is not an answer: the status stays 'unknown', so the
+      // gate remains to explain what happened and offer the village list. Only
+      // an explicit skip() or setManualPlace() ends the question.
+      setState((s) => ({ ...s, lastError: e.code || 'POSITION_UNAVAILABLE' }));
       throw e;
     } finally {
       setChecking(false);

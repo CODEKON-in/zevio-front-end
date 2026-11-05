@@ -86,6 +86,12 @@ export default function AddressForm({ initial, defaults = {}, onSubmit, onNotLis
     { value: PLACE_NOT_LISTED, label: t('address.notListed') },
   ];
 
+  // With no villages set up, the only choice is "not listed", and Place is
+  // required — so no address can be saved and no order can be placed. That is
+  // a setup problem, not something the customer can solve by trying again, so
+  // it says so instead of presenting an empty dropdown that looks broken.
+  const noPlaces = settings.servicePlaces.length === 0;
+
   return (
     <form className={s.form} onSubmit={handleSubmit} noValidate>
       <Input label={t('address.nameLabel')} required value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
@@ -115,6 +121,11 @@ export default function AddressForm({ initial, defaults = {}, onSubmit, onNotLis
       {outOfArea && (
         <p className={s.outOfArea} role="alert">
           {t('location.outOfRangeAddress')}
+        </p>
+      )}
+      {noPlaces && (
+        <p className={s.outOfArea} role="alert">
+          {t('location.noPlacesConfigured')}
         </p>
       )}
       <Select

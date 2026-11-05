@@ -16,6 +16,14 @@ import s from './UseMyLocationButton.module.css';
  *  - onDetected({ place, lat, lng, inServiceArea }) — a village we serve was recognised
  *  - onOutOfArea(reading) — the reading is outside the delivery area
  */
+/** "pandaravadai" → "Pandaravadai": a slug is an id, not something to show. */
+const titleCase = (slug) =>
+  String(slug || '')
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+
 export default function UseMyLocationButton({ onDetected, onOutOfArea }) {
   const { getPlace } = useSettings();
   const [busy, setBusy] = useState(false);
@@ -36,8 +44,20 @@ export default function UseMyLocationButton({ onDetected, onOutOfArea }) {
         setMessage({ tone: 'warn', text: t('location.notDetected') });
         return;
       }
+      // The village came from the app's own map of the corridor; the form can
+      // only offer the villages the admin has set up. When those disagree the
+      // form silently keeps its old value, so claiming success here left the
+      // person looking at "Detected: X" above an empty, required field.
+      const known = getPlace(reading.place);
+      if (!known) {
+        setMessage({
+          tone: 'warn',
+          text: t('location.detectedNotServed', { place: titleCase(reading.place) }),
+        });
+        return;
+      }
       onDetected?.(reading);
-      setMessage({ tone: 'ok', text: t('location.detected', { place: getPlace(reading.place)?.name || reading.place }) });
+      setMessage({ tone: 'ok', text: t('location.detected', { place: known.name }) });
     } catch (e) {
       setMessage({ tone: 'warn', text: t(`location.errors.${e.code || 'POSITION_UNAVAILABLE'}`) });
     } finally {
