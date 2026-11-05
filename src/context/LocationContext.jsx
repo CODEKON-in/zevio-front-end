@@ -16,8 +16,8 @@ const LocationContext = createContext(null);
  *  'unknown'       nobody has asked yet → the app shows the explanation screen
  *  'in_range'      the phone is inside the delivery area
  *  'out_of_range'  the phone is outside it → they may still order for a friend inside
- *  'manual'        they picked their village themselves; treated as inside
- *  'unavailable'   permission refused, no GPS, or it timed out → behave as normal
+ *  'unavailable'   refused, no GPS, or too vague to use, and they chose to
+ *                  carry on without one → the app behaves as it always did
  */
 export function LocationProvider({ children }) {
   const [state, setState] = useState(() => readStorage(KEY, null) || { status: 'unknown', location: null, acknowledged: false });
@@ -30,10 +30,10 @@ export function LocationProvider({ children }) {
   }, []);
 
   /** Read the phone's location once and decide whether we deliver there. */
-  const check = useCallback(async () => {
+  const check = useCallback(async (onProgress) => {
     setChecking(true);
     try {
-      const location = await locate();
+      const location = await locate({ onProgress });
       // A reading too vague to decide is not an answer either. Throwing here
       // puts the gate into exactly the state a refusal produces: it explains
       // and offers the village list, rather than asserting something the
@@ -54,7 +54,7 @@ export function LocationProvider({ children }) {
       // told nothing, and the error messages below could never appear at all.
       // A failed reading is not an answer: the status stays 'unknown', so the
       // gate remains to explain what happened and offer the village list. Only
-      // an explicit skip() or setManualPlace() ends the question.
+      // an explicit skip() ends the question.
       setState((s) => ({ ...s, lastError: e.code || 'POSITION_UNAVAILABLE' }));
       throw e;
     } finally {
@@ -62,15 +62,11 @@ export function LocationProvider({ children }) {
     }
   }, [save]);
 
-  /** "That's not right — let me pick my area." A chosen village is always in range. */
-  const setManualPlace = useCallback((placeId) => {
-    const point = PLACE_POINTS[placeId];
-    return save({
-      status: 'manual',
-      location: { place: placeId, source: 'manual', lat: point?.lat ?? null, lng: point?.lng ?? null, inServiceArea: true },
-      acknowledged: true,
-    });
-  }, [save]);
+  /* setManualPlace is gone on purpose. Letting someone name their own
+     village meant the app accepted a claim it could not check — anyone
+     outside the area could declare themselves inside it, which made the
+     reading decorative. Where an order actually goes is decided by the
+     delivery address. */
 
   /** Skip the question for now; the app behaves as it always did. */
   const skip = useCallback(() => save({ status: 'unavailable', location: null, acknowledged: true }), [save]);
@@ -87,7 +83,6 @@ export function LocationProvider({ children }) {
     ...state,
     checking,
     check,
-    setManualPlace,
     skip,
     acknowledge,
     reset,
@@ -99,7 +94,7 @@ export function LocationProvider({ children }) {
       // A village in the admin's list is served even if it has no coordinates yet.
       return point ? isWithinServiceArea(point.lat, point.lng) : Boolean(placeId);
     },
-  }), [state, checking, check, setManualPlace, skip, acknowledge, reset]);
+  }), [state, checking, check, skip, acknowledge, reset]);
 
   return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>;
 }

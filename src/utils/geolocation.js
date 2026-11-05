@@ -10,7 +10,24 @@ import { ServiceError } from './errors.js';
 /** Browser geolocation errors, as codes the UI can show a message for. */
 const BROWSER_ERRORS = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' };
 
-const OPTIONS = { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 };
+/**
+ * maximumAge is 0 on purpose. It used to be 60000, which lets the browser hand
+ * back a position up to a minute old without consulting the GPS at all — so a
+ * coarse wifi fix taken earlier was returned instantly, and the app decided
+ * the delivery area from it. That is the difference between "roughly this
+ * town" and "this street".
+ *
+ * timeout is 30s rather than 10s because a cheap Android that has not seen the
+ * sky recently needs twenty seconds or more for its first satellite lock, and
+ * the old limit gave up before that happened.
+ */
+const OPTIONS = { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 };
+
+/** Good enough to place someone in a village rather than a district. */
+export const ACCURACY_TARGET_M = 100;
+
+/** How long to keep refining before taking the best reading so far. */
+export const FIX_DEADLINE_MS = 25000;
 
 /**
  * Where the phone is now.
@@ -31,6 +48,94 @@ export function getCurrentPosition(options = {}) {
       }),
       (error) => reject(new ServiceError(BROWSER_ERRORS[error?.code] || 'POSITION_UNAVAILABLE', error?.message)),
       { ...OPTIONS, ...options },
+    );
+  });
+}
+
+/**
+ * The best position the phone can manage, rather than the first one it offers.
+ *
+ * A single getCurrentPosition takes whatever is available the instant it is
+ * asked. On a phone that is usually the network fix — right town, wrong few
+ * kilometres — because the GPS has not reported yet. Accuracy then improves
+ * over the next several seconds as satellites come in, but nobody is
+ * listening by then.
+ *
+ * So this watches instead, keeps the most accurate reading seen, and stops as
+ * soon as one is good enough, or when the deadline passes and the best so far
+ * is all there is. onProgress fires for each improvement so the screen can
+ * show the fix tightening rather than appearing to hang.
+ *
+ * A refusal ends it immediately — waiting out the deadline would tell the
+ * person nothing they are not already being told by the browser.
+ */
+export function getAccuratePosition({
+  targetM = ACCURACY_TARGET_M,
+  deadlineMs = FIX_DEADLINE_MS,
+  onProgress,
+  isGoodEnough,
+} = {}) {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      reject(new ServiceError('UNSUPPORTED'));
+      return;
+    }
+
+    let best = null;
+    let watchId = null;
+    let timer = null;
+    let settled = false;
+
+    const stop = () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      if (timer !== null) clearTimeout(timer);
+      watchId = null;
+      timer = null;
+    };
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      stop();
+      fn(value);
+    };
+
+    timer = setTimeout(() => {
+      // Out of time: the best reading so far beats nothing, and the caller
+      // decides whether it is precise enough to act on.
+      if (best) finish(resolve, best);
+      else finish(reject, new ServiceError('TIMEOUT'));
+    }, deadlineMs);
+
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const reading = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        };
+        if (!best || !(best.accuracy <= reading.accuracy)) {
+          best = reading;
+          onProgress?.(reading);
+        }
+        // Stop as soon as the reading can answer the question being asked.
+        // Chasing ±100 m when a ±6 km fix already puts someone unambiguously
+        // inside the area just makes them wait for nothing.
+        const enough = isGoodEnough
+          ? isGoodEnough(best)
+          : Number.isFinite(best.accuracy) && best.accuracy <= targetM;
+        if (enough) finish(resolve, best);
+      },
+      (error) => {
+        const code = BROWSER_ERRORS[error?.code] || 'POSITION_UNAVAILABLE';
+        // A refusal or missing hardware is final. Anything else is worth
+        // sitting out, because a later reading may still arrive.
+        if (code === 'PERMISSION_DENIED' || code === 'UNSUPPORTED') {
+          finish(reject, new ServiceError(code, error?.message));
+        } else if (!best && code === 'TIMEOUT') {
+          finish(reject, new ServiceError('TIMEOUT', error?.message));
+        }
+      },
+      { ...OPTIONS, timeout: deadlineMs },
     );
   });
 }
@@ -98,8 +203,17 @@ export async function reverseGeocode(lat, lng) {
 }
 
 /** Everything a screen needs after one reading: the point, its village, and whether we deliver there. */
-export async function locate(options) {
-  const position = await getCurrentPosition(options);
+export async function locate(options = {}) {
+  const position = await getAccuratePosition({
+    // The question is "do we deliver here", not "where exactly are you". A
+    // reading that already answers it is good enough; one that cannot is
+    // worth waiting on. So a fix that puts someone inside the area settles it
+    // at once, however loose, and only an ambiguous one keeps refining.
+    isGoodEnough: (reading) =>
+      serviceAreaVerdict(reading.lat, reading.lng, reading.accuracy) === 'in' ||
+      (Number.isFinite(reading.accuracy) && reading.accuracy <= ACCURACY_TARGET_M),
+    ...options,
+  });
   const verdict = serviceAreaVerdict(position.lat, position.lng, position.accuracy);
   // A reading too vague to place inside the area is also too vague to name a
   // village from: picking the nearest one would put a confident label on a

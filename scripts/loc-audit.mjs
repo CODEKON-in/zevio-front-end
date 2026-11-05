@@ -57,29 +57,29 @@ console.log('\n--- A. permission refused: the reason must be shown, not swallowe
   const stored = await page.evaluate(() => localStorage.getItem('zevio.location'));
   check('stays on the gate instead of dropping onto Home', /Where are you/i.test(body), 'gate gone');
   check('says why it failed', /switched off|Couldn.t get|too long|cannot share/i.test(body), 'no reason shown');
-  check('offers the village list it promises', /village or town/i.test(body), 'no picker');
+  check('offers no way to type a village by hand', !/village or town/i.test(body), 'manual entry still offered');
+  check('offers a retry', /try again/i.test(body), 'no retry');
+  check('says where a phone finds itself best', /outdoors|near a window/i.test(body), 'no guidance');
   check('a refusal is not recorded as an answer', !/"acknowledged":true/.test(stored || ''), `stored=${stored}`);
   check('no console errors', errs.length === 0, errs.join(' | '));
   await page.screenshot({ path: '/root/preview/shots/fix-a-denied.png' });
 
-  // the picker must actually get them through
-  await page.selectOption('select', 'papanasam');
-  await page.getByRole('button', { name: /use this area/i }).click();
+  // not a dead end: they can still get into the app
+  await page.getByRole('button', { name: /continue without it/i }).click();
   await page.waitForTimeout(1500);
   const after = await page.textContent('body');
-  check('picking a village gets into the app', /Shops near you|Selvi|Delivering to/i.test(after), 'still stuck');
+  check('continuing without it gets into the app', /Shops near you|Selvi|Delivering to/i.test(after), 'still stuck');
   await ctx.close();
 }
 
-console.log('\n--- B. "Enter my area instead" must lead somewhere you can do that ---');
+console.log('\n--- B. the gate never offers to set a location by hand ---');
 {
   const { ctx, page, errs } = await open({ geo: P.papanasam, grant: false });
-  await page.getByRole('button', { name: /enter my area instead/i }).click();
-  await page.waitForTimeout(800);
   const body = await page.textContent('body');
-  check('reveals the village list', /village or town/i.test(body), 'skipped instead of showing the list');
+  check('no village dropdown on first view', !/village or town/i.test(body), 'manual entry offered');
+  check('no "enter my area" button', !/enter my area/i.test(body), 'manual entry offered');
   check('no console errors', errs.length === 0, errs.join(' | '));
-  await page.screenshot({ path: '/root/preview/shots/fix-b-manual.png' });
+  await page.screenshot({ path: '/root/preview/shots/fix-b-no-manual.png' });
   await ctx.close();
 }
 
@@ -102,7 +102,10 @@ console.log('\n--- D. allowed, far outside (must still warn) ---');
   await page.waitForTimeout(1800);
   const body = await page.textContent('body');
   check('out-of-range notice renders', /outside our delivery area/i.test(body), 'continued silently');
-  check('offers a way on', /browse|order for|wrong/i.test(body), 'dead end');
+  check('offers a way on', /browse|order for/i.test(body), 'dead end');
+  check('offers to re-check rather than override', /check my location again/i.test(body), 'no recheck');
+  check('no hand-picked village override', !/village or town/i.test(body), 'override still offered');
+  check('shows the reading it acted on', /Your phone reported/i.test(body), 'reading hidden');
   check('no console errors', errs.length === 0, errs.join(' | '));
   await ctx.close();
 }
@@ -160,11 +163,12 @@ console.log('\n--- H. weak fix that lands on a nearby town: ask, do not assert -
 {
   const { ctx, page, errs } = await open({ geo: { latitude: 10.7870, longitude: 79.1378, accuracy: 6000 }, grant: true });
   await page.getByRole('button', { name: 'Allow location' }).click();
-  await page.waitForTimeout(1800);
+  // An ambiguous reading is meant to keep refining until the deadline.
+  await page.waitForTimeout(28000);
   const body = await page.textContent('body');
   check('does not assert "outside our delivery area"', !/outside our delivery area/i.test(body), 'asserted from a vague reading');
   check('says the reading was not precise enough', /precisely enough|could only place/i.test(body), 'no explanation');
-  check('offers the village list', /village or town/i.test(body), 'no way through');
+  check('offers a retry rather than a village list', /try again/i.test(body) && !/village or town/i.test(body), 'manual entry offered');
   check('no console errors', errs.length === 0, errs.join(' | '));
   await page.screenshot({ path: '/root/preview/shots/fix-h-town-weak-fix.png' });
   await ctx.close();

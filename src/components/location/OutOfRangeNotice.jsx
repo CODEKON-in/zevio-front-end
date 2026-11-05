@@ -1,22 +1,22 @@
-import { useState } from 'react';
 import { t } from '../../i18n/index.js';
 import { useLocationStatus } from '../../context/LocationContext.jsx';
-import { useSettings } from '../../context/SettingsContext.jsx';
-import { Button, Select } from '../ui/index.js';
+import { Button } from '../ui/index.js';
 import { AlertIcon } from '../icons/Icons.jsx';
 import s from './OutOfRangeNotice.module.css';
 
 /**
- * Shown full-screen when the phone says the customer is outside the delivery
- * area. Unmissable on purpose — but never a dead end: they can browse, order
- * for someone who is inside the area, or say the reading is wrong and pick
- * their village by hand (GPS is often poor indoors).
+ * Shown full-screen when the phone places the customer outside the delivery
+ * area. Unmissable on purpose, but not a dead end: they can browse, and they
+ * can order for someone who does live inside the area.
+ *
+ * There is no "pick my village instead" here. It let anyone declare
+ * themselves inside the area, which is not something the app can check, and
+ * it made the reading pointless. If the reading is wrong, the honest remedy
+ * is to take another one outdoors — so the screen shows what the phone
+ * actually reported and offers to try again.
  */
 export default function OutOfRangeNotice() {
-  const { acknowledge, setManualPlace, location } = useLocationStatus();
-  const { settings } = useSettings();
-  const [picking, setPicking] = useState(false);
-  const [placeId, setPlaceId] = useState('');
+  const { acknowledge, check, checking, location } = useLocationStatus();
 
   return (
     <main className={s.page}>
@@ -41,37 +41,19 @@ export default function OutOfRangeNotice() {
           </p>
         )}
 
-        {!picking ? (
-          <>
-            <div className={s.actions}>
-              <Button size="lg" block onClick={acknowledge}>
-                {t('location.outOfRange.sendToFriend')}
-              </Button>
-              <Button variant="outline" size="lg" block onClick={acknowledge}>
-                {t('location.outOfRange.browse')}
-              </Button>
-            </div>
-            <button type="button" className={s.link} onClick={() => setPicking(true)}>
-              {t('location.outOfRange.wrong')}
-            </button>
-          </>
-        ) : (
-          <div className={s.manual}>
-            <Select
-              label={t('location.outOfRange.pickPlace')}
-              placeholder={t('address.placePlaceholder')}
-              value={placeId}
-              onChange={(e) => setPlaceId(e.target.value)}
-              options={settings.servicePlaces.map((p) => ({ value: p.id, label: p.name }))}
-            />
-            <Button size="lg" block disabled={!placeId} onClick={() => setManualPlace(placeId)}>
-              {t('location.outOfRange.usePlace')}
-            </Button>
-            <button type="button" className={s.link} onClick={() => setPicking(false)}>
-              {t('common.back')}
-            </button>
-          </div>
-        )}
+        <div className={s.actions}>
+          <Button size="lg" block onClick={acknowledge}>
+            {t('location.outOfRange.sendToFriend')}
+          </Button>
+          <Button variant="outline" size="lg" block onClick={acknowledge}>
+            {t('location.outOfRange.browse')}
+          </Button>
+          <Button variant="ghost" size="lg" block loading={checking} onClick={() => check().catch(() => {})}>
+            {t('location.outOfRange.recheck')}
+          </Button>
+        </div>
+
+        <p className={s.tip}>{t('location.accuracyTip')}</p>
       </div>
     </main>
   );
