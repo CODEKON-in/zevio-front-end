@@ -16,22 +16,68 @@
 
 /** The villages Zevio serves, with a point near the centre of each. */
 export const PLACE_POINTS = Object.freeze({
-  papanasam: { lat: 10.9333, lng: 79.2833 },      // Wikipedia
-  rajagiri: { lat: 10.9205, lng: 79.2450 },       // between Papanasam and Pasupathikoil — approximate
-  pandaravadai: { lat: 10.9120, lng: 79.2180 },   // approximate
-  pasupathikoil: { lat: 10.8876, lng: 79.1859 },  // Wikipedia
-  ayyampettai: { lat: 10.9014, lng: 79.1798 },    // latitude.to
+  papanasam: { lat: 10.9333, lng: 79.2833 },        // Wikipedia
+  rajagiri: { lat: 10.9205, lng: 79.2450 },         // between Papanasam and Pasupathikoil — approximate
+  pandaravadai: { lat: 10.91333, lng: 79.24194 },   // Wikipedia (the earlier value sat 2.6 km west)
+  pasupathikoil: { lat: 10.8876, lng: 79.1859 },    // Wikipedia
+  ayyampettai: { lat: 10.8962, lng: 79.1943 },      // Wikipedia (the earlier value was 1.7 km off)
 });
 
-/** Centre of the corridor (midway between Papanasam and Ayyampettai). */
-export const SERVICE_AREA = Object.freeze({
-  center: { lat: 10.9174, lng: 79.2316 },
-  /**
-   * 8 km covers every village above (the furthest sits about 6 km from the
-   * centre) plus room for ordinary GPS error on a cheap phone.
-   */
-  radiusKm: 8,
-});
+/**
+ * The delivery area, worked out from the villages above rather than typed in
+ * beside them.
+ *
+ * The two used to be written out separately, which let them drift apart: a
+ * village could be near enough to be recognised by name and still fall
+ * outside the circle, so the app could greet someone by their village and
+ * refuse to deliver to it in the same breath. Deriving the area makes that
+ * impossible — every village served is inside it by construction, and adding
+ * one to the list above widens the area to cover it.
+ */
+function deriveServiceArea(points, bufferKm) {
+  const list = Object.values(points);
+  const lats = list.map((p) => p.lat);
+  const lngs = list.map((p) => p.lng);
+  const center = {
+    lat: (Math.min(...lats) + Math.max(...lats)) / 2,
+    lng: (Math.min(...lngs) + Math.max(...lngs)) / 2,
+  };
+  // Rough km per degree at this latitude, used only to size the circle; the
+  // real distance check is haversine.
+  const KM_PER_DEG_LAT = 110.57;
+  const KM_PER_DEG_LNG = 111.32 * Math.cos((center.lat * Math.PI) / 180);
+  const furthest = Math.max(
+    ...list.map((p) => Math.hypot((p.lat - center.lat) * KM_PER_DEG_LAT, (p.lng - center.lng) * KM_PER_DEG_LNG)),
+  );
+  return Object.freeze({
+    center: Object.freeze(center),
+    radiusKm: Math.round((furthest + bufferKm) * 10) / 10,
+  });
+}
+
+/**
+ * How far past the furthest village the area reaches. The hamlets and fields
+ * around each village are served too, and a customer wrongly told "we don't
+ * deliver to you" is a lost order. 2 km still leaves Thanjavur town (17 km)
+ * and Kumbakonam (17 km) well outside, so the area cannot quietly swallow a
+ * neighbouring town.
+ */
+export const SERVICE_AREA_BUFFER_KM = 2;
+
+export const SERVICE_AREA = deriveServiceArea(PLACE_POINTS, SERVICE_AREA_BUFFER_KM);
+
+/**
+ * How vague a reading may be and still settle the question.
+ *
+ * A phone reports how sure it is, in metres. GPS outdoors is good to tens of
+ * metres; a laptop, or a phone indoors with the radio off, falls back to wifi
+ * and network lookup and can be wrong by kilometres — in a village it often
+ * lands on the nearest town, or on the operator's gateway city. Telling
+ * someone standing in Pandaravadai that they are outside the delivery area,
+ * on the strength of a reading that vague, is simply wrong. Past this limit
+ * the app says it could not be sure and asks, rather than deciding.
+ */
+export const ACCURACY_LIMIT_M = 2000;
 
 /**
  * How close a GPS reading must be to a village before the app names it.

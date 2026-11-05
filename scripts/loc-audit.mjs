@@ -141,6 +141,35 @@ console.log('\n--- F. address form, village NOT in the admin list ---');
   await ctx.close();
 }
 
+console.log('\n--- G. standing in Pandaravadai with a weak fix (the reported bug) ---');
+{
+  // A real phone indoors in the village: the position is right, but the phone
+  // only knows it to within several kilometres.
+  const { ctx, page, errs } = await open({ geo: { ...P.pandaravadai, accuracy: 6000 }, grant: true });
+  await page.getByRole('button', { name: 'Allow location' }).click();
+  await page.waitForTimeout(1800);
+  const body = await page.textContent('body');
+  check('is NOT told they are outside the area', !/outside our delivery area/i.test(body), 'still turned away');
+  check('gets into the app', /Shops near you|Selvi|Delivering to/i.test(body), 'blocked');
+  check('no console errors', errs.length === 0, errs.join(' | '));
+  await page.screenshot({ path: '/root/preview/shots/fix-g-village-weak-fix.png' });
+  await ctx.close();
+}
+
+console.log('\n--- H. weak fix that lands on a nearby town: ask, do not assert ---');
+{
+  const { ctx, page, errs } = await open({ geo: { latitude: 10.7870, longitude: 79.1378, accuracy: 6000 }, grant: true });
+  await page.getByRole('button', { name: 'Allow location' }).click();
+  await page.waitForTimeout(1800);
+  const body = await page.textContent('body');
+  check('does not assert "outside our delivery area"', !/outside our delivery area/i.test(body), 'asserted from a vague reading');
+  check('says the reading was not precise enough', /precisely enough|could only place/i.test(body), 'no explanation');
+  check('offers the village list', /village or town/i.test(body), 'no way through');
+  check('no console errors', errs.length === 0, errs.join(' | '));
+  await page.screenshot({ path: '/root/preview/shots/fix-h-town-weak-fix.png' });
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fails === 0 ? 'All location checks passed.' : `${fails} check(s) failed.`}`);
 process.exit(fails === 0 ? 0 : 1);

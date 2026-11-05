@@ -79,3 +79,15 @@
   gap: var(--space-3);
   text-align: left;
 }
+
+/* The raw reading: present when someone needs it, quiet when they don't. */
+.reading {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}

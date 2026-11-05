@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { locate } from '../utils/geolocation.js';
+import { ServiceError } from '../utils/errors.js';
 import { isWithinServiceArea } from '../utils/geolocation.js';
 import { PLACE_POINTS } from '../data/serviceArea.js';
 import { readStorage, removeStorage, writeStorage } from '../utils/storage.js';
@@ -33,8 +34,16 @@ export function LocationProvider({ children }) {
     setChecking(true);
     try {
       const location = await locate();
+      // A reading too vague to decide is not an answer either. Throwing here
+      // puts the gate into exactly the state a refusal produces: it explains
+      // and offers the village list, rather than asserting something the
+      // reading cannot support.
+      if (location.verdict === 'unsure') {
+        setState((s) => ({ ...s, lastError: 'TOO_VAGUE', lastReading: location }));
+        throw new ServiceError('TOO_VAGUE');
+      }
       return save({
-        status: location.inServiceArea ? 'in_range' : 'out_of_range',
+        status: location.verdict === 'in' ? 'in_range' : 'out_of_range',
         location,
         acknowledged: false,
       });

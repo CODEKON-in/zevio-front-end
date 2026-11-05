@@ -34,6 +34,13 @@ export default function UseMyLocationButton({ onDetected, onOutOfArea }) {
     setMessage(null);
     try {
       const reading = await locate();
+      // Too vague to decide: say the reading was poor rather than announcing
+      // a conclusion it cannot support. Someone standing in the village gets
+      // told the signal was weak, not that we refuse to deliver to them.
+      if (reading.verdict === 'unsure') {
+        setMessage({ tone: 'warn', text: t('location.tooVague', { km: Math.round(reading.accuracy / 100) / 10 }) });
+        return;
+      }
       if (!reading.inServiceArea) {
         setMessage({ tone: 'warn', text: t('location.outOfRangeAddress') });
         onOutOfArea?.(reading);

@@ -10,6 +10,8 @@
  */
 import { lineMin } from '../src/utils/productRules.js';
 import { MAX_ITEM_QTY } from '../src/utils/constants.js';
+import { isWithinServiceArea, serviceAreaVerdict } from '../src/utils/geolocation.js';
+import { PLACE_POINTS } from '../src/data/serviceArea.js';
 
 let failures = 0;
 const check = (name, actual, expected) => {
@@ -68,6 +70,26 @@ check(
   corrected.filter((c, n) => c.qty > saved[n].qty).map((c) => c.productId),
   ['puff'],
 );
+
+console.log('\nService area — a village we name must be a village we serve\n');
+
+for (const [name, p] of Object.entries(PLACE_POINTS)) {
+  check(`${name} is inside the delivery area`, isWithinServiceArea(p.lat, p.lng), true);
+}
+
+console.log('\nService area — how sure the reading was has to count\n');
+
+const pandaravadai = PLACE_POINTS.pandaravadai;
+check('standing in a served village, sharp fix', serviceAreaVerdict(pandaravadai.lat, pandaravadai.lng, 20), 'in');
+check('standing in a served village, vague fix', serviceAreaVerdict(pandaravadai.lat, pandaravadai.lng, 20000), 'in');
+// The reading that caused the trouble: a network fix that lands on the nearest
+// town. Too vague to be trusted, so it must not turn a customer away.
+check('nearby town, fix too vague to trust', serviceAreaVerdict(10.7870, 79.1378, 5000), 'unsure');
+check('nearby town, fix sharp enough to trust', serviceAreaVerdict(10.7870, 79.1378, 50), 'out');
+check('far away with a sharp fix is genuinely out', serviceAreaVerdict(13.0827, 80.2707, 30), 'out');
+check('far away with a vague fix claims nothing', serviceAreaVerdict(13.0827, 80.2707, 30000), 'unsure');
+check('no accuracy reported is taken at face value', serviceAreaVerdict(13.0827, 80.2707, undefined), 'out');
+check('junk coordinates decide nothing', serviceAreaVerdict(undefined, undefined, 10), 'unsure');
 
 console.log(`\n${failures === 0 ? 'All checks passed.' : `${failures} check(s) failed.`}\n`);
 process.exit(failures === 0 ? 0 : 1);

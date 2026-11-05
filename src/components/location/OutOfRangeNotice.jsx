@@ -13,7 +13,7 @@ import s from './OutOfRangeNotice.module.css';
  * their village by hand (GPS is often poor indoors).
  */
 export default function OutOfRangeNotice() {
-  const { acknowledge, setManualPlace } = useLocationStatus();
+  const { acknowledge, setManualPlace, location } = useLocationStatus();
   const { settings } = useSettings();
   const [picking, setPicking] = useState(false);
   const [placeId, setPlaceId] = useState('');
@@ -26,6 +26,20 @@ export default function OutOfRangeNotice() {
         </span>
         <h1 className={s.title}>{t('location.outOfRange.title')}</h1>
         <p className={s.text}>{t('location.outOfRange.body')}</p>
+
+        {/* What the phone actually reported. Without this, someone standing in
+            their own village has no way to tell a genuine refusal from a bad
+            reading, and no way to tell anyone else what went wrong. */}
+        {location && (
+          <p className={s.reading}>
+            {t('location.outOfRange.reading', {
+              lat: location.lat?.toFixed(4),
+              lng: location.lng?.toFixed(4),
+              km: Math.round(location.distanceKm ?? 0),
+              accuracy: Math.round((location.accuracy ?? 0) / 100) / 10,
+            })}
+          </p>
+        )}
 
         {!picking ? (
           <>

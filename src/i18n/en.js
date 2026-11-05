@@ -57,13 +57,16 @@ const en = {
     notDetected: "Couldn't detect your exact area — please pick it below.",
     detectedNotServed: "You seem to be near {place}, but it isn't in our delivery list yet — please pick your area below.",
     outOfRangeAddress: 'This location is outside our delivery area.',
+    tooVague: "Your phone could only place you to within about {km} km, which isn't precise enough to check the delivery area. Pick your village below, or try again outdoors.",
     errors: {
       PERMISSION_DENIED: 'Location is switched off for this site. Pick your area below instead.',
       POSITION_UNAVAILABLE: "Couldn't get your location. Pick your area below instead.",
       TIMEOUT: 'That took too long. Try again, or pick your area below.',
+      TOO_VAGUE: "Your phone couldn't place you precisely enough to check the delivery area. Pick your village below, or try again outdoors.",
       UNSUPPORTED: 'This phone cannot share its location. Pick your area below.',
     },
     outOfRange: {
+      reading: 'Your phone reported {lat}, {lng} — about {km} km away, accurate to roughly {accuracy} km. If that is not where you are, pick your village below.',
       title: "You're outside our delivery area",
       body: 'We deliver only between Papanasam and Ayyampettai. You can still browse, and you can order for someone who lives inside the area — but we cannot deliver to you where you are now.',
       sendToFriend: 'Send an order to someone in the area',
