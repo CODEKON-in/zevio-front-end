@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
 /**
  * Most visitors are customers, so start downloading the customer section
@@ -65,8 +66,18 @@ function preloadCustomerSection() {
 
   export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
+    /*
+     * `npm run dev:phone` serves over HTTPS so the app can be tested on a real
+     * phone. Browsers only allow location on https:// or on localhost, and a
+     * phone reaching this laptop at http://192.168.x.x:5173 is neither — so
+     * there, geolocation is silently refused and GPS can never be tested.
+     * A laptop has no GPS of its own, so the phone is where location has to be
+     * checked. The certificate is self-signed: the phone warns once, and
+     * "Advanced → Proceed" is safe on your own network.
+     */
+    const phone = mode === 'phone';
     return {
-    plugins: [react(), preloadCustomerSection()],
+    plugins: [react(), preloadCustomerSection(), ...(phone ? [basicSsl()] : [])],
     server: { host: true, port: 5173, proxy: apiProxy(env) },
     preview: { proxy: apiProxy(env) },
     build: {

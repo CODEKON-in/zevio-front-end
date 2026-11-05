@@ -13,6 +13,9 @@ function lazyRetry(load) {
 // Each section is its own chunk, so customers never download the admin panel.
 const CustomerApp = lazyRetry(() => import('./pages/customer/CustomerApp.jsx'));
 const AdminApp = lazyRetry(() => import('./pages/admin/AdminApp.jsx'));
+// Outside both sections on purpose: it must work before anyone signs in, on
+// whatever device is being checked.
+const LocationCheck = lazyRetry(() => import('./pages/LocationCheck.jsx'));
 
 export default function App() {
   const { pathname } = useLocation();
@@ -26,6 +29,7 @@ export default function App() {
             {/* Admin panel handles its own login screen. Its path comes from
                 VITE_ADMIN_PATH; anything else falls through to the customer app. */}
             <Route path={`${ADMIN_BASE}/*`} element={<AdminApp />} />
+            <Route path="/location-check" element={<LocationCheck />} />
             {/* Customer section handles its own login screen. */}
             <Route path="/*" element={<CustomerApp />} />
           </Routes>
