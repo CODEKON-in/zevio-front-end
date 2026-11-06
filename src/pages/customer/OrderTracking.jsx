@@ -10,6 +10,7 @@ import {
 } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import BillDetails from '../../components/customer/BillDetails.jsx';
+import { OrderStatusArt } from '../../components/illustrations/Illustrations.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
 import { BikeIcon, PhoneIcon, StoreIcon } from '../../components/icons/Icons.jsx';
 import { ACTIVE_STATUSES, ORDER_STATUS } from '../../utils/constants.js';
@@ -82,18 +83,25 @@ export default function OrderTracking() {
           <ErrorState error={order.error} onRetry={order.reload} />
         ) : (
           <>
-            <Card className={s.statusCard}>
-              <div className={p.between}>
-                <div>
-                  <p className={p.muted}>{t('tracking.placedAt', { date: formatDateTime(o.createdAt) })}</p>
-                  <h1 className={s.shop}>{o.shopName}</h1>
-                </div>
-                <span className={s.headBadges}>
-                  {o.isGiftOrder && <Badge tone="warning" size="sm">{t('gift.badgeFor', { name: o.customerName })}</Badge>}
-                  <Badge tone={statusTone(o.status)} solid>{t(`orderStatus.${o.status}`)}</Badge>
-                </span>
+            <Card padding="none" className={s.statusCard}>
+              {/* The large status picture: a receipt, a steaming pot, the
+                  scooter on the road (it bobs), the house with a tick. */}
+              <div className={`${s.stage} ${s[`stage_${o.status}`] || ''}`}>
+                <OrderStatusArt status={o.status} size={136} />
               </div>
-              {o.status === ORDER_STATUS.DELIVERED && <p className={s.delivered}>{t('tracking.deliveredTitle')}</p>}
+              <div className={s.statusBody}>
+                <div className={p.between}>
+                  <div>
+                    <p className={p.muted}>{t('tracking.placedAt', { date: formatDateTime(o.createdAt) })}</p>
+                    <h1 className={s.shop}>{o.shopName}</h1>
+                  </div>
+                  <span className={s.headBadges}>
+                    {o.isGiftOrder && <Badge tone="warning" size="sm">{t('gift.badgeFor', { name: o.customerName })}</Badge>}
+                    <Badge tone={statusTone(o.status)} solid>{t(`orderStatus.${o.status}`)}</Badge>
+                  </span>
+                </div>
+                {o.status === ORDER_STATUS.DELIVERED && <p className={s.delivered}>{t('tracking.deliveredTitle')}</p>}
+              </div>
             </Card>
 
             <Card className={s.block}>
@@ -105,22 +113,36 @@ export default function OrderTracking() {
               />
             </Card>
 
+            {/* Delivery partner card: who is bringing it, and a call button. */}
+            {(active || partner.data) && (
+              <Card className={`${s.block} ${s.partnerCard}`}>
+                <span className={s.avatar} aria-hidden="true">
+                  {partner.data ? (partner.data.name || '?').trim().charAt(0).toUpperCase() : <BikeIcon size={22} />}
+                </span>
+                <div className={s.partnerText}>
+                  <p className={s.partnerName}>
+                    {partner.data ? t('tracking.partner', { name: partner.data.name }) : t('tracking.noPartner')}
+                  </p>
+                  {partner.data?.vehicle && <p className={p.muted}>{partner.data.vehicle}</p>}
+                </div>
+                {partner.data && (
+                  <Button
+                    as="a"
+                    href={telLink(partner.data.phone)}
+                    variant="secondary"
+                    className={s.callPartner}
+                    aria-label={t('tracking.callPartner')}
+                    iconLeft={<PhoneIcon size={20} />}
+                  />
+                )}
+              </Card>
+            )}
+
             <div className={s.callRow}>
               <Button as="a" href={telLink(o.shopPhone)} variant="outline" iconLeft={<StoreIcon size={20} />}>
                 {t('tracking.callShop')}
               </Button>
-              {partner.data ? (
-                <Button as="a" href={telLink(partner.data.phone)} variant="outline" iconLeft={<PhoneIcon size={20} />}>
-                  {t('tracking.callPartner')}
-                </Button>
-              ) : null}
             </div>
-            {active && (
-              <p className={s.partner}>
-                <BikeIcon size={20} />
-                {partner.data ? t('tracking.partner', { name: partner.data.name }) : t('tracking.noPartner')}
-              </p>
-            )}
 
             <Card className={s.block}>
               <h2 className={s.blockTitle}>{t('tracking.items')}</h2>

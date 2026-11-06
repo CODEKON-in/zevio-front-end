@@ -209,7 +209,7 @@ export default function Checkout() {
           <InfoNote tone={isGiftOrder ? 'warning' : 'info'} className={s.cancelNote}>
             {isGiftOrder ? t('gift.nonReturnableNote') : t('checkout.cancelNote')}
           </InfoNote>
-          <Button size="lg" variant="success" block disabled={!canPlace} loading={placing} onClick={submit}>
+          <Button size="lg" block disabled={!canPlace} loading={placing} onClick={submit}>
             {placing ? t('checkout.placing') : t('checkout.placeOrder', { total: formatPrice(total) })}
           </Button>
         </div>

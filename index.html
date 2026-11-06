@@ -3,33 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffc107" />
+    <meta name="theme-color" content="#f2b43a" />
     <meta name="description" content="Zevio — order from hotels and bakeries between Papanasam and Ayyampettai, delivered home." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!--
-      Fredoka for the brand voice, Inter for everything that must stay legible
-      small. Both swap, so the system font shows instantly and is replaced when
-      they arrive — the first paint never waits on a font.
+      Bricolage Grotesque (600/700/800) for headings, prices and the name;
+      Nunito (400/600/700) for everything else. Only these weights are fetched,
+      and both swap, so the system font shows at once and the first paint never
+      waits on a font.
       TODO before launch: self-host both as a fallback for when Google Fonts is
-      unreachable (blocked networks, captive portals), rather than depending on it.
+      unreachable (blocked networks, captive portals).
     -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;600;700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" />
     </noscript>
     <title>Zevio</title>
     <style>
-      /* Everything here is plain HTML and CSS so the splash paints while the
-         JavaScript is still downloading — on a slow village connection that is
-         the difference between "loading" and "broken". */
-      html, body { margin: 0; background: #ffffff; }
+      /* Plain HTML and CSS so the splash paints while the JavaScript is still
+         downloading — on a slow village connection that is the difference
+         between "loading" and "broken". Colours mirror variables.css (which
+         has not loaded yet): mango-50 wash, mango-500, ink-900. */
+      html, body { margin: 0; background: #fff8ea; }
 
       #boot {
         position: fixed;
@@ -39,54 +41,59 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 18px;
-        background: #ffffff;
-        color: #2b2416;
-        font-family: 'Fredoka', 'Segoe UI', system-ui, sans-serif;
-        /* Only opacity animates on the way out: no layout, no repaint storm. */
+        gap: 14px;
+        background: #fff8ea;
+        color: #2a2116;
+        font-family: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
         opacity: 1;
-        transition: opacity 200ms ease;
+        transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
       }
       #boot.boot-hide { opacity: 0; pointer-events: none; }
 
-      .boot-logo {
-        width: 88px; height: 88px;
-        border-radius: 28px;
-        background: #ffc107;
-        display: grid; place-items: center;
-        box-shadow: 0 8px 24px rgba(61, 43, 0, 0.16);
+      .boot-mango { width: 84px; height: 84px; }
+      .boot-shadow {
+        width: 56px; height: 8px; margin-top: -10px;
+        border-radius: 50%;
+        background: rgba(42, 33, 22, 0.12);
       }
-      .boot-name { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 0.01em; }
-      .boot-dots { display: flex; gap: 8px; }
-      .boot-dots i {
-        width: 10px; height: 10px; border-radius: 50%;
-        background: #ffc107; display: block;
-      }
+      .boot-name { margin: 6px 0 0; font-size: 34px; font-weight: 800; letter-spacing: -0.01em; }
 
-      /* Three dots, staggered — transform and opacity only, which the GPU can
-         do without touching layout. Cheap enough for a budget phone. */
+      /* The mango drops in, bounces once and settles; its shadow grows as it
+         lands. Transform and opacity only — nothing touches layout. */
       @media (prefers-reduced-motion: no-preference) {
-        .boot-dots i { animation: boot-bounce 1.1s ease-in-out infinite; }
-        .boot-dots i:nth-child(2) { animation-delay: 0.15s; }
-        .boot-dots i:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes boot-bounce {
-          0%, 80%, 100% { transform: translateY(0); opacity: 0.45; }
-          40%           { transform: translateY(-9px); opacity: 1; }
+        .boot-mango { animation: boot-drop 760ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: 50% 100%; }
+        .boot-shadow { animation: boot-shadow 760ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        .boot-name { animation: boot-rise 450ms 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+        @keyframes boot-drop {
+          0%   { transform: translateY(-120px) rotate(-14deg); opacity: 0; }
+          45%  { transform: translateY(0) rotate(0) scale(1.06, 0.92); opacity: 1; }
+          62%  { transform: translateY(-18px) scale(0.98, 1.03); }
+          80%  { transform: translateY(0) scale(1.02, 0.97); }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
         }
-      }
-      /* Motion turned off at the OS level: the dots simply sit there, still visible. */
-      @media (prefers-reduced-motion: reduce) {
-        .boot-dots i { opacity: 0.8; }
+        @keyframes boot-shadow {
+          0%   { transform: scaleX(0.3); opacity: 0; }
+          45%  { transform: scaleX(1.1); opacity: 1; }
+          62%  { transform: scaleX(0.75); }
+          100% { transform: scaleX(1); opacity: 1; }
+        }
+        @keyframes boot-rise {
+          from { transform: translateY(8px); opacity: 0; }
+          to   { transform: none; opacity: 1; }
+        }
       }
     </style>
   </head>
   <body>
     <div id="boot" role="status" aria-live="polite" aria-label="Loading Zevio">
-      <div class="boot-logo" aria-hidden="true">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#3d2b00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 4.5 4h15L21 9" /><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0" /><path d="M5 11.5V20h14v-8.5" /><path d="M10 20v-5h4v5" /></svg>
-      </div>
+      <svg class="boot-mango" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M33 15c-1.6-3-3.4-5-6-6.4" fill="none" stroke="#6b4a12" stroke-width="2.6" stroke-linecap="round" />
+        <path d="M34 15.5c11.6 0 21 9.4 21 21.3C55 48.3 45.6 56 33.4 56 22.4 56 13 49.6 13 39.4c0-7.2 4.4-11.6 9.6-14.6C27 22.3 28.4 15.5 34 15.5Z" fill="#f2b43a" />
+        <path d="M45 26c3.4 3 5 6.6 5 10.6" fill="none" stroke="#fff8ea" stroke-width="3" stroke-linecap="round" opacity=".55" />
+        <path d="M33.6 15.2c1.6-5.8 6.4-9 13.4-8.6-1.4 6.8-6.4 9.8-13.4 8.6Z" fill="#4f8a4b" />
+      </svg>
+      <div class="boot-shadow" aria-hidden="true"></div>
       <p class="boot-name">Zevio</p>
-      <div class="boot-dots" aria-hidden="true"><i></i><i></i><i></i></div>
     </div>
     <div id="root"></div>
     <noscript>

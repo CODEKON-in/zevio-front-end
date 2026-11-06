@@ -10,6 +10,7 @@ import CartBar from '../../components/customer/CartBar.jsx';
 import { ChevronRightIcon, CloseIcon, SearchIcon } from '../../components/icons/Icons.jsx';
 import p from '../../styles/page.module.css';
 import s from './Search.module.css';
+import { NothingFoundArt } from '../../components/illustrations/Illustrations.jsx';
 
 const MIN_CHARS = 2;
 
@@ -60,13 +61,13 @@ export default function Search() {
       <main className={p.page} aria-live="polite">
         <h1 className="visually-hidden">{t('search.title')}</h1>
         {debounced.length < MIN_CHARS ? (
-          <EmptyState icon={<SearchIcon size={36} />} title={t('search.title')} message={t('search.hint')} />
+          <EmptyState icon={<NothingFoundArt size={84} />} title={t('search.title')} message={t('search.hint')} />
         ) : results.loading ? (
           <SkeletonList count={4} />
         ) : results.error ? (
           <ErrorState error={results.error} onRetry={results.reload} />
         ) : !hasResults ? (
-          <EmptyState icon={<SearchIcon size={36} />} title={t('search.noResultsTitle')} message={t('search.noResults', { query: debounced })} />
+          <EmptyState icon={<NothingFoundArt size={84} />} title={t('search.noResultsTitle')} message={t('search.noResults', { query: debounced })} />
         ) : (
           <>
             {results.data.shops.length > 0 && (

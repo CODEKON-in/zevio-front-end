@@ -1,14 +1,25 @@
+/* The mango band (fill + grain) with the greeting and address, and the search
+   bar floating half over its bottom edge. */
 .top {
+  position: relative;
+  padding-bottom: calc(var(--tap-target) / 2 + var(--space-2));
+}
+
+.band {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
-  background: var(--color-primary);
+  padding: var(--space-4) var(--space-4) calc(var(--tap-target) / 2 + var(--space-5));
+  padding-top: calc(var(--space-4) + env(safe-area-inset-top));
+  border-radius: 0 0 28px 28px;
+  background-color: var(--color-primary);
+  background-image: var(--grain), var(--mango-fill);
+  background-blend-mode: multiply, normal;
   color: var(--color-on-primary);
 }
 
 .topRow,
+.addressChip,
 .searchBar {
   width: 100%;
   max-width: calc(var(--container-max) - 2 * var(--space-4));
@@ -17,22 +28,56 @@
 
 .topRow {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.hello {
+  min-width: 0;
+}
+
+.greeting {
+  font-size: var(--fs-30);
+  font-weight: var(--font-weight-black);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.greetingSub {
+  margin-top: var(--space-1);
+  font-size: var(--fs-14);
+  font-weight: var(--font-weight-semibold);
 }
 
 .addressChip {
   display: flex;
-  flex: 1;
+  align-self: flex-start;
+  width: auto;
+  max-width: 100%;
   min-width: 0;
   align-items: center;
   gap: var(--space-2);
-  min-height: var(--tap-target);
-  padding: var(--space-1) var(--space-2) var(--space-1) 0;
-  border: 0;
-  background: transparent;
+  min-height: 40px;
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-press);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-light);
   color: inherit;
+  font-size: var(--fs-14);
   text-align: left;
+}
+
+/* keep the 48px touch area */
+.addressChip {
+  position: relative;
+}
+.addressChip::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
 }
 
 .addressChip:focus-visible {
@@ -45,13 +90,7 @@
 
 .addressText {
   display: flex;
-  flex-direction: column;
   min-width: 0;
-}
-
-.deliveringTo {
-  font-size: var(--font-size-xs);
-  opacity: 0.85;
 }
 
 .addressLine {
@@ -69,8 +108,9 @@
   width: var(--tap-target);
   height: var(--tap-target);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--color-surface);
   color: inherit;
+  box-shadow: var(--shadow-1);
 }
 
 .cartBtn:focus-visible {
@@ -79,32 +119,74 @@
 
 .cartCount {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  min-width: 20px;
-  height: 20px;
+  top: -2px;
+  right: -2px;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
   padding: 0 5px;
+  overflow: hidden;
+  border: 2px solid var(--color-primary);
   border-radius: var(--radius-pill);
-  background: var(--color-warning-light);
-  color: var(--color-text);
-  font-size: 12px;
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+  font-family: var(--font-display);
+  font-size: var(--fs-12);
   font-weight: var(--font-weight-bold);
-  line-height: 20px;
+  line-height: 18px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.cartCountNum {
+  display: block;
 }
 
 .searchBar {
+  position: absolute;
+  left: var(--space-4);
+  right: var(--space-4);
+  bottom: var(--space-2);
+  width: auto;
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: var(--tap-target);
+  min-height: 52px;
   padding: 0 var(--space-4);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
   background: var(--color-surface);
   color: var(--color-text-muted);
   text-decoration: none;
+  box-shadow: var(--shadow-2);
 }
 
-.searchBar:focus-visible {
-  outline-color: var(--color-on-primary);
+@media (min-width: 672px) {
+  .searchBar {
+    left: 50%;
+    right: auto;
+    width: calc(var(--container-max) - 2 * var(--space-4));
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .greeting,
+  .greetingSub,
+  .addressChip {
+    animation: rise var(--dur-slow) var(--ease-out) both;
+  }
+  .greetingSub { animation-delay: 60ms; }
+  .addressChip { animation-delay: 120ms; }
+  .cartCountNum {
+    animation: count-roll var(--dur-base) var(--ease-out);
+  }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes count-roll {
+  from { transform: translateY(100%); opacity: 0; }
 }

@@ -18,7 +18,7 @@ export default function BarChart({ data, ariaLabel, highlightLast = true }) {
             <div className={s.track}>
               <div
                 className={`${s.bar} ${highlightLast && i === data.length - 1 ? s.today : ''}`}
-                style={{ height: `${(d.value / max) * 100}%` }}
+                style={{ height: `${(d.value / max) * 100}%`, '--i': i }}
               />
             </div>
             <span className={s.label}>{d.label}</span>

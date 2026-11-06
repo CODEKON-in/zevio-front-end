@@ -10,8 +10,11 @@ import s from './PageHeader.module.css';
  *  - backTo: string — where Back goes if there is no history (default '/')
  *  - showBack: boolean (default true)
  *  - right: ReactNode — action on the right (e.g. a call button)
+ *  - overlay: boolean — float over a hero image: transparent, with round
+ *    buttons, until `solid` turns it into the normal bar (the shop page)
+ *  - solid: boolean — with overlay, show the bar's background and title
  */
-export default function PageHeader({ title, backTo = '/', showBack = true, right }) {
+export default function PageHeader({ title, backTo = '/', showBack = true, right, overlay = false, solid = false }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,13 +25,16 @@ export default function PageHeader({ title, backTo = '/', showBack = true, right
   };
 
   return (
-    <header className={s.header}>
+    <header className={`${s.header} ${overlay ? s.overlay : ''} ${overlay && solid ? s.solid : ''}`}>
+      {overlay && <span className={s.backdrop} aria-hidden="true" />}
       {showBack && (
         <button type="button" className={s.back} onClick={goBack} aria-label={t('common.back')}>
           <ChevronLeftIcon size={26} />
         </button>
       )}
-      <h1 className={s.title}>{title}</h1>
+      <h1 className={s.title} aria-hidden={overlay && !solid ? true : undefined}>
+        {title}
+      </h1>
       {right && <div className={s.right}>{right}</div>}
     </header>
   );

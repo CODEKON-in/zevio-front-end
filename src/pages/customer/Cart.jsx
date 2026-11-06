@@ -12,9 +12,10 @@ import PageHeader from '../../components/layout/PageHeader.jsx';
 import BillDetails from '../../components/customer/BillDetails.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
 import AddressPickerSheet from '../../components/customer/AddressPickerSheet.jsx';
-import { AlertIcon, CartIcon, LocationIcon, PlusIcon, StoreIcon } from '../../components/icons/Icons.jsx';
+import { AlertIcon, LocationIcon, PlusIcon, StoreIcon } from '../../components/icons/Icons.jsx';
 import p from '../../styles/page.module.css';
 import s from './Cart.module.css';
+import { EmptyCartArt } from '../../components/illustrations/Illustrations.jsx';
 
 /** Cart: items with steppers, instructions, address, bill. One shop only. */
 export default function Cart() {
@@ -50,7 +51,7 @@ export default function Cart() {
         <PageHeader title={t('cart.title')} />
         <main className={p.page}>
           <EmptyState
-            icon={<CartIcon size={36} />}
+            icon={<EmptyCartArt size={84} />}
             title={t('cart.emptyTitle')}
             message={t('cart.emptyMessage')}
             action={

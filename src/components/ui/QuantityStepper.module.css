@@ -8,9 +8,9 @@
   display: inline-flex;
   align-items: center;
   border: 2px solid var(--color-primary-edge);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-btn);
   background: var(--color-primary-light);
-  color: var(--color-primary-ink);
+  color: var(--color-on-primary);
   overflow: hidden;
 }
 
@@ -22,11 +22,20 @@
   border: 0;
   background: transparent;
   color: inherit;
-  transition: background-color var(--transition-fast);
 }
 
 .btn:hover:not(:disabled) {
-  background: rgba(138, 96, 0, 0.12);
+  background: var(--color-press);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .btn {
+    transition: transform var(--dur-base) var(--ease-spring);
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.88);
+    transition-duration: 80ms;
+  }
 }
 
 /* The minus goes quiet at a product's minimum, which is the whole point — but
@@ -38,12 +47,38 @@
 }
 
 .value {
+  display: grid;
   min-width: 28px;
+  height: 1.5em;
+  overflow: hidden;
   text-align: center;
-  font-family: var(--font-en);
+  font-family: var(--font-display);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-md);
   font-variant-numeric: tabular-nums;
+}
+
+.digit {
+  display: block;
+  line-height: 1.5;
+}
+
+/* The number slides in from below when it grows and from above when it shrinks. */
+@media (prefers-reduced-motion: no-preference) {
+  .up {
+    animation: roll-up var(--dur-base) var(--ease-out);
+  }
+  .down {
+    animation: roll-down var(--dur-base) var(--ease-out);
+  }
+}
+
+@keyframes roll-up {
+  from { transform: translateY(80%); opacity: 0; }
+}
+
+@keyframes roll-down {
+  from { transform: translateY(-80%); opacity: 0; }
 }
 
 .lg .btn {
@@ -65,10 +100,9 @@
   width: 36px;
   height: 36px;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-btn);
   background: var(--color-surface);
   color: var(--color-text-muted);
-  transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .remove:hover,

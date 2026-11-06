@@ -1,14 +1,38 @@
 .statusCard {
-  border-width: 2px;
+  overflow: hidden;
+}
+
+/* The illustration stage: a tinted band the picture stands in. */
+.stage {
+  display: grid;
+  place-items: center;
+  min-height: 176px;
+  padding: var(--space-4) 0 var(--space-2);
+  background-color: var(--color-primary-light);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  overflow: hidden;
+}
+
+.stage_DELIVERED {
+  background-color: var(--color-success-light);
+}
+
+.stage_CANCELLED {
+  background-color: var(--color-danger-light);
+}
+
+.statusBody {
+  padding: var(--space-4);
 }
 
 .shop {
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-20);
 }
 
 .delivered {
   margin-top: var(--space-2);
-  color: var(--color-success);
+  color: var(--color-success-ink);
   font-weight: var(--font-weight-bold);
 }
 
@@ -18,7 +42,7 @@
 
 .blockTitle {
   margin-bottom: var(--space-3);
-  font-size: var(--font-size-md);
+  font-size: var(--fs-18);
 }
 
 .dev {
@@ -29,20 +53,50 @@
   font-size: var(--font-size-sm);
 }
 
+/* Delivery partner card */
+.partnerCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  color: var(--color-on-primary);
+  font-family: var(--font-display);
+  font-size: var(--fs-20);
+  font-weight: var(--font-weight-black);
+}
+
+.partnerText {
+  flex: 1;
+  min-width: 0;
+}
+
+.partnerName {
+  font-weight: var(--font-weight-bold);
+}
+
+.callPartner {
+  flex-shrink: 0;
+  width: var(--tap-target);
+  padding: 0;
+  border-radius: 50%;
+}
+
 .callRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: var(--space-2);
   margin-top: var(--space-3);
-}
-
-.partner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
 }
 
 .items {
@@ -55,7 +109,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px dashed var(--color-border);
 }
 
 .itemName {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useCart } from '../../context/CartContext.jsx';
@@ -6,18 +6,21 @@ import { useSettings } from '../../context/SettingsContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useAddToCart } from '../../hooks/useAddToCart.jsx';
 import { useDebounce } from '../../hooks/useDebounce.js';
+import { useStagger } from '../../hooks/useStagger.js';
+import { prefersMotion } from '../../utils/motion.js';
 import { getShopById } from '../../services/shopService.js';
 import { getProductsByShop } from '../../services/productService.js';
-import { Badge, Button, EmptyState, ErrorState, Skeleton, SkeletonList } from '../../components/ui/index.js';
+import { Badge, Button, EmptyState, ErrorState, Skeleton, SkeletonList, SmartImage } from '../../components/ui/index.js';
 import PageHeader from '../../components/layout/PageHeader.jsx';
 import ProductCard from '../../components/customer/ProductCard.jsx';
 import ProductDetailSheet from '../../components/customer/ProductDetailSheet.jsx';
 import CartBar from '../../components/customer/CartBar.jsx';
-import { AlertIcon, ClockIcon, LocationIcon, PhoneIcon, SearchIcon } from '../../components/icons/Icons.jsx';
+import { AlertIcon, CategoryIcon, ClockIcon, LocationIcon, PhoneIcon, SearchIcon } from '../../components/icons/Icons.jsx';
 import { formatClock } from '../../utils/format.js';
 import { telLink } from '../../utils/links.js';
 import p from '../../styles/page.module.css';
 import s from './ShopPage.module.css';
+import { NoShopsArt, NothingFoundArt } from '../../components/illustrations/Illustrations.jsx';
 
 /** Groups products by `section`, keeping the order they first appear in. */
 function groupBySection(products) {
@@ -29,7 +32,113 @@ function groupBySection(products) {
   return [...groups.entries()];
 }
 
-/** Shop page: info, timings, search in shop, products grouped by section, cart bar. */
+const slug = (section) => `sec-${String(section || 'other').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+/** One section of the menu; its rows come in with a stagger. */
+function MenuSection({ section, count, children }) {
+  const ref = useStagger();
+  return (
+    <section id={slug(section)} className={s.group} aria-labelledby={`${slug(section)}-title`}>
+      <h2 id={`${slug(section)}-title`} className={s.groupTitle}>
+        {section} <span className={s.groupCount}>{count}</span>
+      </h2>
+      <div ref={ref} data-stagger>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The hero photo collapses as the page scrolls: it drifts up at half speed
+ * and fades, and the header turns solid once it has gone. Transform and
+ * opacity only, written straight to the element once per frame.
+ */
+function useCollapsingHero() {
+  const hero = useRef(null);
+  const [solid, setSolid] = useState(false);
+  useEffect(() => {
+    let frame = 0;
+    const motion = prefersMotion();
+    const update = () => {
+      frame = 0;
+      const el = hero.current;
+      const h = el?.offsetHeight || 220;
+      const y = window.scrollY;
+      if (el && motion) {
+        const k = Math.min(1, Math.max(0, y / h));
+        el.style.transform = `translateY(${y * 0.45}px)`;
+        el.style.opacity = String(1 - k * 0.85);
+      }
+      setSolid(y > h - 72);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+  return { hero, solid };
+}
+
+/** Sticky section tabs: the one in view is marked; tapping one scrolls to it. */
+function SectionTabs({ sections }) {
+  const [active, setActive] = useState(sections[0]);
+  const bar = useRef(null);
+
+  // The active section is the last one whose heading has reached the line
+  // under the header and the tabs. Checked once per frame while scrolling.
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const line = (bar.current?.getBoundingClientRect().bottom || 120) + 16;
+      let current = sections[0];
+      for (const sec of sections) {
+        const el = document.getElementById(slug(sec));
+        if (el && el.getBoundingClientRect().top <= line) current = sec;
+      }
+      setActive(current);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [sections]);
+
+  // Keep the active tab in view inside the scrolling bar.
+  useEffect(() => {
+    const tab = bar.current?.querySelector('[aria-current="true"]');
+    tab?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: prefersMotion() ? 'smooth' : 'auto' });
+  }, [active]);
+
+  const go = (sec) => {
+    setActive(sec);
+    document.getElementById(slug(sec))?.scrollIntoView({ behavior: prefersMotion() ? 'smooth' : 'auto', block: 'start' });
+  };
+
+  if (sections.length < 2) return null;
+  return (
+    <nav ref={bar} className={s.tabs} aria-label={t('shopPage.sectionsLabel')}>
+      {sections.map((sec) => (
+        <button key={sec} type="button" className={`${s.tab} ${sec === active ? s.tabActive : ''}`} aria-current={sec === active || undefined} onClick={() => go(sec)}>
+          {sec}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/** Shop page: hero, info, timings, search in shop, section tabs, products grouped by section, cart bar. */
 export default function ShopPage() {
   const { id } = useParams();
   const { getPlace } = useSettings();
@@ -54,19 +163,33 @@ export default function ShopPage() {
 
   // Cart quantities only for this shop.
   const qtyFor = (productId) => (cart.cart.shopId === id ? cart.getQty(productId) : 0);
+  const { hero, solid } = useCollapsingHero();
+  const sections = useMemo(() => groups.map(([section]) => section), [groups]);
 
   return (
     <>
       <PageHeader
+        overlay
+        solid={solid}
         title={shop?.name || ''}
         right={
           shop && (
-            <Button as="a" href={telLink(shop.phone)} variant="ghost" aria-label={t('shopPage.call')} iconLeft={<PhoneIcon size={22} />} />
+            <Button as="a" href={telLink(shop.phone)} variant="ghost" aria-label={t('shopPage.call')} iconLeft={<PhoneIcon size={20} />} />
           )
         }
       />
 
-      <main className={`${p.page} ${p.pageNoNav}`}>
+      <div className={s.heroWrap} aria-hidden="true">
+        <div ref={hero} className={s.hero}>
+          {shop ? (
+            <SmartImage src={shop.image} alt="" ratio="16 / 10" rounded={false} fallback={<CategoryIcon category={shop.category} size={56} />} />
+          ) : (
+            <Skeleton height="100%" radius="0" className={s.heroSkeleton} />
+          )}
+        </div>
+      </div>
+
+      <main className={`${p.page} ${p.pageNoNav} ${s.main}`}>
         {loading && !data ? (
           <>
             <div className={s.infoSkeleton}>
@@ -88,7 +211,7 @@ export default function ShopPage() {
                 </Badge>
               </div>
               <p className={s.meta}>
-                {t(`categories.${shop.category}`)} · {shop.address}
+                {[t(`categories.${shop.category}`), shop.address].filter(Boolean).join(' · ')}
               </p>
               <p className={s.meta}>
                 <span className={s.metaItem}>
@@ -134,16 +257,15 @@ export default function ShopPage() {
               </div>
             )}
 
+            {data.products.length > 0 && !q && <SectionTabs sections={sections} />}
+
             {!data.products.length ? (
-              <EmptyState title={t('shopPage.noItemsTitle')} message={t('shopPage.emptyMenu')} />
+              <EmptyState icon={<NoShopsArt size={84} />} title={t('shopPage.noItemsTitle')} message={t('shopPage.emptyMenu')} />
             ) : !groups.length ? (
-              <EmptyState icon={<SearchIcon size={36} />} title={t('shopPage.noItemsTitle')} message={t('shopPage.noItems')} />
+              <EmptyState icon={<NothingFoundArt size={84} />} title={t('shopPage.noItemsTitle')} message={t('shopPage.noItems')} />
             ) : (
               groups.map(([section, items]) => (
-                <section key={section} className={s.group} aria-labelledby={`sec-${section}`}>
-                  <h2 id={`sec-${section}`} className={s.groupTitle}>
-                    {section} <span className={p.muted}>({items.length})</span>
-                  </h2>
+                <MenuSection key={section} section={section} count={items.length}>
                   {items.map((prod) => (
                     <ProductCard
                       key={prod.id}
@@ -158,7 +280,7 @@ export default function ShopPage() {
                       onOpen={setDetail}
                     />
                   ))}
-                </section>
+                </MenuSection>
               ))
             )}
           </>

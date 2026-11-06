@@ -12,7 +12,6 @@
   inset: 0;
   background: var(--color-overlay);
   opacity: 0;
-  transition: opacity var(--transition);
 }
 
 .sheet {
@@ -23,10 +22,9 @@
   max-width: var(--container-max);
   max-height: 88vh;
   background: var(--color-surface);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  box-shadow: var(--shadow-lg);
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-3);
   transform: translateY(100%);
-  transition: transform var(--transition);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -92,4 +90,12 @@
 
 .footer > * {
   flex: 1;
+}
+
+/* Opens with a spring, closes a little faster and without one. */
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop { transition: opacity 180ms var(--ease-in); }
+  .sheet { transition: transform 180ms var(--ease-in); }
+  .visible .backdrop { transition: opacity var(--dur-base) var(--ease-out); }
+  .visible .sheet { transition: transform var(--dur-slow) var(--ease-spring); }
 }

@@ -3,9 +3,10 @@ import { t } from '../../i18n/index.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Button, Input } from '../../components/ui/index.js';
-import { SlidersIcon } from '../../components/icons/Icons.jsx';
+
 import { ROLES } from '../../utils/constants.js';
 import s from '../../styles/login.module.css';
+import MangoMark from '../../components/brand/MangoMark.jsx';
 
 /**
  * Admin login. The email and password are checked against the
@@ -40,7 +41,7 @@ export default function AdminLogin() {
     <main className={s.page}>
       <div className={s.hero}>
         <span className={s.logo} aria-hidden="true">
-          <SlidersIcon size={40} />
+          <MangoMark size={60} />
         </span>
         <p className={s.appName}>{t('app.name')}</p>
       </div>

@@ -8,23 +8,31 @@
   position: relative;
   display: flex;
   gap: var(--space-3);
-  min-height: 56px;
+  min-height: 60px;
 }
 
-/* connecting line */
-.step:not(:last-child)::before {
+/* The connecting line: a grey track, and a green fill that grows down it
+   (scaleY from the top) for every step that is done. */
+.step:not(:last-child)::before,
+.step:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 13px;
-  top: 28px;
-  bottom: 0;
-  width: 2px;
+  left: 14px;
+  top: 32px;
+  bottom: 2px;
+  width: 3px;
+  border-radius: 2px;
   background: var(--color-border);
-  transition: background-color var(--transition);
 }
 
-.step.done:not(.current):not(:last-child)::before {
+.step:not(:last-child)::after {
   background: var(--color-success);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.step.done:not(.current):not(:last-child)::after {
+  transform: scaleY(1);
 }
 
 .dot {
@@ -33,13 +41,12 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 31px;
+  height: 31px;
   border: 2px solid var(--color-border-strong);
   border-radius: 50%;
   background: var(--color-surface);
   color: var(--color-text-inverse);
-  transition: background-color var(--transition), border-color var(--transition);
 }
 
 .done .dot {
@@ -48,9 +55,19 @@
 }
 
 .current .dot {
-  border-color: var(--color-warning);
+  border-color: var(--color-warning-accent);
   background: var(--color-surface);
-  box-shadow: inset 0 0 0 5px var(--color-warning);
+  box-shadow: inset 0 0 0 6px var(--color-warning-accent);
+}
+
+/* The soft pulse around the current step: a ring that grows and fades. */
+.current .dot::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid var(--color-warning-accent);
+  opacity: 0;
 }
 
 .failed .dot {
@@ -65,7 +82,7 @@
 }
 
 .label {
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text-muted);
 }
 
@@ -85,9 +102,50 @@
 .time {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .extra {
   margin-top: var(--space-1);
   font-size: var(--font-size-sm);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Each done segment fills in turn, top to bottom, when the timeline appears. */
+  .step.done:not(.current):not(:last-child)::after {
+    animation: fill var(--dur-slow) var(--ease-out) both;
+  }
+  .step:nth-child(2)::after { animation-delay: 120ms; }
+  .step:nth-child(3)::after { animation-delay: 240ms; }
+  .step:nth-child(4)::after { animation-delay: 360ms; }
+  .step:nth-child(5)::after { animation-delay: 480ms; }
+
+  .done .dot {
+    animation: dot-in var(--dur-base) var(--ease-spring) both;
+  }
+  .step:nth-child(2) .dot { animation-delay: 120ms; }
+  .step:nth-child(3) .dot { animation-delay: 240ms; }
+  .step:nth-child(4) .dot { animation-delay: 360ms; }
+  .step:nth-child(5) .dot { animation-delay: 480ms; }
+
+  .current .dot::after {
+    animation: pulse 1.8s var(--ease-out) infinite;
+  }
+  :global(html[data-hidden]) .current .dot::after {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes fill {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes dot-in {
+  from { transform: scale(0.6); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.8); opacity: 0; }
 }

@@ -3,7 +3,8 @@
   width: 100%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-1);
   color: inherit;
   text-align: left;
   text-decoration: none;
@@ -16,24 +17,48 @@
 .pad-lg { padding: var(--space-6); }
 
 .interactive {
+  position: relative;
   cursor: pointer;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+/* The deeper shadow sits on a pseudo-element and fades in, so hovering only
+   ever animates opacity and transform — never the shadow itself. */
+.interactive::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .interactive:hover {
   border-color: var(--color-border-strong);
-  box-shadow: var(--shadow-md);
 }
 
-.interactive:active {
-  transform: scale(0.99);
+.interactive:hover::after {
+  opacity: 1;
 }
 
-/* "Unavailable" look (e.g. closed shop): grey background, faded photo,
-   but text keeps full contrast so it stays readable. */
+@media (prefers-reduced-motion: no-preference) {
+  .interactive {
+    transition: transform var(--dur-base) var(--ease-spring);
+  }
+  .interactive::after {
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+  .interactive:active {
+    transform: scale(0.985);
+    transition-duration: 80ms;
+  }
+}
+
+/* "Unavailable" look (e.g. closed shop): desaturated photo, but the text keeps
+   full contrast so it stays readable. */
 .muted {
   background: var(--color-surface-muted);
-  border-style: dashed;
+  box-shadow: none;
 }
 
 .muted img,

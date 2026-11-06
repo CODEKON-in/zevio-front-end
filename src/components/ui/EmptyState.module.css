@@ -10,12 +10,27 @@
 .icon {
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
+  width: 112px;
+  height: 112px;
   margin-bottom: var(--space-2);
   border-radius: 50%;
   background: var(--color-primary-light);
   color: var(--color-primary-ink);
+}
+
+/* The one slow loop allowed: the illustration drifts up and down. It stops
+   when the tab is hidden (html[data-hidden], set in main.jsx). */
+@media (prefers-reduced-motion: no-preference) {
+  .icon > * {
+    animation: float 4s ease-in-out infinite;
+  }
+  :global(html[data-hidden]) .icon > * {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes float {
+  50% { transform: translateY(-6px); }
 }
 
 .danger {
@@ -24,7 +39,7 @@
 }
 
 .title {
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-20);
 }
 
 .message {

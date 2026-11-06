@@ -1,6 +1,5 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { t } from '../../i18n/index.js';
-import Badge from '../ui/Badge.jsx';
 import Button from '../ui/Button.jsx';
 import PriceTag from '../ui/PriceTag.jsx';
 import QuantityStepper from '../ui/QuantityStepper.jsx';
@@ -8,6 +7,7 @@ import SmartImage from '../ui/SmartImage.jsx';
 import VegDot from '../ui/VegDot.jsx';
 import { CategoryIcon, PlusIcon } from '../icons/Icons.jsx';
 import { lineMin } from '../../utils/productRules.js';
+import { flyToCart } from '../../utils/motion.js';
 import s from './ProductCard.module.css';
 
 /**
@@ -26,6 +26,17 @@ import s from './ProductCard.module.css';
 function ProductCard({ product, category, qty, canOrder, onAdd, onIncrement, onDecrement, onRemove, onOpen }) {
   const unavailable = !product.inStock;
   const minQty = lineMin(product);
+
+  // When this item first lands in the cart, a small copy of its photo flies
+  // to the cart bar. Driven by the cart itself (qty going from 0 to more), so
+  // it only plays when the add really happened — not when the shop is closed
+  // or a "replace your cart?" question is still open.
+  const photo = useRef(null);
+  const prevQty = useRef(qty);
+  useEffect(() => {
+    if (prevQty.current === 0 && qty > 0) flyToCart(photo.current);
+    prevQty.current = qty;
+  }, [qty]);
 
   return (
     <article className={`${s.card} ${unavailable ? s.unavailable : ''}`}>
@@ -46,14 +57,14 @@ function ProductCard({ product, category, qty, canOrder, onAdd, onIncrement, onD
           <PriceTag amount={product.price} />
           {/* Nothing at all for the ordinary item that sells one at a time. */}
           {minQty > 1 && (
-            <Badge tone="info" size="sm" aria-label={t('product.minOrderAria', { count: minQty })}>
+            <span className={s.min} aria-label={t('product.minOrderAria', { count: minQty })}>
               {t('product.minOrder', { count: minQty })}
-            </Badge>
+            </span>
           )}
         </div>
         {unavailable && <p className={s.oos}>{t('common.outOfStock')}</p>}
       </div>
-      <div className={s.side}>
+      <div className={s.side} ref={photo}>
         {onOpen ? (
           <button type="button" className={s.photoButton} onClick={() => onOpen(product)} tabIndex={-1} aria-hidden="true">
             <SmartImage

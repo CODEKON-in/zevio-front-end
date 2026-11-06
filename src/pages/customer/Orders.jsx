@@ -10,10 +10,12 @@ import { getShopById } from '../../services/shopService.js';
 import { getProductsByShop } from '../../services/productService.js';
 import { Button, ConfirmDialog, EmptyState, ErrorState, SkeletonList } from '../../components/ui/index.js';
 import OrderCard from '../../components/customer/OrderCard.jsx';
-import { OrdersIcon } from '../../components/icons/Icons.jsx';
+import { useStagger } from '../../hooks/useStagger.js';
+
 import { ACTIVE_STATUSES, ORDER_STATUS } from '../../utils/constants.js';
 import { canCancelOrder } from '../../utils/orderRules.js';
 import p from '../../styles/page.module.css';
+import { NoOrdersArt } from '../../components/illustrations/Illustrations.jsx';
 
 /** Order history: active orders first, then past orders with Reorder. */
 export default function Orders() {
@@ -21,6 +23,8 @@ export default function Orders() {
   const cart = useCart();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const activeList = useStagger();
+  const pastList = useStagger();
   const orders = useAsync(() => getOrders({ customerId: user.customerId }), [user.customerId]);
   const [reordering, setReordering] = useState(null);
   const [pendingReorder, setPendingReorder] = useState(null);
@@ -97,7 +101,7 @@ export default function Orders() {
         <ErrorState error={orders.error} onRetry={orders.reload} />
       ) : !orders.data.length ? (
         <EmptyState
-          icon={<OrdersIcon size={36} />}
+          icon={<NoOrdersArt size={84} />}
           title={t('orders.emptyTitle')}
           message={t('orders.emptyMessage')}
           action={
@@ -111,7 +115,7 @@ export default function Orders() {
           {active.length > 0 && (
             <section aria-labelledby="active-orders">
               <h2 id="active-orders" className={p.sectionTitle}>{t('orders.active')}</h2>
-              <ul className={p.list}>
+              <ul ref={activeList} className={p.list} data-stagger>
                 {active.map((o) => (
                   <OrderCard key={o.id} order={o} onCancel={setPendingCancel} cancelling={cancelling === o.id} />
                 ))}
@@ -121,7 +125,7 @@ export default function Orders() {
           {past.length > 0 && (
             <section className={active.length ? p.section : undefined} aria-labelledby="past-orders">
               <h2 id="past-orders" className={p.sectionTitle}>{t('orders.past')}</h2>
-              <ul className={p.list}>
+              <ul ref={pastList} className={p.list} data-stagger>
                 {past.map((o) => (
                   <OrderCard key={o.id} order={o} onReorder={askReorder} reordering={reordering === o.id} />
                 ))}

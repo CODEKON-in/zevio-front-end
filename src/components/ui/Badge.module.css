@@ -3,7 +3,7 @@
   align-items: center;
   gap: var(--space-1);
   border-radius: var(--radius-pill);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -20,15 +20,16 @@
 
 .neutral { background: var(--color-surface-muted); color: var(--color-text); }
 .primary { background: var(--color-primary-light); color: var(--color-primary-ink); }
-.success { background: var(--color-success-light); color: var(--color-success); }
-.danger { background: var(--color-danger-light); color: var(--color-danger); }
+.success { background: var(--color-success-light); color: var(--color-success-ink); }
+.danger { background: var(--color-danger-light); color: var(--color-danger-ink); }
 .warning { background: var(--color-warning-light); color: var(--color-warning); }
 .info { background: var(--color-info-light); color: var(--color-info); }
 
 .solid { color: var(--color-text-inverse); }
 .solid.neutral { background: var(--color-text-muted); }
-.solid.primary { background: var(--color-primary); }
+.solid.primary { background-color: var(--color-primary); background-image: var(--grain); background-blend-mode: multiply; color: var(--color-on-primary); }
 .solid.success { background: var(--color-success); }
 .solid.danger { background: var(--color-danger); }
 .solid.warning { background: var(--color-warning); }
+.solid.success, .solid.danger, .solid.info, .solid.warning, .solid.neutral { color: var(--color-text-inverse); }
 .solid.info { background: var(--color-info); }

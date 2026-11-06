@@ -5,55 +5,46 @@ import { useSettings } from '../../context/SettingsContext.jsx';
 import Card from '../ui/Card.jsx';
 import Badge from '../ui/Badge.jsx';
 import SmartImage from '../ui/SmartImage.jsx';
-import { CategoryIcon, ClockIcon, LocationIcon } from '../icons/Icons.jsx';
+import { CategoryIcon, ClockIcon } from '../icons/Icons.jsx';
 import { formatClock } from '../../utils/format.js';
 import s from './ShopCard.module.css';
 
 /**
- * ShopCard — tappable shop row linking to /shop/:id. Closed shops are greyed.
+ * ShopCard — tappable shop card linking to /shop/:id: a large photo, the name,
+ * and one quiet line of facts (category · place · time). Closed shops are
+ * desaturated and say when they open.
  * Props: shop (object from shopService)
  */
 function ShopCard({ shop }) {
   const { getPlace } = useSettings();
   const place = getPlace(shop.placeId);
+  const facts = [t(`categories.${shop.category}`), place?.name].filter(Boolean);
 
   return (
-    <Card as={Link} to={`/shop/${shop.id}`} interactive padding="sm" muted={!shop.isOpen} className={s.card}>
-      <SmartImage
-        src={shop.image}
-        alt={t('common.imageAlt', { name: shop.name })}
-        ratio="1 / 1"
-        className={s.image}
-        fallback={<CategoryIcon category={shop.category} size={34} />}
-      />
+    <Card as={Link} to={`/shop/${shop.id}`} interactive padding="none" muted={!shop.isOpen} className={s.card}>
+      <div className={s.media}>
+        <SmartImage
+          src={shop.image}
+          alt={t('common.imageAlt', { name: shop.name })}
+          ratio="16 / 9"
+          rounded={false}
+          className={s.image}
+          fallback={<CategoryIcon category={shop.category} size={40} />}
+        />
+        <Badge tone={shop.isOpen ? 'success' : 'neutral'} solid size="sm" className={s.status}>
+          {shop.isOpen ? t('common.open') : t('common.closed')}
+        </Badge>
+      </div>
       <div className={s.info}>
-        <div className={s.top}>
-          <h3 className={s.name}>{shop.name}</h3>
-          <Badge tone={shop.isOpen ? 'success' : 'neutral'} solid size="sm">
-            {shop.isOpen ? t('common.open') : t('common.closed')}
-          </Badge>
-        </div>
+        <h3 className={s.name}>{shop.name}</h3>
         <p className={s.meta}>
-          {t(`categories.${shop.category}`)}
-          {place && (
-            <span className={s.metaItem}>
-              <LocationIcon size={15} />
-              {place.name}
-            </span>
-          )}
-        </p>
-        <p className={s.meta}>
-          {shop.isOpen ? (
-            <span className={s.metaItem}>
-              <ClockIcon size={15} />
-              {t('common.minutes', { time: shop.deliveryTime })}
-            </span>
-          ) : (
-            <span className={s.metaItem}>
-              <ClockIcon size={15} />
-              {t('shopCard.opensAt', { time: formatClock(shop.timings?.open) })}
-            </span>
-          )}
+          <span>{facts.join(' · ')}</span>
+          <span className={s.time}>
+            <ClockIcon size={15} />
+            {shop.isOpen
+              ? t('common.minutes', { time: shop.deliveryTime })
+              : t('shopCard.opensAt', { time: formatClock(shop.timings?.open) })}
+          </span>
         </p>
       </div>
     </Card>

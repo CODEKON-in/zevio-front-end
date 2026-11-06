@@ -15,17 +15,15 @@
 
 .toast {
   touch-action: pan-y;
-  will-change: transform;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   background: var(--color-inverse-surface);
   color: var(--color-text-inverse);
   box-shadow: var(--shadow-lg);
   pointer-events: auto;
-  animation: toast-in 200ms ease-out;
 }
 
 .success svg:first-child { color: var(--color-on-inverse-success); }
@@ -57,13 +55,20 @@
 
 .close:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-inverse-hairline);
+}
+
+/* Pops up from below with a little overshoot. */
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast-in var(--dur-slow) var(--ease-spring) both;
+  }
 }
 
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(16px) scale(0.96);
   }
 }
 

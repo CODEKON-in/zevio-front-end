@@ -5,6 +5,7 @@
 }
 
 html {
+  background: var(--color-bg);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   /* The root of the rem scale. Everything sizes from here, so a phone set to
@@ -37,13 +38,13 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: 0.01em;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: -0.01em;
 }
 
-h1 { font-size: var(--font-size-xl); line-height: 1.3; }
-h2 { font-size: var(--font-size-lg); line-height: 1.35; }
-h3 { font-size: var(--font-size-md); line-height: 1.4; }
+h1 { font-size: var(--fs-24); line-height: 1.25; }
+h2 { font-size: var(--fs-20); line-height: 1.3; }
+h3 { font-size: var(--fs-18); line-height: 1.35; }
 
 img,
 svg {
@@ -97,16 +98,6 @@ ol {
   padding: 0 var(--space-4);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 /*
  * Motion is a preference, not a decoration. When the OS says "reduce", every
  * animation and transition collapses to something instant — the interface
@@ -128,4 +119,48 @@ ol {
 html,
 body {
   overflow-x: hidden;
+  /* clip, where supported, stops sideways scroll without turning <body> into
+     a scroll container — 'hidden' does, and that silently breaks every
+     position: sticky element (headers, the shop's section tabs). */
+  overflow-x: clip;
+}
+
+/* Numbers that change in place (prices, totals, counts) keep their width, so
+   the line around them never jumps. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Matte mango surface: the brand fill plus the static grain tile multiplied in.
+ * Used by the header band, primary buttons, active chips and the cart bar.
+ */
+.mango-surface {
+  background-color: var(--color-primary);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  color: var(--color-on-primary);
+}
+
+/* The photo that flies to the cart (utils/motion.js flyToCart). */
+.fly-dot {
+  position: fixed;
+  z-index: var(--z-fly);
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--color-surface);
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+}
+
+/* Staggered list entrance (hooks/useStagger.js): rows wait, hidden, until they
+   scroll into view and are animated in. Only when motion is allowed. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-stagger] > :not([data-shown]) {
+    opacity: 0;
+  }
 }

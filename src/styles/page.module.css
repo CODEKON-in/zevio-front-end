@@ -1,14 +1,13 @@
 /*
- * Page arrival: opacity only, ~160ms. Sliding or scaling a whole screen is
- * what makes a cheap phone look broken, so neither is used anywhere.
+ * Page arrival: a fade and an 8px rise, transform and opacity only. Navigation
+ * never waits for it — the new page is already there, it just settles in.
  */
 @media (prefers-reduced-motion: no-preference) {
   .page {
-    animation: pageFade 160ms ease-out both;
+    animation: pageIn var(--dur-base) var(--ease-out) both;
   }
-  @keyframes pageFade {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+  @keyframes pageIn {
+    from { opacity: 0; transform: translateY(8px); }
   }
 }
 
@@ -36,7 +35,7 @@
 
 .sectionTitle {
   margin-bottom: var(--space-3);
-  font-size: var(--font-size-lg);
+  font-size: var(--fs-20);
 }
 
 .sectionHead {
@@ -82,7 +81,8 @@
   padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
-  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 24px 24px 0 0;
+  box-shadow: var(--shadow-up);
 }
 
 .footerInner {
@@ -98,7 +98,7 @@
   gap: var(--space-2);
   align-items: flex-start;
   padding: var(--space-3);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   background: var(--color-warning-light);
   color: var(--color-warning);
   font-size: var(--font-size-sm);

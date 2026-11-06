@@ -51,3 +51,15 @@ function dismissSplash() {
 }
 
 dismissSplash();
+
+/*
+ * The few looping animations (empty-state float, skeleton shimmer, status
+ * pulse) pause while the tab is in the background: CSS reads html[data-hidden].
+ */
+function trackVisibility() {
+  const sync = () => document.documentElement.toggleAttribute('data-hidden', document.hidden);
+  document.addEventListener('visibilitychange', sync);
+  sync();
+}
+
+trackVisibility();

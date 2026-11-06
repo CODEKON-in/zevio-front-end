@@ -1,5 +1,12 @@
+/* Admin: the same tokens and fonts, but calmer — white surfaces on a light
+   warm grey, mango kept for accents (active nav, primary buttons, charts).
+   Re-pointing the surface tokens here re-skins every admin card and table. */
 .shell {
+  --color-surface: var(--color-admin-surface);
+  --color-bg: var(--color-admin-bg);
+  --color-surface-muted: var(--color-zebra);
   min-height: 100vh;
+  background: var(--color-bg);
 }
 
 .sidebar {
@@ -30,8 +37,12 @@
 }
 
 .brand {
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-black);
+  font-size: var(--fs-20);
 }
 
 .brandTag {
@@ -39,8 +50,10 @@
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--color-primary-light);
-  color: var(--color-primary-ink);
+  color: var(--color-on-primary);
+  font-family: var(--font-body);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
   vertical-align: middle;
 }
 
@@ -70,7 +83,7 @@
   min-height: var(--tap-target);
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-btn);
   background: transparent;
   color: var(--color-text);
   font-weight: var(--font-weight-semibold);
@@ -84,8 +97,11 @@
 
 .active,
 .active:hover {
-  background: var(--color-primary-light);
-  color: var(--color-primary-ink);
+  background-color: var(--color-primary);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  color: var(--color-on-primary);
+  font-weight: var(--font-weight-bold);
 }
 
 @media (min-width: 900px) {

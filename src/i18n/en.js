@@ -245,6 +245,9 @@ const en = {
   },
   home: {
     deliveringTo: 'Delivering to',
+    greeting: 'Hungry, {name}?',
+    greetingNoName: 'Hungry?',
+    greetingSub: 'Hot food and fresh bakes, brought home.',
     addAddress: 'Add delivery address',
     searchPlaceholder: 'Search shops or items',
     cart: 'Cart',
@@ -280,6 +283,7 @@ const en = {
     minOrderLine: 'Minimum order: {count} units',
   },
   shopPage: {
+    sectionsLabel: 'Menu sections',
     timings: 'Timings: {open} – {close}',
     call: 'Call shop',
     searchLabel: 'Search in this shop',

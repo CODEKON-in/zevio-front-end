@@ -6,10 +6,12 @@
   z-index: var(--z-bottom-nav);
   display: flex;
   justify-content: center;
-  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(var(--bottom-nav-height) + var(--safe-bottom));
+  padding: 0 var(--space-2) var(--safe-bottom);
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow-up);
 }
 
 .item {
@@ -22,40 +24,83 @@
   gap: 2px;
   color: var(--color-text-muted);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .label {
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
 }
 
 .active {
-  color: var(--color-primary-ink);
+  color: var(--color-text);
 }
 
 .active svg {
   stroke-width: 2.5;
 }
 
+/* The active tab's icon sits in a small matte mango pill. */
 .iconWrap {
   position: relative;
   display: grid;
   place-items: center;
+  width: 56px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+}
+
+.iconWrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-color: var(--color-primary);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  opacity: 0;
+  transform: scaleX(0.5);
+}
+
+.iconWrap {
+  isolation: isolate;
+}
+
+.active .iconWrap {
+  color: var(--color-on-primary);
+}
+
+.active .iconWrap::before {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .iconWrap::before {
+    transition: transform var(--dur-base) var(--ease-spring), opacity var(--dur-fast) var(--ease-out);
+  }
+  .item:active .iconWrap {
+    transform: scale(0.92);
+  }
+  .iconWrap {
+    transition: transform var(--dur-base) var(--ease-spring);
+  }
 }
 
 .badge {
   position: absolute;
   top: -6px;
-  right: -12px;
+  right: 2px;
   min-width: 20px;
   height: 20px;
   padding: 0 5px;
+  border: 2px solid var(--color-surface);
   border-radius: var(--radius-pill);
   background: var(--color-danger);
   color: var(--color-text-inverse);
-  font-size: 12px;
+  font-size: var(--fs-12);
   font-weight: var(--font-weight-bold);
-  line-height: 20px;
+  line-height: 16px;
   text-align: center;
 }

@@ -1,6 +1,7 @@
 import EmptyState from './EmptyState.jsx';
 import Button from './Button.jsx';
-import { AlertIcon, RefreshIcon } from '../icons/Icons.jsx';
+import { RefreshIcon } from '../icons/Icons.jsx';
+import { ErrorArt } from '../illustrations/Illustrations.jsx';
 import { t } from '../../i18n/index.js';
 
 /**
@@ -18,7 +19,7 @@ export default function ErrorState({ error, message, onRetry }) {
     <EmptyState
       tone="danger"
       role="alert"
-      icon={<AlertIcon size={36} />}
+      icon={<ErrorArt size={84} />}
       title={t('common.errorTitle')}
       message={text}
       action={

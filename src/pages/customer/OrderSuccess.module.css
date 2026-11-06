@@ -11,28 +11,77 @@
   text-align: center;
 }
 
-.tick {
-  display: grid;
-  place-items: center;
-  width: 112px;
-  height: 112px;
+.tickWrap {
+  position: relative;
   margin-bottom: var(--space-3);
-  border-radius: 50%;
-  background: var(--color-success);
-  color: var(--color-text-inverse);
-  box-shadow: 0 0 0 12px var(--color-success-light);
-  animation: pop 400ms ease-out;
 }
 
-@keyframes pop {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
+.tick {
+  display: block;
+  width: 128px;
+  height: 128px;
+}
+
+.ring {
+  fill: var(--color-success-light);
+}
+
+.disc {
+  fill: var(--color-success);
+}
+
+.check {
+  fill: none;
+  stroke: var(--color-text-inverse);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* The disc pops in with a spring, the ring breathes out once, and the tick
+   draws along its path. Transform, opacity and stroke-dashoffset only. */
+@media (prefers-reduced-motion: no-preference) {
+  .disc {
+    transform-origin: 60px 60px;
+    animation: pop var(--dur-slow) var(--ease-spring) both;
+  }
+  .ring {
+    transform-origin: 60px 60px;
+    animation: ring 700ms var(--ease-out) 120ms both;
+  }
+  .check {
+    animation: draw 420ms var(--ease-out) 300ms both;
+  }
+  .title,
+  .message {
+    animation: rise var(--dur-slow) var(--ease-out) 420ms both;
+  }
+  .message {
+    animation-delay: 500ms;
   }
 }
 
+@keyframes pop {
+  from { transform: scale(0.4); opacity: 0; }
+}
+
+@keyframes ring {
+  from { transform: scale(0.6); opacity: 0; }
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+}
+
+@keyframes rise {
+  from { transform: translateY(8px); opacity: 0; }
+}
+
 .title {
-  font-size: var(--font-size-2xl);
+  font-size: var(--fs-30);
+  font-weight: var(--font-weight-black);
 }
 
 .message {

@@ -1,25 +1,31 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useCustomer } from '../../context/CustomerContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
+import { useStagger } from '../../hooks/useStagger.js';
 import { getShops } from '../../services/shopService.js';
 import { EmptyState, ErrorState, SkeletonList } from '../../components/ui/index.js';
 import ShopCard from '../../components/customer/ShopCard.jsx';
 import CategoryChips from '../../components/customer/CategoryChips.jsx';
 import CartBar from '../../components/customer/CartBar.jsx';
 import AddressPickerSheet from '../../components/customer/AddressPickerSheet.jsx';
-import { CartIcon, ChevronDownIcon, LocationIcon, SearchIcon, StoreIcon } from '../../components/icons/Icons.jsx';
+import { CartIcon, ChevronDownIcon, LocationIcon, SearchIcon } from '../../components/icons/Icons.jsx';
 import p from '../../styles/page.module.css';
 import s from './Home.module.css';
+import { NoShopsArt } from '../../components/illustrations/Illustrations.jsx';
 
 /** Customer home: address chip, search, category chips, shop list. */
 export default function Home() {
   const [category, setCategory] = useState('all');
   const [pickerOpen, setPickerOpen] = useState(false);
   const { itemCount } = useCart();
+  const { user } = useAuth();
+  const firstName = (user?.name || '').trim().split(/\s+/)[0];
+  const listRef = useStagger();
   const { selectedAddress } = useCustomer();
   const { getPlace } = useSettings();
   const shops = useAsync(() => getShops({ category }), [category]);
@@ -29,21 +35,33 @@ export default function Home() {
   return (
     <>
       <header className={s.top}>
-        <div className={s.topRow}>
+        <div className={s.band}>
+          <div className={s.topRow}>
+            <div className={s.hello}>
+              <h1 className={s.greeting}>{firstName ? t('home.greeting', { name: firstName }) : t('home.greetingNoName')}</h1>
+              <p className={s.greetingSub}>{t('home.greetingSub')}</p>
+            </div>
+            <Link to="/cart" className={s.cartBtn} aria-label={itemCount ? t('home.cartWithCount', { count: itemCount }) : t('home.cart')}>
+              <CartIcon size={24} />
+              {itemCount > 0 && (
+                <span className={s.cartCount} aria-hidden="true">
+                  <span key={itemCount} className={s.cartCountNum}>
+                    {itemCount}
+                  </span>
+                </span>
+              )}
+            </Link>
+          </div>
           <button type="button" className={s.addressChip} onClick={() => setPickerOpen(true)}>
-            <LocationIcon size={22} className={s.pin} />
+            <LocationIcon size={18} className={s.pin} />
             <span className={s.addressText}>
-              <span className={s.deliveringTo}>{t('home.deliveringTo')}</span>
+              <span className="visually-hidden">{t('home.deliveringTo')} </span>
               <span className={s.addressLine}>
                 {selectedAddress ? `${selectedAddress.street}, ${placeName}` : t('home.addAddress')}
               </span>
             </span>
-            <ChevronDownIcon size={20} />
+            <ChevronDownIcon size={18} />
           </button>
-          <Link to="/cart" className={s.cartBtn} aria-label={itemCount ? t('home.cartWithCount', { count: itemCount }) : t('home.cart')}>
-            <CartIcon size={24} />
-            {itemCount > 0 && <span className={s.cartCount} aria-hidden="true">{itemCount}</span>}
-          </Link>
         </div>
         <Link to="/search" className={s.searchBar}>
           <SearchIcon size={20} />
@@ -52,7 +70,6 @@ export default function Home() {
       </header>
 
       <main className={p.page}>
-        <h1 className="visually-hidden">{t('app.name')}</h1>
         <CategoryChips value={category} onChange={setCategory} />
 
         <section className={p.section} aria-labelledby="shops-title">
@@ -68,9 +85,9 @@ export default function Home() {
           ) : shops.error ? (
             <ErrorState error={shops.error} onRetry={shops.reload} />
           ) : !shops.data?.length ? (
-            <EmptyState icon={<StoreIcon size={36} />} title={t('home.noShopsTitle')} message={t('home.noShopsMessage')} />
+            <EmptyState icon={<NoShopsArt size={84} />} title={t('home.noShopsTitle')} message={t('home.noShopsMessage')} />
           ) : (
-            <ul className={p.list}>
+            <ul ref={listRef} className={p.list} data-stagger>
               {shops.data.map((shop) => (
                 <li key={shop.id}>
                   <ShopCard shop={shop} />

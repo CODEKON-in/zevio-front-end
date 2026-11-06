@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import CountUp from './CountUp.jsx';
 import s from './StatCard.module.css';
 
 /**
@@ -12,7 +13,7 @@ export default function StatCard({ label, value, hint, tone = 'neutral', icon, t
         <span className={s.label}>{label}</span>
         {icon && <span className={s.icon}>{icon}</span>}
       </span>
-      <span className={s.value}>{value}</span>
+      <span className={s.value}>{typeof value === 'string' || typeof value === 'number' ? <CountUp value={value} /> : value}</span>
       {hint && <span className={s.hint}>{hint}</span>}
     </>
   );

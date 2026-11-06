@@ -27,7 +27,7 @@
 }
 
 .shop {
-  font-size: var(--font-size-md);
+  font-size: var(--fs-18);
 }
 
 .meta {
@@ -48,13 +48,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
 }
 
 .details {
   display: inline-flex;
   align-items: center;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   color: var(--color-primary-ink);
 }
 

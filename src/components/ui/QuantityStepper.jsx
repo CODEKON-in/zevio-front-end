@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { t } from '../../i18n/index.js';
 import { MinusIcon, PlusIcon, TrashIcon } from '../icons/Icons.jsx';
 import { MAX_ITEM_QTY } from '../../utils/constants.js';
@@ -31,6 +32,14 @@ export default function QuantityStepper({
   className,
 }) {
   const atMin = value <= min;
+  // Which way the number rolls: up when it grows, down when it shrinks. Worked
+  // out during render from the last value seen, so no extra render is needed.
+  const last = useRef(value);
+  const dir = useRef(null);
+  if (last.current !== value) {
+    dir.current = value > last.current ? 'up' : 'down';
+    last.current = value;
+  }
 
   return (
     <div className={cx(s.wrap, className)}>
@@ -45,7 +54,10 @@ export default function QuantityStepper({
           <MinusIcon size={20} strokeWidth={2.5} />
         </button>
         <span className={s.value} aria-live="polite">
-          {value}
+          {/* A new key per value remounts the digit, which replays the roll. */}
+          <span key={value} className={cx(s.digit, dir.current && s[dir.current])}>
+            {value}
+          </span>
         </span>
         <button
           type="button"

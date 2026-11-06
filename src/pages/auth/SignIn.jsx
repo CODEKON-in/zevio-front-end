@@ -3,12 +3,13 @@ import { t } from '../../i18n/index.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { Button, Input } from '../../components/ui/index.js';
-import { ChevronLeftIcon, StoreIcon } from '../../components/icons/Icons.jsx';
+import { ChevronLeftIcon } from '../../components/icons/Icons.jsx';
 import { ROLES } from '../../utils/constants.js';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
 import GoogleButton from './GoogleButton.jsx';
 import l from '../../styles/login.module.css';
 import s from './SignIn.module.css';
+import MangoMark from '../../components/brand/MangoMark.jsx';
 
 /**
  * SignIn — the customer sign-in screen.
@@ -56,7 +57,7 @@ export default function SignIn() {
     <main className={l.page}>
       <div className={l.hero}>
         <span className={l.logo} aria-hidden="true">
-          <StoreIcon size={40} />
+          <MangoMark size={60} />
         </span>
         <p className={l.appName}>{t('app.name')}</p>
       </div>

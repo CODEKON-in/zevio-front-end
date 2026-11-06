@@ -4,7 +4,7 @@ import { t } from '../../i18n/index.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { getOrderById } from '../../services/orderService.js';
 import { Badge, Button, ErrorState, Spinner } from '../../components/ui/index.js';
-import { CheckIcon } from '../../components/icons/Icons.jsx';
+import Confetti from '../../components/ui/Confetti.jsx';
 import s from './OrderSuccess.module.css';
 
 const REDIRECT_MS = 4000;
@@ -25,8 +25,14 @@ export default function OrderSuccess() {
 
   return (
     <main className={s.page}>
-      <div className={s.tick} aria-hidden="true">
-        <CheckIcon size={56} strokeWidth={3} />
+      <div className={s.tickWrap}>
+        {/* The tick draws itself (SVG stroke), then a small confetti burst. */}
+        <svg className={s.tick} viewBox="0 0 120 120" aria-hidden="true">
+          <circle className={s.ring} cx="60" cy="60" r="52" />
+          <circle className={s.disc} cx="60" cy="60" r="44" />
+          <path className={s.check} d="M40 61l14 14 27-29" pathLength="1" />
+        </svg>
+        {order.data && <Confetti />}
       </div>
       <h1 className={s.title}>{t('success.title')}</h1>
       {order.data ? (

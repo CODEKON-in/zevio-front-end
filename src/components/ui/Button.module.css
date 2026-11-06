@@ -7,19 +7,18 @@
   min-height: var(--tap-target);
   padding: 0 var(--space-5);
   border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-body);
+  font-size: var(--fs-16);
+  font-weight: var(--font-weight-bold);
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
   user-select: none;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
-}
-
-.btn:active:not(.inactive) {
-  transform: scale(0.97);
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .label {
@@ -30,7 +29,8 @@
 .sm {
   min-height: 40px;
   padding: 0 var(--space-3);
-  font-size: var(--font-size-sm);
+  font-size: var(--fs-14);
+  overflow: visible;
 }
 /* keep a 48px touch area for small buttons */
 .sm::before {
@@ -40,8 +40,8 @@
 }
 .lg {
   min-height: 56px;
-  font-size: var(--font-size-lg);
-  border-radius: var(--radius-lg);
+  font-size: var(--fs-18);
+  border-radius: calc(var(--radius-btn) + 2px);
 }
 .block {
   display: flex;
@@ -49,30 +49,40 @@
 }
 
 /* Variants */
+
+/* The primary is a matte mango surface: the fill, a barely-there same-hue
+   lift, and the static grain multiplied in. No gloss. */
 .primary {
-  background: var(--color-primary);
+  background-color: var(--color-primary);
+  background-image: var(--grain), var(--mango-fill);
+  background-blend-mode: multiply, normal;
   color: var(--color-on-primary);
+  box-shadow: var(--shadow-1);
 }
 .primary:hover:not(.inactive) {
-  background: var(--color-primary-dark);
+  background-color: var(--color-primary-hover);
+}
+.primary:active:not(.inactive) {
+  background-color: var(--color-primary-dark);
 }
 
 .secondary {
   background: var(--color-primary-light);
-  color: var(--color-primary-ink);
+  color: var(--color-on-primary);
 }
 .secondary:hover:not(.inactive) {
   border-color: var(--color-primary-edge);
 }
 
 .outline {
-  background: var(--color-bg);
-  border-color: var(--color-primary-edge);
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
   color: var(--color-text);
 }
 .outline:hover:not(.inactive) {
+  border-color: var(--color-primary-edge);
   background: var(--color-primary-light);
-  color: var(--color-primary-ink);
+  color: var(--color-on-primary);
 }
 
 .ghost {
@@ -88,15 +98,18 @@
   color: var(--color-text-inverse);
 }
 .danger:hover:not(.inactive) {
-  filter: brightness(0.92);
+  background: var(--color-danger-ink);
 }
 
 .success {
-  background: var(--color-success);
+  background-color: var(--color-success);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
   color: var(--color-text-inverse);
+  box-shadow: var(--shadow-1);
 }
 .success:hover:not(.inactive) {
-  filter: brightness(0.92);
+  background-color: var(--color-success-ink);
 }
 
 /* "Not ready yet", not "faded out". Dimming the whole button with opacity took
@@ -107,8 +120,46 @@
    state is a flat, inert colour pair at full opacity instead of a veil. */
 .inactive {
   background: var(--color-disabled-surface);
+  background-image: none;
   border-color: transparent;
   color: var(--color-disabled-ink);
   box-shadow: none;
   cursor: not-allowed;
+}
+
+/*
+ * Motion. A press squishes to 96% at once and springs back on release — the
+ * press itself never waits on an animation. The primary gets one soft light
+ * sweep on hover, and only where there is a real pointer: it never loops and
+ * never shows on a phone.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .btn {
+    transition:
+      transform var(--dur-base) var(--ease-spring),
+      background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .btn:active:not(.inactive) {
+    transform: scale(0.96);
+    transition-duration: 80ms;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .primary::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: -1;
+    width: 60%;
+    background: linear-gradient(100deg, transparent 0%, var(--color-shine) 50%, transparent 100%);
+    transform: translateX(-120%) skewX(-12deg);
+    pointer-events: none;
+  }
+  .primary:hover:not(.inactive)::after {
+    transform: translateX(240%) skewX(-12deg);
+    transition: transform 700ms var(--ease-out);
+  }
 }
