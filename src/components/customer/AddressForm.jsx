@@ -11,7 +11,7 @@ import { PLACE_NOT_LISTED } from '../../utils/constants.js';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
 import s from './AddressForm.module.css';
 
-const IS_DEV = Boolean(import.meta.env?.DEV);
+const IS_DEV = import.meta.env.DEV;
 
 /**
  * AddressForm — Name, Phone, Area, Street, Door number, Landmark, Notes.

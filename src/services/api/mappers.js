@@ -9,6 +9,7 @@
  */
 import { ORDER_STATUS, PAYMENT_METHODS, PAYMENT_STATUS } from '../../utils/constants.js';
 import { getPlacesOrEmpty } from './apiSettings.js';
+import { areaById } from '../../data/serviceAreas.js';
 
 /* ---------------- places (city ↔ placeId) ---------------- */
 
@@ -26,7 +27,7 @@ export function placeIdFromCity(city, places) {
 }
 
 export function cityFromPlaceId(placeId, places) {
-  return places.find((p) => p.id === placeId)?.name || placeId || '';
+  return places.find((p) => p.id === placeId)?.name || areaById(placeId)?.name || placeId || '';
 }
 
 /* ---------------- slugs ---------------- */

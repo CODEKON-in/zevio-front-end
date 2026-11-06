@@ -7,7 +7,7 @@ import { getShops } from '../../services/shopService.js';
 import { Button, Card, ErrorState, Input, SkeletonList } from '../../components/ui/index.js';
 import { PlusIcon, TrashIcon } from '../../components/icons/Icons.jsx';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
-import { PLACE_POINTS } from '../../data/serviceArea.js';
+import { SERVICE_AREAS, areaById } from '../../data/serviceAreas.js';
 import a from './admin.module.css';
 import s from './AdminSettings.module.css';
 
@@ -54,9 +54,7 @@ export default function AdminSettings() {
    * what is here — and with this list empty, nobody can save an address or
    * place an order at all.
    */
-  const missingVillages = Object.entries(PLACE_POINTS)
-    .filter(([id]) => !places.some((p) => p.id === id))
-    .map(([id, p]) => ({ id, name: p.name }));
+  const missingVillages = SERVICE_AREAS.filter((a) => !places.some((p) => p.id === a.id)).map((a) => ({ id: a.id, name: a.name }));
   const [addingVillages, setAddingVillages] = useState(false);
 
   /** Adds the known villages with exactly the ids the GPS code uses, and saves at once. */
@@ -227,7 +225,7 @@ export default function AdminSettings() {
                 <span className={s.count}>
                   {t('admin.settings.shopsInPlace', { count: shopsByPlace[p.id] || 0 })}
                   {/* Typed by hand, so the id may not be one the GPS code knows. */}
-                  {!PLACE_POINTS[p.id] && <span className={s.noGps}> · {t('admin.settings.noGps')}</span>}
+                  {!areaById(p.id) && <span className={s.noGps}> · {t('admin.settings.noGps')}</span>}
                 </span>
                 <Button variant="ghost" aria-label={t('admin.settings.removePlace', { name: p.name })} iconLeft={<TrashIcon size={18} />} onClick={() => removePlace(p)} className={s.remove} />
               </li>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { deviceKind, distanceKm, serviceAreaVerdict } from '../utils/geolocation.js';
-import { PLACE_POINTS, SERVICE_AREA } from '../data/serviceArea.js';
+import { areasByDistance, detectArea, deviceKind } from '../utils/geolocation.js';
+import { LOW_ACCURACY_M } from '../data/serviceAreas.js';
 import s from './LocationCheck.module.css';
 
 /**
@@ -20,13 +20,11 @@ import s from './LocationCheck.module.css';
 const fmtKm = (km) => (km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`);
 const fmtAcc = (m) => (m >= 1000 ? `±${(m / 1000).toFixed(1)} km` : `±${Math.round(m)} m`);
 
-function nearestVillage(lat, lng) {
-  let best = null;
-  for (const [id, p] of Object.entries(PLACE_POINTS)) {
-    const km = distanceKm(p, { lat, lng });
-    if (!best || km < best.km) best = { id, km };
-  }
-  return best;
+/** The app's verdict in words, from the same detectArea() the app itself uses. */
+function verdictText(result) {
+  if (result.status === 'IN_AREA') return `IN_AREA — ${result.area.name}`;
+  if (result.status === 'OUT_OF_RANGE') return 'OUT_OF_RANGE';
+  return 'LOW_ACCURACY — too rough to say which village';
 }
 
 export default function LocationCheck() {
@@ -83,8 +81,8 @@ export default function LocationCheck() {
   };
 
   const best = readings.reduce((b, r) => (!b || r.accuracy < b.accuracy ? r : b), null);
-  const village = best && nearestVillage(best.lat, best.lng);
-  const verdict = best && serviceAreaVerdict(best.lat, best.lng, best.accuracy);
+  const nearest = best ? areasByDistance(best).slice(0, 3) : [];
+  const result = best && detectArea(best);
 
   return (
     <main className={s.page}>
@@ -120,10 +118,11 @@ export default function LocationCheck() {
         <section className={s.panel}>
           <h2 className={s.h2}>Best reading so far</h2>
           <Row label="Coordinates" value={`${best.lat.toFixed(5)}, ${best.lng.toFixed(5)}`} />
-          <Row label="Accuracy" value={fmtAcc(best.accuracy)} bad={best.accuracy > 2000} />
-          <Row label="Nearest village" value={`${village.id} — ${fmtKm(village.km)} away`} />
-          <Row label="From centre of delivery area" value={`${fmtKm(distanceKm(SERVICE_AREA.center, best))} (area radius ${SERVICE_AREA.radiusKm} km)`} />
-          <Row label="App's verdict" value={verdict} bad={verdict !== 'in'} />
+          <Row label="Accuracy" value={fmtAcc(best.accuracy)} bad={best.accuracy > LOW_ACCURACY_M} />
+          {nearest.map(({ area, distanceKm: km }) => (
+            <Row key={area.id} label={area.name} value={`${fmtKm(km)} from centre (radius ${area.radiusKm} km)`} bad={km > area.radiusKm} />
+          ))}
+          <Row label="App's verdict" value={verdictText(result)} bad={result.status !== 'IN_AREA'} />
           <p className={s.map}>
             <a href={`https://www.google.com/maps?q=${best.lat},${best.lng}`} target="_blank" rel="noreferrer">
               Open this point on a map

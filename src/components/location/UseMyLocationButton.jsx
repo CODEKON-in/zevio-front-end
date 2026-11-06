@@ -5,7 +5,7 @@ import { LocationIcon } from '../icons/Icons.jsx';
 import { detectArea, deviceKind, getCurrentPosition } from '../../utils/geolocation.js';
 import s from './UseMyLocationButton.module.css';
 
-const IS_DEV = Boolean(import.meta.env?.DEV);
+const IS_DEV = import.meta.env.DEV;
 
 /**
  * "Use my location" — works out which of our areas the customer is in.

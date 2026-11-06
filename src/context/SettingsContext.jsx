@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { getSettings, updateSettings as saveSettings } from '../services/settingsService.js';
 import { DEFAULT_SETTINGS } from '../utils/constants.js';
+import { areaById } from '../data/serviceAreas.js';
 
 const SettingsContext = createContext(null);
 
@@ -44,7 +45,9 @@ export function SettingsProvider({ children }) {
 
   const value = useMemo(() => {
     const placeById = Object.fromEntries(settings.servicePlaces.map((p) => [p.id, p]));
-    return { settings, status, error, reload, updateSettings, getPlace: (id) => placeById[id] };
+    return { settings, status, error, reload, updateSettings, // An address's area comes from serviceAreas.js, so a village not yet added
+    // in Admin → Settings still shows its name instead of a blank.
+    getPlace: (id) => placeById[id] || areaById(id) || undefined };
   }, [settings, status, error, reload, updateSettings]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
