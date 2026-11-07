@@ -6,7 +6,7 @@
  * within the radius of at least one area, and their area is the one whose centre
  * is closest. Both the sign-in check and "Use my location" use exactly this.
  *
- * The id must match the same village's id in Admin → Settings. The customer's
+ * The id must match the same village's id in the database's settings (places). The customer's
  * area dropdown comes from this list, but shops are assigned to the villages in
  * Settings, and Settings has a one-click button that copies these in so the two
  * cannot drift apart through a typing slip.

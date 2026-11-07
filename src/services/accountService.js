@@ -1,8 +1,8 @@
 /**
- * Accounts for customers, shop owners and delivery partners: Google sign-in,
- * first-time sign-up, and delete account. Admins sign in through services/adminAuth (Google, invite-only).
+ * Customer accounts: Google sign-in,
+ * first-time sign-up, and delete account. Customers are the only people who sign in.
  *
  * A signed-in user looks like:
- *   { id, role, name, phone, email, picture, customerId? | shopId? | partnerId? }
+ *   { id, role: "customer", name, phone, email, picture, customerId }
  */
 export { signIn as signInWithGoogle, signUp as completeSignUp, deleteAccount } from './api/apiAccount.js';

@@ -7,15 +7,7 @@
 import * as api from './api/apiUsers.js';
 import * as book from './addressBook.js';
 
-export {
-  getCustomers,
-  updateCustomer,
-  setCustomerBlocked,
-  getPartners,
-  getPartnerById,
-  savePartner,
-  setPartnerOnline,
-} from './api/apiUsers.js';
+export { getPartnerById } from './api/apiUsers.js';
 
 /** The customer, with the addresses saved on this phone. */
 export async function getCustomerById(id) {

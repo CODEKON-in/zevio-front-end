@@ -87,9 +87,6 @@
      outdoors. This pair reads as inert and still clears AA at 5.2:1. */
   --color-disabled-surface: #f3ecdd;
   --color-disabled-ink: #6b6145;
-  /* Admin: calmer — white surfaces, mango only as an accent. */
-  --color-admin-bg: #faf7f0;
-  --color-admin-surface: #ffffff;
   --color-zebra: #fcf8ee;
   --color-press: rgba(58, 42, 8, 0.1); /* pressed tint over mango fills       */
   --color-hero-scrim: rgba(42, 33, 22, 0.55);
@@ -166,7 +163,6 @@
   --header-height: 56px;
   --bottom-nav-height: 64px;
   --container-max: 640px;
-  --admin-sidebar-width: 240px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* ---- Shadows ------------------------------------------------------------ */
@@ -206,7 +202,7 @@
  * reference every media query is written against):
  *   mobile   up to 599px   — the primary target, designed from 320px up
  *   tablet   600–1023px
- *   desktop  1024px and above — mainly the admin panel
+ *   desktop  1024px and above
  */
 :root {
   --color-text-primary: var(--color-text);

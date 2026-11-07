@@ -72,7 +72,7 @@
   }
 }
 
-/* Wide screens (admin): bottom-left corner — clear of page headers and of
+/* Wide screens: bottom-left corner — clear of page headers and of
    the right-side drawers, whose buttons a toast must never cover. */
 @media (min-width: 900px) {
   .viewport {

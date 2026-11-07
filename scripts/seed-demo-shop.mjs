@@ -5,7 +5,7 @@
  *   npm run seed:demo -- --hide  hide it from customers again
  *
  * Uses ZEVIO_API_URL and ZEVIO_API_KEY from .env.local. Also adds the five
- * delivery villages if Admin → Settings has none, because a shop must sit in
+ * delivery villages if the settings have none, because a shop must sit in
  * one of them.
  */
 import { randomUUID } from 'node:crypto';
@@ -34,7 +34,7 @@ if (hide) {
     process.exit(0);
   }
   must(await post('/shop/set-active/', { shop_id: shop.id, status: false }), 'Hiding the demo shop');
-  console.log('✓ Demo shop hidden from customers. Show it again from Admin → Shops, or run npm run seed:demo.');
+  console.log('✓ Demo shop hidden from customers. Show it again in Supabase (shops.is_active), or run npm run seed:demo.');
   process.exit(0);
 }
 

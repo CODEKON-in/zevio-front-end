@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import * as authService from '../services/authService.js';
 import * as accountService from '../services/accountService.js';
 import { googleSignOut } from '../services/google.js';
 import { readStorage, writeStorage, removeStorage } from '../utils/storage.js';
@@ -9,8 +8,7 @@ const AuthContext = createContext(null);
 
 /**
  * Provides:
- *  - user: { id, name, phone, role, shopId?, partnerId?, customerId? } | null
- *  - login(role, details) → Promise<user>
+ *  - user: { id, name, phone, role, customerId } | null (customers only)
  *  - logout()
  *  - updateUser(patch) — e.g. after editing profile name
  *  - signInWithGoogle(role, google) → { user } (signed in) | { needsSignUp: true }
@@ -20,15 +18,9 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const saved = readStorage(STORAGE_KEYS.SESSION, null);
-    return saved && saved.role ? saved : null;
+    // Only customer sessions count (an old admin session from before is ignored).
+    return saved && saved.role === 'customer' ? saved : null;
   });
-
-  const login = useCallback(async (role, details) => {
-    const u = await authService.login(role, details);
-    setUser(u);
-    writeStorage(STORAGE_KEYS.SESSION, u);
-    return u;
-  }, []);
 
   const saveSession = useCallback((u) => {
     setUser(u);
@@ -51,7 +43,6 @@ export function AuthProvider({ children }) {
   );
 
   const logout = useCallback(async () => {
-    await authService.logout();
     googleSignOut();
     setUser(null);
     removeStorage(STORAGE_KEYS.SESSION);
@@ -75,8 +66,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, login, logout, updateUser, signInWithGoogle, completeSignUp, deleteAccount }),
-    [user, login, logout, updateUser, signInWithGoogle, completeSignUp, deleteAccount],
+    () => ({ user, logout, updateUser, signInWithGoogle, completeSignUp, deleteAccount }),
+    [user, logout, updateUser, signInWithGoogle, completeSignUp, deleteAccount],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

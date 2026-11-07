@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { getSettings, updateSettings as saveSettings } from '../services/settingsService.js';
+import { getSettings } from '../services/settingsService.js';
 import { DEFAULT_SETTINGS } from '../utils/constants.js';
 import { areaById } from '../data/serviceAreas.js';
 
@@ -10,7 +10,7 @@ const SettingsContext = createContext(null);
  *  - settings: { deliveryFee, partnerIncentive, servicePlaces:[{id,name}], supportPhone, supportWhatsApp, platformUpiId, platformUpiName }
  *  - status: 'loading' | 'ready' | 'error'
  *  - error: the failure behind status 'error', so screens can say what went wrong
- *  - reload(), updateSettings(patch)
+ *  - reload()
  *  - getPlace(placeId) → place object or undefined
  */
 export function SettingsProvider({ children }) {
@@ -37,18 +37,18 @@ export function SettingsProvider({ children }) {
     reload();
   }, [reload]);
 
-  const updateSettings = useCallback(async (patch) => {
-    const next = await saveSettings(patch);
-    setSettings(next);
-    return next;
-  }, []);
-
   const value = useMemo(() => {
     const placeById = Object.fromEntries(settings.servicePlaces.map((p) => [p.id, p]));
-    return { settings, status, error, reload, updateSettings, // An address's area comes from serviceAreas.js, so a village not yet added
-    // in Admin → Settings still shows its name instead of a blank.
-    getPlace: (id) => placeById[id] || areaById(id) || undefined };
-  }, [settings, status, error, reload, updateSettings]);
+    return {
+      settings,
+      status,
+      error,
+      reload,
+      // An address's area comes from serviceAreas.js, so a village missing
+      // from the database's places list still shows its name.
+      getPlace: (id) => placeById[id] || areaById(id) || undefined,
+    };
+  }, [settings, status, error, reload]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

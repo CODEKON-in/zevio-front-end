@@ -10,7 +10,7 @@
  * before Google sign-in are matched on email and linked on first sign-in.
  *
  * Customers are the only people who sign in here. Shops and delivery partners
- * are records the admin creates and manages; they have no app of their own.
+ * are records managed in the database; they have no app of their own.
  */
 import { apiGet, apiPost } from './client.js';
 import { getOrders } from './apiOrders.js';
@@ -70,12 +70,12 @@ export async function signIn(role, googleFromBrowser) {
 
   if (role === ROLES.CUSTOMER) {
     if (!profile) return { needsSignUp: true, google };
-    // A profile the admin created as a shop owner or a delivery partner cannot
+    // A profile created in the database as a shop owner or a delivery partner cannot
     // order through this app: its user_type is not 'customer', and the row is
     // the shop's or the partner's record rather than a person's. They sign up
-    // with a different Google account, or the admin changes the row.
+    // with a different Google account, or the row is changed in the database.
     if (profile.user_type !== 'customer') throw new ServiceError('WRONG_ROLE');
-    // is_blocked is a real column, so the admin's block applies on every phone.
+    // is_blocked is a real column, so a block set in the database applies on every phone.
     if (profile.is_blocked) throw new ServiceError('BLOCKED');
     return { user: customerUser(profile, google) };
   }

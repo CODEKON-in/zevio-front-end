@@ -1,8 +1,10 @@
 # Zevio API — state of the backend
 
-The whole app runs on the database now: every list, number and toggle in the
-customer app, the shop panel, the delivery app and `/admin` is a row the API read
-or wrote. There is no demo data left anywhere.
+The website is now **the customer app only** — the admin panel, shop panel and
+delivery app were removed. Shops, products, order statuses, settings and villages
+are managed directly in Supabase (or with `npm run seed:demo`). The app's proxy
+forwards only the customer endpoints, so none of the management endpoints below
+can be reached from the website.
 
 This file records what the backend does, what you must do once, and what is
 still missing.
@@ -26,10 +28,8 @@ Supabase errors on an unknown column, so `/api/user/<uid>` would answer 500.
    - `GOOGLE_CLIENT_ID` — the same OAuth client id the app uses. Without it
      `/api/auth/google` answers 404 and the app falls back to trusting the
      browser's own reading of the Google token.
-4. **Sign in to `/admin`** with the account `migration.sql` created (the password
-   is in the API's README) and change that password.
-5. **Admin → Settings:** the villages you serve, delivery fee, partner incentive,
-   support phone / WhatsApp, platform UPI id. Shops and partners cannot be filed
+4. **Supabase → Table Editor → `settings` / `places`:** the villages you serve,
+   delivery fee, support phone / WhatsApp, platform UPI id. Shops cannot be filed
    under a village until that list is right.
 
 ---
@@ -40,12 +40,9 @@ Supabase errors on an unknown column, so `/api/user/<uid>` would answer 500.
 - `POST /api/auth/google` — checks the Google ID token's signature, issuer,
   audience and expiry against Google's keys, then returns the person **and**
   their profile. A profile is found by `google_sub`; an account created earlier
-  (or by the admin) is claimed by matching `email`.
-- `POST /api/auth/admin` — email + password against a hash in `profiles`
-  (Werkzeug PBKDF2/scrypt). Wrong details answer 401 without saying which.
-- `POST /api/admin/add/` — creates an admin. Deliberately **not** in the app's
-  proxy allowlist: it is a server-side call with the API key, never something a
-  browser can do.
+  (or added in the database) is claimed by matching `email`.
+- `POST /api/auth/admin` and `POST /api/admin/add/` still exist in the API but
+  are **not** in the app's proxy allowlist; nothing on the website uses them.
 
 ### Real columns instead of text-field hacks
 Earlier versions packed data the database lacked into existing text fields (shop
@@ -61,7 +58,7 @@ database holds:
 | `profiles` | `email`, `google_sub`, `password_hash`, `is_blocked`, `is_active`, `is_online`, `vehicle`, `base_place` |
 | new tables | `places` (the service area), `settings` (one row), `addresses` |
 
-### Endpoints the app uses
+### Other endpoints the API has (not reachable from the website)
 `/api/users/?user_type=…`, `/api/places/` + `/api/place/{add,update,delete}/`,
 `/api/settings/` (GET and POST), `/api/shop/set-active/`, `/api/orders/` with
 `status` and `date` filters, `/api/orders/by-partner/<id>`,
@@ -90,9 +87,5 @@ orders stay as records with the personal link emptied.
 
 ## Notes
 
-- The admin path can be moved off `/admin` with `VITE_ADMIN_PATH` in the app.
-  That **hides** the panel; it does not protect it (the value ships in the
-  JavaScript bundle, because the browser has to know where to route). The
-  password and the API's own checks are the real gate.
 - `Zevio-delivery-app-main/database/*.sql` is the original schema. It is older
   than the live database — `migration.sql` is what brings a database up to date.

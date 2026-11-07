@@ -7,7 +7,7 @@ import { cx } from '../../utils/format.js';
 import s from './Modal.module.css';
 
 /**
- * Modal — centred dialog (confirmations, admin forms).
+ * Modal — centred dialog (confirmations).
  * Props:
  *  - open: boolean
  *  - onClose: () => void — backdrop tap, close button, Escape

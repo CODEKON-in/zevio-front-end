@@ -87,7 +87,6 @@ for (const w of [320, 768, 1280]) {
   ok('Home band shows the Mynt lockup (one accessible name)', (await p.getByRole('img', { name: 'Mynt' }).count()) >= 1);
   ok('Title is "Mynt — Food & essentials delivered"', (await p.title()) === 'Mynt — Food & essentials delivered', await p.title());
   ok('theme-color #F2B43A', (await p.getAttribute('meta[name=theme-color]', 'content')) === '#F2B43A');
-  await p.goto(BASE + '/admin'); await p.waitForTimeout(1600);
   await c.close();
 }
 {
@@ -96,14 +95,6 @@ for (const w of [320, 768, 1280]) {
   ok('Sign-in shows the Mynt lockup and "Welcome to Mynt"', (await p.getByRole('img', { name: 'Mynt' }).count()) === 1 && (await p.getByText('Welcome to Mynt').count()) === 1);
   const html = await p.content();
   ok('No user-visible "Zevio" on sign-in', !/zevio/i.test(await p.locator('body').innerText()));
-  await c.close();
-}
-{
-  const c = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, reducedMotion: 'reduce' }); await install(c);
-  await c.addInitScript(([s]) => localStorage.setItem('zevio.api.session', s), [JSON.stringify(sessions.admin)]);
-  const p = await c.newPage(); await p.goto(BASE + '/admin'); await p.waitForTimeout(1500);
-  ok('Admin sidebar shows the Mynt lockup', (await p.locator('aside').getByRole('img', { name: 'Mynt' }).count()) === 1);
-  ok('No user-visible "Zevio" in admin', !/zevio/i.test(await p.locator('body').innerText()));
   await c.close();
 }
 {

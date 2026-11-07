@@ -86,6 +86,5 @@ export async function install(ctx, { delay = 150 } = {}) {
 }
 export const sessions = {
   customer: { id: 'c1', customerId: 'c1', role: 'customer', name: 'Arun Kumar', phone: '9876500001', email: 'arun@example.com', picture: null },
-  admin: { id: 'a1', role: 'admin', name: 'Waheed', phone: '9999999999', email: 'codekon10@gmail.com' },
 };
 export const inRange = { status: 'in_range', location: { lat: 10.91333, lng: 79.24194, accuracy: 12, place: 'pandaravadai', source: 'gps' }, acknowledged: true };

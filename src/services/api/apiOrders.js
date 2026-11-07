@@ -1,11 +1,9 @@
 /** Orders from the Zevio API. */
 import { apiGet, apiPost } from './client.js';
-import { cityFromPlaceId, getPlaces, toApiStatus, toOrder } from './mappers.js';
+import { cityFromPlaceId, getPlaces, toOrder } from './mappers.js';
 import { fetchShops, getProductsByShop, getShopById } from './apiShops.js';
 import { fetchRawSettings } from './apiSettings.js';
-import { forgetOrderCounts } from './apiUsers.js';
 import { ServiceError } from '../../utils/errors.js';
-import { ALLOWED_TRANSITIONS, ORDER_STATUS } from '../../utils/constants.js';
 import { canCancelOrder } from '../../utils/orderRules.js';
 import { isSameDay } from '../../utils/format.js';
 
@@ -50,25 +48,13 @@ async function mapOrders(rows) {
 
 /**
  * List orders, newest first. The API lists by customer, shop or partner, and
- * `GET /api/orders/` returns every order for the admin screens.
+ * `GET /api/orders/` returns every order (not used by this app).
  */
+/** A customer's orders, newest first. Optional filters: status (one or a list), placeId, date, query. */
 export async function getOrders(filters = {}) {
-  const { customerId, shopId, partnerId, status, placeId, date, query } = filters;
-  const single = Array.isArray(status) ? null : status;
-
-  let rows;
-  if (customerId) rows = await apiGet(`/orders/by-customer/${customerId}`);
-  else if (shopId) rows = await apiGet(`/orders/by-shop/${shopId}`);
-  else if (partnerId) rows = await apiGet(`/orders/by-partner/${partnerId}`);
-  else {
-    // The server filters by status and day, so a filtered admin view stays small.
-    rows = await apiGet('/orders/', {
-      status: single ? toApiStatus(single) : undefined,
-      date: date ? new Date(date).toISOString().slice(0, 10) : undefined,
-    });
-  }
-  if (customerId && shopId) rows = rows.filter((r) => r.shop_id === shopId);
-  if (partnerId && shopId) rows = rows.filter((r) => r.shop_id === shopId);
+  const { customerId, status, placeId, date, query } = filters;
+  if (!customerId) return [];
+  const rows = await apiGet(`/orders/by-customer/${customerId}`);
 
   const statuses = status ? [].concat(status) : null;
   const q = query?.trim().toLowerCase();
@@ -77,7 +63,7 @@ export async function getOrders(filters = {}) {
     .filter((o) => !statuses || statuses.includes(o.status))
     .filter((o) => !placeId || o.address.placeId === placeId)
     .filter((o) => !date || isSameDay(o.createdAt, date))
-    .filter((o) => !q || String(o.number).toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q) || o.shopName.toLowerCase().includes(q))
+    .filter((o) => !q || String(o.number).toLowerCase().includes(q) || o.shopName.toLowerCase().includes(q))
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
@@ -131,22 +117,7 @@ export async function placeOrder({ customer, cart, address, paymentMethod, isGif
     items: JSON.stringify(lines),
   });
   if (!data?.order_id) throw new ServiceError('SERVER');
-  forgetOrderCounts();
   return getOrderById(data.order_id);
-}
-
-export async function updateOrderStatus(id, status, options = {}) {
-  const current = await getOrderById(id);
-  if (!options.force && !ALLOWED_TRANSITIONS[current.status]?.includes(status)) {
-    throw new ServiceError('INVALID_STATUS');
-  }
-  await apiPost('/order/update-status/', {
-    order_id: id,
-    status: toApiStatus(status),
-    ...(status === ORDER_STATUS.CANCELLED && options.reason ? { reject_reason: options.reason } : {}),
-  });
-  forgetOrderCounts();
-  return getOrderById(id);
 }
 
 /**
@@ -157,31 +128,6 @@ export async function cancelOrder(id, reason) {
   const current = await getOrderById(id);
   if (!canCancelOrder(current)) throw new ServiceError('NOT_CANCELLABLE');
   await apiPost('/order/cancel/', { order_id: id, ...(reason ? { reject_reason: reason } : {}) });
-  forgetOrderCounts();
   return getOrderById(id);
 }
 
-/** Assign or reassign a delivery partner (admin). Pass null to unassign. */
-export async function assignPartner(orderId, partnerId) {
-  await apiPost('/order/assign-partner/', { order_id: orderId, partner_id: partnerId || '' });
-  forgetOrderCounts();
-  return getOrderById(orderId);
-}
-
-export async function markOrderPaid(orderId) {
-  await apiPost('/order/mark-paid/', { order_id: orderId });
-  forgetOrderCounts();
-  return getOrderById(orderId);
-}
-
-export async function getDailyOrderCounts(days = 7) {
-  const rows = (await apiGet('/orders/')) || [];
-  const result = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setHours(12, 0, 0, 0);
-    d.setDate(d.getDate() - i);
-    result.push({ date: d.toISOString(), count: rows.filter((o) => isSameDay(o.created_at, d)).length });
-  }
-  return result;
-}

@@ -7,7 +7,7 @@ import { cx } from '../../utils/format.js';
 import s from './Drawer.module.css';
 
 /**
- * Drawer — panel that slides in from the side (admin detail views and forms).
+ * Drawer — panel that slides in from the side (detail views and forms).
  * Full screen on phones.
  * Props:
  *  - open, onClose, title

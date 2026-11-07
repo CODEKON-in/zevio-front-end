@@ -19,7 +19,7 @@ import MyntLogo from '../../components/brand/MyntLogo.jsx';
  *
  * There used to be a "Who are you?" chooser here, because shop owners and
  * delivery partners signed in through the same screen. They have no app of
- * their own any more — the admin manages shops and partners — so anyone
+ * their own any more — shops and partners are managed in the database — so anyone
  * arriving here is a customer and there is nothing to choose.
  */
 export default function SignIn() {

@@ -24,52 +24,15 @@ export const ORDER_FLOW = [
   ORDER_STATUS.DELIVERED,
 ];
 
-/** Which status can move to which. Admin can override with `force`. */
-export const ALLOWED_TRANSITIONS = Object.freeze({
-  PENDING: ['CONFIRMED', 'CANCELLED'],
-  CONFIRMED: ['PREPARING', 'CANCELLED'],
-  PREPARING: ['OUT_FOR_DELIVERY', 'CANCELLED'],
-  OUT_FOR_DELIVERY: ['DELIVERED'],
-  DELIVERED: [],
-  CANCELLED: [],
-});
-
 export const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING', 'OUT_FOR_DELIVERY'];
 export const FINISHED_STATUSES = ['DELIVERED', 'CANCELLED'];
 
-/** A shop's "Reject" is a cancel with a reason. */
-export const isRejected = (order) => order?.status === ORDER_STATUS.CANCELLED && Boolean(order.rejectReason);
-
 /**
- * The two kinds of person who sign in. Shops and delivery partners are still
- * real records the admin manages, but they have no app of their own any more,
- * so they are not roles anyone signs in as.
+ * Who signs in: customers only. Shops and delivery partners are records in the
+ * database (managed there directly); they have no app of their own.
  */
 export const ROLES = Object.freeze({
   CUSTOMER: 'customer',
-  ADMIN: 'admin',
-});
-
-/**
- * URL segment of the admin panel. Set VITE_ADMIN_PATH to something hard to guess
- * so the panel does not sit at the obvious /admin; any other path falls through
- * to the customer app, which gives nothing away.
- *
- * This HIDES the panel, it does not protect it. The value ships inside the JS
- * bundle — the browser has to know where to route — so anyone who reads the
- * bundle can find it. Treat it as a speed bump against scanners and curious
- * visitors. The real gate is the admin login and the API's own checks.
- */
-/* `import.meta.env` is Vite's, so it is undefined when this module is imported
-   by plain node — which scripts/check-rules.mjs does, to check the order rules
-   against the real constants rather than copies of them. */
-export const ADMIN_PATH = (import.meta.env?.VITE_ADMIN_PATH || 'admin').replace(/^\/+|\/+$/g, '') || 'admin';
-export const ADMIN_BASE = `/${ADMIN_PATH}`;
-
-/** Root path of each role's section. */
-export const ROLE_HOME = Object.freeze({
-  customer: '/',
-  admin: ADMIN_BASE,
 });
 
 /** Food only: hotels and bakeries. */
@@ -77,14 +40,6 @@ export const SHOP_CATEGORIES = ['hotels', 'bakery'];
 
 export const PAYMENT_METHODS = Object.freeze({ UPI: 'UPI', COD: 'COD' });
 export const PAYMENT_STATUS = Object.freeze({ PENDING: 'PENDING', PAID: 'PAID' });
-
-export const SUBSCRIPTION_STATUS = Object.freeze({
-  TRIAL: 'TRIAL',
-  ACTIVE: 'ACTIVE',
-  EXPIRED: 'EXPIRED',
-});
-
-export const REJECT_REASONS = ['outOfStock', 'shopBusy', 'closingSoon', 'cannotDeliver', 'other'];
 
 /** Value used in the Place dropdown for "My place is not listed". */
 export const PLACE_NOT_LISTED = '__not_listed__';

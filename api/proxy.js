@@ -11,63 +11,34 @@
  * cannot reach admin-only parts of the API with this key attached.
  * (/api/admin/add/ is deliberately absent: creating an admin stays a
  * server-side call, never something a browser can do.)
- *
- * Admin-only calls (see api/_adminGuard.js) also need the signed-in admin's
- * Firebase ID token, and the caller's role from Firestore adminUsers must
- * allow them — a shop owner only ever reaches their own shop. Add to Vercel:
- *   FIREBASE_PROJECT_ID  the Firebase project id (same as VITE_FIREBASE_PROJECT_ID)
+
  */
-import { adminRuleFor, authorizeAdmin } from './_adminGuard.js';
 
 const ID = '[0-9a-fA-F-]{36}';
-const SLUG = '[a-z0-9-]{2,100}';
-const PHONE = '[0-9]{10}';
 
+// Only what the customer app calls. Everything that changes shops, products,
+// orders' status, users or settings is NOT here: there is no admin panel, so
+// nothing on this site may make those calls (manage that data in the database
+// directly, or with scripts/seed-demo-shop.mjs from your own computer).
 const ALLOWED = {
   GET: [
     '/api/shops/',
     `/api/shop/${ID}`,
-    `/api/shop/slug/${SLUG}`,
-    `/api/shops/by-profile/${ID}`,
     `/api/products/by-shop/${ID}`,
-    `/api/product/${ID}`,
-    `/api/product/slug/${SLUG}`,
-    '/api/orders/',
     `/api/orders/by-customer/${ID}`,
-    `/api/orders/by-shop/${ID}`,
-    `/api/orders/by-partner/${ID}`,
     `/api/order/${ID}`,
     `/api/order/${ID}/items/`,
     '/api/order/items/',
     `/api/user/${ID}`,
-    '/api/users/',
-    `/api/user/by-phone/${PHONE}`,
     '/api/settings/',
     '/api/places/',
   ],
   POST: [
     '/api/user/add/',
-    '/api/user/update/',
     '/api/user/delete/',
-    '/api/shop/add/',
-    '/api/shop/update/',
-    '/api/shop/toggle-orders/',
-    '/api/shop/set-active/',
-    '/api/shop/delete/',
-    '/api/product/add/',
-    '/api/product/update/',
-    '/api/product/toggle-availability/',
-    '/api/product/delete/',
     '/api/order/place/',
-    '/api/order/update-status/',
     '/api/order/cancel/',
-    '/api/order/assign-partner/',
-    '/api/order/mark-paid/',
     '/api/auth/google',
-    '/api/settings/',
-    '/api/place/add/',
-    '/api/place/update/',
-    '/api/place/delete/',
   ],
 };
 
@@ -187,24 +158,6 @@ export default async function handler(req, res) {
   try {
     const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
 
-    // Admin-only call: check the Firebase sign-in and the role first.
-    const rule = adminRuleFor(req.method, matched);
-    if (rule) {
-      const form = body ? new URLSearchParams(Buffer.isBuffer(body) ? body.toString('utf8') : String(body)) : null;
-      const verdict = await authorizeAdmin({
-        rule,
-        authorization: req.headers.authorization,
-        form,
-        pathname: matched,
-        projectId: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID,
-        lookup: async (path) => {
-          const r = await fetch(base + path, { headers: { 'X-API-Key': key, Accept: 'application/json' } });
-          if (!r.ok) return null;
-          return (await r.json())?.data || null;
-        },
-      });
-      if (!verdict.ok) return send(res, verdict.status, { status: verdict.message });
-    }
 
     const upstream = await fetch(url, { method: req.method, headers, body });
     const text = await upstream.text();

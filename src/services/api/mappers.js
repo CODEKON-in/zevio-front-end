@@ -30,18 +30,6 @@ export function cityFromPlaceId(placeId, places) {
   return places.find((p) => p.id === placeId)?.name || areaById(placeId)?.name || placeId || '';
 }
 
-/* ---------------- slugs ---------------- */
-
-export function makeSlug(name) {
-  const base = String(name || '')
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80) || 'item';
-  return `${base}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 /* ---------------- times ---------------- */
 
 /** Postgres `time` comes back as 'HH:MM:SS'; the form inputs want 'HH:MM'. */
@@ -85,39 +73,7 @@ export function toShop(raw, places) {
   };
 }
 
-/** The app's shop object → the API's columns. Only defined fields are included. */
-export function shopColumns(shop, places) {
-  const columns = {
-    shop_name: shop.name,
-    description: shop.description,
-    contact_phone: shop.phone,
-    contact_email: shop.email,
-    address: shop.address,
-    category: shop.category,
-    owner_name: shop.ownerName,
-    upi_id: shop.upiId,
-    delivery_time: shop.deliveryTime,
-  };
-  if (shop.placeId !== undefined) columns.city = cityFromPlaceId(shop.placeId, places);
-  if (shop.timings?.open) columns.open_time = shop.timings.open;
-  if (shop.timings?.close) columns.close_time = shop.timings.close;
-  if (typeof shop.isActive === 'boolean') columns.is_active = shop.isActive;
-  if (shop.subscription) {
-    columns.subscription_plan = shop.subscription.plan;
-    columns.subscription_status = shop.subscription.status;
-    columns.subscription_start = shop.subscription.startDate;
-    columns.subscription_end = shop.subscription.endDate;
-  }
-  if (isWebUrl(shop.image)) columns.cover_image_url = shop.image;
-  return clean(columns);
-}
-
 export const isWebUrl = (v) => typeof v === 'string' && /^https?:\/\//.test(v) && v.length <= 500;
-
-/** Drops keys the caller did not set, so an update never blanks a column by accident. */
-function clean(columns) {
-  return Object.fromEntries(Object.entries(columns).filter(([, v]) => v !== undefined));
-}
 
 /* ---------------- products ---------------- */
 
@@ -144,27 +100,12 @@ export function toProduct(raw) {
   };
 }
 
-export function productColumns(product) {
-  const columns = {
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    section: product.section,
-  };
-  if (typeof product.isVeg === 'boolean') columns.is_veg = product.isVeg;
-  if (product.minOrderQty !== undefined) columns.min_order_qty = toMinOrderQty(product.minOrderQty);
-  if (typeof product.inStock === 'boolean') columns.is_available = product.inStock;
-  if (isWebUrl(product.image)) columns.image_url = product.image;
-  return clean(columns);
-}
-
 /* ---------------- order status ---------------- */
 
 /*
  * The app uses the API's own lifecycle, only written in capitals:
  *   pending → confirmed → preparing → out_for_delivery → delivered, or cancelled.
  */
-export const toApiStatus = (status) => String(status).toLowerCase();
 
 export function fromApiStatus(apiStatus) {
   const st = String(apiStatus || 'pending').toUpperCase();
