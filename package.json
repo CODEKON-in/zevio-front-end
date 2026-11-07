@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "node scripts/check-rules.mjs",
-    "dev:phone": "vite --mode phone"
+    "dev:phone": "vite --mode phone",
+    "seed:demo": "node scripts/seed-demo-shop.mjs",
+    "create-admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",
