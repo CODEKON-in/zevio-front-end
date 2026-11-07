@@ -54,23 +54,15 @@ export const RefreshIcon = make(<><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="
 export const EditIcon = make(<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></>);
 export const TrashIcon = make(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />);
 export const ChatIcon = make(<path d="M4 20l1.5-4A8 8 0 1 1 8 19z" />);
-export const GlobeIcon = make(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>);
 export const LogoutIcon = make(<><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4M6 12h10" /></>);
-export const MenuIcon = make(<path d="M4 6h16M4 12h16M4 18h16" />);
 export const ImageIcon = make(<><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="m21 16-5-5-9 9" /></>);
-export const CodeIcon = make(<path d="m8 7-5 5 5 5M16 7l5 5-5 5" />);
 export const BoxIcon = make(<><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z" /><path d="M3 7.5 12 12l9-4.5M12 12v9" /></>);
 
-export const SlidersIcon = make(<><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>);
-export const LockIcon = make(<><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>);
 
 /* Category icons */
-export const BowlIcon = make(<><path d="M3 11h18a9 9 0 0 1-18 0z" /><path d="M8 7.5c0-1 1-1.2 1-2.5M12 7.5c0-1 1-1.2 1-2.5M16 7.5c0-1 1-1.2 1-2.5" /></>);
-export const CakeIcon = make(<><rect x="4" y="11" width="16" height="9" rx="1" /><path d="M4 15c2 1.2 4 1.2 5.3 0s4 1.2 5.4 0 4 1.2 5.3 0" /><path d="M12 11V7.5M12 4.5v.01" /></>);
-export const BagIcon = make(<><path d="M5 8h14l-1 13H6z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></>);
-export const MedicalIcon = make(<><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M12 8v8M8 12h8" /></>);
-export const LeafIcon = make(<><path d="M5 19C5 11 10 5 20 5c0 10-6 15-14 15" /><path d="M5 19l8-8" /></>);
-export const GridIcon = make(<><rect x="4" y="4" width="7" height="7" rx="1" /><rect x="13" y="4" width="7" height="7" rx="1" /><rect x="4" y="13" width="7" height="7" rx="1" /><rect x="13" y="13" width="7" height="7" rx="1" /></>);
+const BowlIcon = make(<><path d="M3 11h18a9 9 0 0 1-18 0z" /><path d="M8 7.5c0-1 1-1.2 1-2.5M12 7.5c0-1 1-1.2 1-2.5M16 7.5c0-1 1-1.2 1-2.5" /></>);
+const CakeIcon = make(<><rect x="4" y="11" width="16" height="9" rx="1" /><path d="M4 15c2 1.2 4 1.2 5.3 0s4 1.2 5.4 0 4 1.2 5.3 0" /><path d="M12 11V7.5M12 4.5v.01" /></>);
+const GridIcon = make(<><rect x="4" y="4" width="7" height="7" rx="1" /><rect x="13" y="4" width="7" height="7" rx="1" /><rect x="4" y="13" width="7" height="7" rx="1" /><rect x="13" y="13" width="7" height="7" rx="1" /></>);
 
 const CATEGORY_ICONS = {
   all: GridIcon,

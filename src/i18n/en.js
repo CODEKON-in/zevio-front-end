@@ -15,29 +15,19 @@ const en = {
     continue: 'Continue',
     confirm: 'Confirm',
     close: 'Close',
-    save: 'Save',
     add: 'Add',
-    remove: 'Remove',
     edit: 'Edit',
     delete: 'Delete',
-    search: 'Search',
     back: 'Back',
-    next: 'Next',
-    yes: 'Yes',
-    no: 'No',
     optional: 'Optional',
-    required: 'Required',
     open: 'Open',
     closed: 'Closed',
     veg: 'Veg',
     nonVeg: 'Non-veg',
     outOfStock: 'Out of stock',
-    inStock: 'In stock',
     itemsCount: '{count} items',
     itemsCount_one: '{count} item',
-    total: 'Total',
     minutes: '{time} min',
-    comingSoon: 'Coming soon',
     errorTitle: 'Something went wrong',
     errorMessage: 'Please check your internet and try again.',
     emptyTitle: 'Nothing here yet',
@@ -83,8 +73,6 @@ const en = {
   gift: {
     badge: 'Gift order',
     badgeFor: 'Gift order · for {name}',
-    whoIsThisFor: 'Who is this for?',
-    whoIsThisForBody: 'You are ordering from outside our delivery area, so this order goes to someone inside it. Fill in their name, number and address.',
     bannerTitle: 'Sending this to someone else',
     bannerBody: 'You are outside our delivery area ({place}), so this order will be delivered to the address below.',
     bannerBodyNoPlace: 'You are outside our delivery area, so this order will be delivered to the address below.',
@@ -191,12 +179,9 @@ const en = {
   auth: {
     title: 'Welcome to Mynt',
     subtitle: 'Food from hotels and bakeries near you, delivered home.',
-    google: 'Continue with Google',
     googleNote: 'New to Mynt? Continuing with Google creates your account.',
     googleLoading: 'Loading Google sign-in…',
     // Shown when a form on the sign-in screen needs an email
-    emailError: 'Please enter a valid email address',
-    continue: 'Continue',
     // First-time sign-up
     signUpTitle: 'Create your account',
     signUpSubtitle: {
@@ -206,7 +191,6 @@ const en = {
     yourName: 'Your name',
     phone: 'Mobile number',
     phoneHint: '10-digit mobile number',
-    required: 'This field is required',
     nameError: 'Please enter your name',
     phoneError: 'Please enter a valid 10-digit mobile number',
     create: 'Create account',
@@ -214,7 +198,6 @@ const en = {
     backToSignIn: 'Back',
   },
   account: {
-    logout: 'Log out',
     deleteTitle: 'Delete account',
     deleteButton: 'Delete my account',
     deleteHint: 'Permanently remove your Mynt account.',
@@ -248,7 +231,6 @@ const en = {
   },
   shopCard: {
     opensAt: 'Opens {time}',
-    closesAt: 'Closes {time}',
   },
   search: {
     title: 'Search',
@@ -263,7 +245,6 @@ const en = {
     clear: 'Clear search',
   },
   product: {
-    viewDetails: 'See details',
     detailsAria: 'See details of {name}',
     minOrder: 'Min {count}',
     minOrderAria: 'Minimum order {count} units',
@@ -285,7 +266,6 @@ const en = {
     conflictTitle: 'Start a new cart?',
     conflictBody: 'Your cart has items from {current}. You can order from only one shop at a time. Clear the cart and add from {next}?',
     conflictConfirm: 'Clear cart & add',
-    added: '{name} added to cart',
   },
   cartBar: {
     view: 'View cart',
@@ -297,7 +277,6 @@ const en = {
     emptyTitle: 'Your cart is empty',
     emptyMessage: 'Add items from a shop to see them here.',
     browse: 'Browse shops',
-    from: 'From {shop}',
     addMore: 'Add more items',
     instructionsLabel: 'Instructions for the shop',
     instructionsPlaceholder: 'e.g. less spicy, no onion',
@@ -318,7 +297,6 @@ const en = {
     minCorrectedMany: 'Some quantities were updated to meet the shop\'s minimum order.',
   },
   address: {
-    title: 'Delivery address',
     newTitle: 'Add new address',
     editTitle: 'Edit address',
     add: 'Add new address',
@@ -332,7 +310,6 @@ const en = {
     doorLabel: 'Door / House number',
     doorPlaceholder: 'e.g. 12',
     landmarkLabel: 'Landmark',
-    landmarkHint: 'Villages rely on landmarks — e.g. near temple, opposite ration shop',
     landmarkPlaceholder: 'e.g. Near bus stop, opposite temple',
     areaLocked: 'From your location',
     areaLockedEdit: 'The area this address was saved in',
@@ -361,7 +338,6 @@ const en = {
     required: 'This field is required',
     phoneInvalid: 'Please enter a valid 10-digit mobile number',
     selected: 'Selected',
-    use: 'Deliver here',
   },
   notServiceable: {
     title: "We don't deliver here yet",
@@ -389,7 +365,6 @@ const en = {
     iHavePaid: 'I have paid',
     paid: 'Paid',
     upiNote: 'After paying, come back here and tap "I have paid".',
-    addressMissing: 'Please choose a delivery address first.',
   },
   success: {
     title: 'Order placed!',
@@ -422,7 +397,6 @@ const en = {
     partner: 'Delivery partner: {name}',
     noPartner: 'A delivery partner will be assigned soon.',
     items: 'Items',
-    bill: 'Bill',
     deliverTo: 'Delivering to',
     payment: 'Payment',
     instructions: 'Instructions',
@@ -458,15 +432,6 @@ const en = {
     logout: 'Log out',
     logoutTitle: 'Log out?',
     logoutBody: 'Your cart will stay saved on this phone.',
-  },
-  time: {
-    justNow: 'just now',
-    minAgo: '{count} min ago',
-    minAgo_one: '{count} min ago',
-  },
-  foodType: {
-    veg: 'Veg',
-    nonVeg: 'Non-veg',
   },
 };
 

@@ -1,4 +1,11 @@
+/*
+ * Closing (or opening) a sheet leaves this full-screen layer in the page for
+ * the length of the transition while it is see-through. Without this it still
+ * swallows taps, so a tap aimed at the page right after a sheet closes does
+ * nothing. Only the visible state takes taps.
+ */
 .root {
+  pointer-events: none;
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
@@ -36,6 +43,7 @@
 .md { max-width: 560px; }
 .lg { max-width: 800px; }
 
+.visible { pointer-events: auto; }
 .visible .backdrop { opacity: 1; }
 .visible .dialog { opacity: 1; transform: scale(1); }
 

@@ -20,7 +20,7 @@ export function getPlaces() {
 
 const norm = (v) => String(v || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 
-export function placeIdFromCity(city, places) {
+function placeIdFromCity(city, places) {
   const n = norm(city);
   const hit = places.find((p) => norm(p.id) === n || norm(p.name) === n);
   return hit ? hit.id : n;
@@ -73,12 +73,10 @@ export function toShop(raw, places) {
   };
 }
 
-export const isWebUrl = (v) => typeof v === 'string' && /^https?:\/\//.test(v) && v.length <= 500;
-
 /* ---------------- products ---------------- */
 
 /** A whole count, never below 1 — whatever the column or the form gave us. */
-export function toMinOrderQty(value) {
+function toMinOrderQty(value) {
   const n = Math.floor(Number(value));
   return Number.isFinite(n) && n > 1 ? n : 1;
 }
@@ -107,7 +105,7 @@ export function toProduct(raw) {
  *   pending → confirmed → preparing → out_for_delivery → delivered, or cancelled.
  */
 
-export function fromApiStatus(apiStatus) {
+function fromApiStatus(apiStatus) {
   const st = String(apiStatus || 'pending').toUpperCase();
   return ORDER_STATUS[st] || ORDER_STATUS.PENDING;
 }

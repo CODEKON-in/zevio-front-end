@@ -8,10 +8,6 @@ const PRODUCTS_TTL = 30000;
 let shopsCache = { at: 0, list: null, pending: null };
 const productsCache = new Map(); // shopId → { at, list }
 
-export function forgetShops() {
-  shopsCache = { at: 0, list: null, pending: null };
-}
-
 /** All shops (mapped). `fresh` skips the cache. */
 export async function fetchShops(fresh = false) {
   if (!fresh && shopsCache.list && Date.now() - shopsCache.at < SHOPS_TTL) return shopsCache.list;

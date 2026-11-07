@@ -13,3 +13,14 @@
     transform: rotate(360deg);
   }
 }
+
+/*
+ * "Reduce motion" means this one keeps still: the global rule already collapses
+ * the spin to nothing, and an animation that exists only to be collapsed still
+ * registers as one. The ring and its "Loading…" label say enough on their own.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

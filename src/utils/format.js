@@ -5,21 +5,15 @@ const priceFormatter = new Intl.NumberFormat('en-IN', {
   minimumFractionDigits: 0,
 });
 
-const numberFormatter = new Intl.NumberFormat('en-IN');
-
 /** 1250 → "₹1,250" ; 12.5 → "₹12.5" */
 export function formatPrice(amount) {
   return priceFormatter.format(Number(amount) || 0);
 }
 
-export function formatNumber(n) {
-  return numberFormatter.format(Number(n) || 0);
-}
-
 const pad = (n) => String(n).padStart(2, '0');
 
-/** ISO string → "26/10/2026" (DD/MM/YYYY) */
-export function formatDate(iso) {
+/** ISO string → "26/10/2026" (DD/MM/YYYY). Used through formatDateTime. */
+function formatDate(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
@@ -55,10 +49,6 @@ export function isSameDay(a, b) {
   return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
 }
 
-export function isToday(iso) {
-  return isSameDay(iso, Date.now());
-}
-
 /** Keeps only digits, max 10 — for Indian mobile numbers. */
 export function cleanPhone(value) {
   return String(value || '').replace(/\D/g, '').slice(-10);
@@ -73,15 +63,3 @@ export function cx(...names) {
   return names.filter(Boolean).join(' ');
 }
 
-/** Minutes since an ISO time (never negative). */
-export function minutesSince(iso) {
-  return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
-}
-
-/** Days from today until an ISO date (negative = in the past). No date → Infinity (never ends). */
-export function daysUntil(isoDate) {
-  if (!isoDate) return Infinity;
-  const end = new Date(isoDate);
-  end.setHours(23, 59, 59, 999);
-  return Math.ceil((end.getTime() - Date.now()) / 86400000) - 1;
-}

@@ -64,8 +64,6 @@ export async function install(ctx, { delay = 150 } = {}) {
     if ((m = p.match(/^\/products\/by-shop\/([^/]+)/))) return route.fulfill(ok(products.filter((x) => x.shop_id === m[1])));
     if ((m = p.match(/^\/product\/([^/]+)$/))) return route.fulfill(ok(products.find((x) => x.id === m[1])));
     if ((m = p.match(/^\/orders\/by-customer\/([^/]+)/))) return route.fulfill(ok(orders.filter((o) => o.customer_id === m[1])));
-    if ((m = p.match(/^\/orders\/by-shop\/([^/]+)/))) return route.fulfill(ok(orders.filter((o) => o.shop_id === m[1])));
-    if (p === '/orders/') return route.fulfill(ok(orders));
     if ((m = p.match(/^\/order\/([^/]+)\/items\/$/))) return route.fulfill(ok(items[m[1]] || []));
     if (p === '/order/items/') return route.fulfill(ok((u.searchParams.get('order_ids') || '').split(',').flatMap((id) => items[id] || [])));
     if ((m = p.match(/^\/order\/([^/]+)$/))) return route.fulfill(ok(orders.find((o) => o.id === m[1])));
@@ -78,7 +76,6 @@ export async function install(ctx, { delay = 150 } = {}) {
       return route.fulfill(ok({ order_id: id, order_number: 'ZV' + seq }));
     }
     if ((m = p.match(/^\/user\/([^/]+)$/))) return route.fulfill(ok(m[1] === 'c1' ? customer : partners.find((x) => x.id === m[1]) || customer));
-    if (p.startsWith('/users/')) return route.fulfill(ok(u.searchParams.get('user_type') === 'delivery_person' ? partners : [customer, { ...customer, id: 'c2', name: 'Meena' }]));
     if (req.method() === 'POST') return route.fulfill(ok({ id: 'x' + ++seq }));
     console.warn('[mock] unhandled', req.method(), p);
     return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ status: 'not found' }) });

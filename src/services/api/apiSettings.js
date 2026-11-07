@@ -25,7 +25,7 @@ export async function fetchRawSettings(fresh = false) {
 }
 
 /** [{ id, name }] — the places the platform serves. */
-export async function fetchPlaces(fresh = false) {
+async function fetchPlaces(fresh = false) {
   if (!fresh && placesCache.list && Date.now() - placesCache.at < PLACES_TTL) return placesCache.list;
   if (!fresh && placesCache.pending) return placesCache.pending;
   const pending = apiGet('/places/').then((rows) => {

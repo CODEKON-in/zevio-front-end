@@ -93,9 +93,8 @@ function preloadCustomerSection() {
             if (/node_modules\/(react|react-dom|react-router|react-router-dom|@remix-run|scheduler)\//.test(id)) return 'vendor';
             // Code shared by several sections (UI kit, hooks, services, helpers) goes in ONE
             // file instead of many tiny ones — every extra file costs a round trip on 3G.
-            const shared = /\/src\/(components\/(ui|icons|layout)|hooks|utils|i18n|context|styles)\//.test(id) ||
-              (/\/src\/services\//.test(id) && !/\/services\/db\.js$/.test(id));
-            if (shared && !id.includes('DevRoleSwitcher')) return 'common';
+            const shared = /\/src\/(components\/(ui|icons|layout)|hooks|utils|i18n|context|styles|services)\//.test(id);
+            if (shared) return 'common';
             return undefined;
           },
         },
