@@ -10,10 +10,11 @@ import s from './Field.module.css';
  *  - options: Array<{ value: string, label: string, disabled?: boolean }>
  *  - placeholder: string — first, empty, disabled option
  *  - hint, error, required — same as Input
+ *  - hideLabel: keep the label for screen readers only (e.g. inside a table row)
  *  - value, onChange, and other native select props
  */
 const Select = forwardRef(function Select(
-  { label, options = [], placeholder, hint, error, required, id, className, value, ...rest },
+  { label, options = [], placeholder, hint, error, required, id, className, value, hideLabel = false, ...rest },
   ref,
 ) {
   const autoId = useId();
@@ -23,7 +24,7 @@ const Select = forwardRef(function Select(
 
   return (
     <div className={cx(s.field, className)}>
-      <label htmlFor={selectId} className={s.label}>
+      <label htmlFor={selectId} className={hideLabel ? 'visually-hidden' : s.label}>
         {label}
         {required && <span className={s.req} aria-hidden="true"> *</span>}
       </label>

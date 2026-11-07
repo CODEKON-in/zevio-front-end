@@ -42,9 +42,12 @@ function toValues(shop) {
 
 /**
  * ShopFormDrawer — add / edit a shop including its subscription.
+ * ownerMode: a shop owner editing their own shop — the active switch, the
+ * category, the village and the subscription are the platform's to set, so
+ * they are hidden and not sent (the /api proxy refuses them from an owner).
  * Props: open, shop (null = new), onClose, onSaved(savedShop)
  */
-export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
+export default function ShopFormDrawer({ open, shop, onClose, onSaved, ownerMode = false }) {
   const { settings } = useSettings();
   const { showToast } = useToast();
   const [values, setValues] = useState(() => toValues(shop));
@@ -102,8 +105,12 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
         upiId: values.upiId.trim(),
         timings: { open: values.open, close: values.close },
         deliveryTime: values.deliveryTime.trim() || '30-40',
-        isActive: values.isActive,
-        subscription: { plan: values.plan.trim(), status: values.subStatus, startDate: values.startDate, endDate: values.endDate },
+        ...(ownerMode
+          ? { category: undefined, placeId: undefined }
+          : {
+              isActive: values.isActive,
+              subscription: { plan: values.plan.trim(), status: values.subStatus, startDate: values.startDate, endDate: values.endDate },
+            }),
       });
       showToast(shop ? t('admin.shopForm.updated') : t('admin.shopForm.created'), { type: 'success' });
       onSaved?.(saved);
@@ -154,6 +161,7 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
         </div>
 
         <Input label={t('admin.shopForm.name')} required value={values.name} onChange={set('name')} error={errors.name} />
+        {!ownerMode && (
         <div className={a.twoCols}>
           <Select
             label={t('admin.shopForm.category')}
@@ -171,6 +179,7 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
             options={settings.servicePlaces.map((pl) => ({ value: pl.id, label: pl.name }))}
           />
         </div>
+        )}
         <Input label={t('admin.shopForm.address')} required value={values.address} onChange={set('address')} error={errors.address} />
         <div className={a.twoCols}>
           <Input label={t('admin.shopForm.owner')} required value={values.ownerName} onChange={set('ownerName')} error={errors.ownerName} />
@@ -183,6 +192,8 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
           <Input label={t('admin.shopForm.closeTime')} type="time" value={values.close} onChange={set('close')} error={errors.close} />
         </div>
         <Input label={t('admin.shopForm.deliveryTime')} hint={t('admin.shopForm.deliveryTimeHint')} value={values.deliveryTime} onChange={set('deliveryTime')} />
+        {!ownerMode && (
+          <>
         <Toggle label={t('admin.shopForm.activeLabel')} checked={values.isActive} onChange={(v) => setValues((x) => ({ ...x, isActive: v }))} />
 
         <section className={a.formSection} aria-labelledby="sub-head">
@@ -201,6 +212,8 @@ export default function ShopFormDrawer({ open, shop, onClose, onSaved }) {
             <Input label={t('admin.shopForm.endDate')} type="date" value={values.endDate} onChange={set('endDate')} error={errors.endDate} />
           </div>
         </section>
+          </>
+        )}
         <button type="submit" hidden aria-hidden="true" tabIndex={-1} />
       </form>
     </Drawer>

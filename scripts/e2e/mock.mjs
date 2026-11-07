@@ -64,6 +64,7 @@ export async function install(ctx, { delay = 150 } = {}) {
     if ((m = p.match(/^\/products\/by-shop\/([^/]+)/))) return route.fulfill(ok(products.filter((x) => x.shop_id === m[1])));
     if ((m = p.match(/^\/product\/([^/]+)$/))) return route.fulfill(ok(products.find((x) => x.id === m[1])));
     if ((m = p.match(/^\/orders\/by-customer\/([^/]+)/))) return route.fulfill(ok(orders.filter((o) => o.customer_id === m[1])));
+    if ((m = p.match(/^\/orders\/by-shop\/([^/]+)/))) return route.fulfill(ok(orders.filter((o) => o.shop_id === m[1])));
     if (p === '/orders/') return route.fulfill(ok(orders));
     if ((m = p.match(/^\/order\/([^/]+)\/items\/$/))) return route.fulfill(ok(items[m[1]] || []));
     if (p === '/order/items/') return route.fulfill(ok((u.searchParams.get('order_ids') || '').split(',').flatMap((id) => items[id] || [])));

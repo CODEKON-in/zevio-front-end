@@ -23,9 +23,10 @@ const ALL_STATUSES = Object.values(ORDER_STATUS);
 
 /**
  * AdminOrderDrawer — full order details with partner assignment and manual status change.
- * Props: orderId (null = closed), partners (list for the dropdown), onClose, onChanged (reload the table)
+ * Props: orderId (null = closed), partners (list for the dropdown), onClose, onChanged (reload the table),
+ *        canAssign (false for a shop owner: assigning partners is the platform's job)
  */
-export default function AdminOrderDrawer({ orderId, partners = [], onClose, onChanged }) {
+export default function AdminOrderDrawer({ orderId, partners = [], onClose, onChanged, canAssign = true }) {
   const { getPlace } = useSettings();
   const { showToast } = useToast();
   const order = useAsync(() => (orderId ? getOrderById(orderId) : Promise.resolve(null)), [orderId]);
@@ -143,6 +144,7 @@ export default function AdminOrderDrawer({ orderId, partners = [], onClose, onCh
             )}
           </section>
 
+          {canAssign && (
           <section className={s.action}>
             <h3 className={s.h}>{t('admin.orderDrawer.partner')}</h3>
             <div className={s.row}>
@@ -157,6 +159,7 @@ export default function AdminOrderDrawer({ orderId, partners = [], onClose, onCh
               </Button>
             </div>
           </section>
+          )}
 
           <section className={s.action}>
             <div className={s.row}>

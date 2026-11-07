@@ -133,3 +133,10 @@
     padding: var(--space-6) var(--space-7);
   }
 }
+
+.who {
+  margin: var(--space-4) var(--space-3) var(--space-1);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}

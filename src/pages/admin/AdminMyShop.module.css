@@ -1,0 +1,59 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 599px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.photo {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.heroText {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.open {
+  margin-top: var(--space-4);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.card {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  min-height: 120px;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.card > svg {
+  color: var(--color-primary-ink);
+}
+
+.card:hover {
+  border-color: var(--color-primary-edge);
+}

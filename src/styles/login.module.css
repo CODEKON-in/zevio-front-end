@@ -81,3 +81,12 @@
   color: var(--color-text-muted);
   text-align: center;
 }
+
+.error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-btn);
+  background: var(--color-danger-light);
+  color: var(--color-danger-ink);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}

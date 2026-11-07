@@ -91,6 +91,9 @@ function preloadCustomerSection() {
           // keep it cached when we ship app updates.
           manualChunks(id) {
             if (/node_modules\/(react|react-dom|react-router|react-router-dom|@remix-run|scheduler)\//.test(id)) return 'vendor';
+            // Firebase is only for the admin sign-in: its own file, loaded only by /admin.
+            if (/node_modules\/(firebase|@firebase|idb|tslib)\//.test(id)) return 'firebase';
+            if (/\/src\/(services\/adminAuth\/|context\/AdminAuthContext)/.test(id)) return undefined;
             // Code shared by several sections (UI kit, hooks, services, helpers) goes in ONE
             // file instead of many tiny ones — every extra file costs a round trip on 3G.
             const shared = /\/src\/(components\/(ui|icons|layout)|hooks|utils|i18n|context|styles)\//.test(id) ||

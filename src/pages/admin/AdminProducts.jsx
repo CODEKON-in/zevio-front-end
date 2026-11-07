@@ -10,6 +10,7 @@ import DataTable from '../../components/admin/DataTable.jsx';
 import ProductFormDrawer from '../../components/admin/ProductFormDrawer.jsx';
 import { BagIcon, ChevronLeftIcon, EditIcon, PlusIcon, TrashIcon } from '../../components/icons/Icons.jsx';
 import { ADMIN_BASE } from '../../utils/constants.js';
+import { useAdminAuth } from '../../context/AdminAuthContext.jsx';
 import { lineMin } from '../../utils/productRules.js';
 import a from './admin.module.css';
 
@@ -25,6 +26,7 @@ import a from './admin.module.css';
  */
 export default function AdminProducts() {
   const { shopId } = useParams();
+  const { isShopOwner } = useAdminAuth();
   const { showToast } = useToast();
   const shop = useAsync(() => getShopById(shopId), [shopId]);
   const products = useAsync(() => getProductsByShop(shopId), [shopId]);
@@ -138,8 +140,8 @@ export default function AdminProducts() {
 
   return (
     <>
-      <Button as={Link} to={`${ADMIN_BASE}/shops`} variant="ghost" size="sm" iconLeft={<ChevronLeftIcon size={18} />}>
-        {t('admin.products.backToShops')}
+      <Button as={Link} to={isShopOwner ? `${ADMIN_BASE}/my-shop` : `${ADMIN_BASE}/shops`} variant="ghost" size="sm" iconLeft={<ChevronLeftIcon size={18} />}>
+        {isShopOwner ? t('admin.nav.myShop') : t('admin.products.backToShops')}
       </Button>
 
       <div className={a.head}>

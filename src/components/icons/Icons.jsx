@@ -62,6 +62,7 @@ export const CodeIcon = make(<path d="m8 7-5 5 5 5M16 7l5 5-5 5" />);
 export const BoxIcon = make(<><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z" /><path d="M3 7.5 12 12l9-4.5M12 12v9" /></>);
 
 export const SlidersIcon = make(<><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>);
+export const LockIcon = make(<><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>);
 
 /* Category icons */
 export const BowlIcon = make(<><path d="M3 11h18a9 9 0 0 1-18 0z" /><path d="M8 7.5c0-1 1-1.2 1-2.5M12 7.5c0-1 1-1.2 1-2.5M16 7.5c0-1 1-1.2 1-2.5" /></>);

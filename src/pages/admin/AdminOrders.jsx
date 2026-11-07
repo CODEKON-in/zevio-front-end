@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
+import { useAdminAuth } from '../../context/AdminAuthContext.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useDebounce } from '../../hooks/useDebounce.js';
 import { getOrders } from '../../services/orderService.js';
@@ -20,7 +21,9 @@ export default function AdminOrders() {
   const { settings, getPlace } = useSettings();
   const [params, setParams] = useSearchParams();
   const status = params.get('status') || '';
-  const shopId = params.get('shop') || '';
+  // A shop owner sees their own shop's orders only (the /api proxy enforces it too).
+  const { isShopOwner, admin } = useAdminAuth();
+  const shopId = isShopOwner ? admin.shopId : params.get('shop') || '';
   const placeId = params.get('place') || '';
   const date = params.get('date') || '';
   const unassigned = params.get('unassigned') === '1';
@@ -37,6 +40,7 @@ export default function AdminOrders() {
   };
 
   const lists = useAsync(async () => {
+    if (isShopOwner) return { shops: [], partners: [] };
     const [shops, partners] = await Promise.all([getShops({ includeInactive: true }), getPartners()]);
     return { shops, partners };
   }, []);
@@ -52,7 +56,7 @@ export default function AdminOrders() {
   );
   const partnerName = useMemo(() => Object.fromEntries((lists.data?.partners || []).map((p) => [p.id, p.name])), [lists.data]);
 
-  const hasFilters = status || shopId || placeId || date || unassigned || query;
+  const hasFilters = status || (!isShopOwner && shopId) || placeId || date || unassigned || query;
   const clearFilters = () => {
     setQuery('');
     setParams({}, { replace: true });
@@ -110,23 +114,29 @@ export default function AdminOrders() {
           onChange={(e) => setParam('status', e.target.value)}
           options={[{ value: '', label: t('admin.common.all') }, ...Object.values(ORDER_STATUS).map((st) => ({ value: st, label: t(`orderStatus.${st}`) }))]}
         />
+        {!isShopOwner && (
         <Select
           label={t('admin.orders.shop')}
           value={shopId}
           onChange={(e) => setParam('shop', e.target.value)}
           options={[{ value: '', label: t('admin.common.all') }, ...(lists.data?.shops || []).map((x) => ({ value: x.id, label: x.name }))]}
         />
+        )}
+        {!isShopOwner && (
         <Select
           label={t('admin.orders.place')}
           value={placeId}
           onChange={(e) => setParam('place', e.target.value)}
           options={[{ value: '', label: t('admin.common.all') }, ...settings.servicePlaces.map((pl) => ({ value: pl.id, label: pl.name }))]}
         />
+        )}
         <Input label={t('admin.orders.date')} type="date" value={date} onChange={(e) => setParam('date', e.target.value)} />
-        <label className={`${a.check} ${a.filterWide}`}>
-          <input type="checkbox" checked={unassigned} onChange={(e) => setParam('unassigned', e.target.checked ? '1' : '')} />
-          {t('admin.orders.unassigned')}
-        </label>
+        {!isShopOwner && (
+          <label className={`${a.check} ${a.filterWide}`}>
+            <input type="checkbox" checked={unassigned} onChange={(e) => setParam('unassigned', e.target.checked ? '1' : '')} />
+            {t('admin.orders.unassigned')}
+          </label>
+        )}
       </div>
 
       <div className={a.resultsRow}>
@@ -151,6 +161,7 @@ export default function AdminOrders() {
       )}
 
       <AdminOrderDrawer
+        canAssign={!isShopOwner}
         orderId={openId}
         partners={lists.data?.partners || []}
         onClose={() => setParam('open', '')}

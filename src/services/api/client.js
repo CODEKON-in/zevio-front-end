@@ -11,7 +11,20 @@ import { ServiceError } from '../../utils/errors.js';
 
 const TIMEOUT_MS = 15000;
 
+/*
+ * Admin requests carry the signed-in admin's Firebase ID token. The admin
+ * panel registers where to get it (AdminAuthContext); the customer app never
+ * does, so its requests are unchanged. The site's /api proxy checks the token
+ * and the admin's role before an admin-only call reaches the API.
+ */
+let tokenProvider = null;
+export function setAuthTokenProvider(fn) {
+  tokenProvider = fn;
+}
+
 function toError(httpStatus, message) {
+  // The proxy's admin checks say "admin: …" (signed out, not allowed, not your shop).
+  if (String(message).startsWith('admin:')) return new ServiceError(httpStatus === 401 ? 'ADMIN_SIGNED_OUT' : 'ADMIN_FORBIDDEN', message);
   if (httpStatus === 404) return new ServiceError('NOT_FOUND', message);
   if (httpStatus === 401 || httpStatus === 403) return new ServiceError('API_AUTH', message);
   return new ServiceError('SERVER', message);
@@ -24,6 +37,8 @@ async function call(method, path, fields) {
   let res;
   try {
     const init = { method, headers: { Accept: 'application/json' }, signal: ctrl.signal };
+    const token = tokenProvider ? await tokenProvider().catch(() => null) : null;
+    if (token) init.headers.Authorization = `Bearer ${token}`;
     if (fields) {
       const body = new URLSearchParams();
       for (const [k, v] of Object.entries(fields)) {
