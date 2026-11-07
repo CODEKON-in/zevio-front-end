@@ -40,7 +40,7 @@ export default function LocationCheck() {
   const device = deviceKind();
 
   useEffect(() => {
-    document.title = 'Location check — Zevio';
+    document.title = 'Location check — Mynt';
     let status;
     navigator.permissions
       ?.query({ name: 'geolocation' })

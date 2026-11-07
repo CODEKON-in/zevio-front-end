@@ -28,29 +28,14 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 );
 
-/**
- * Take the splash down once React has actually painted.
- *
- * It fades rather than vanishes, and it is removed from the page afterwards so
- * it can never sit invisibly over the app swallowing taps. If the browser
- * skips the transition (reduced motion, a backgrounded tab), the timeout still
- * clears it — the splash has no way to get stuck.
+/*
+ * Tell the intro in index.html that the app has painted. The intro then
+ * fades out at the end of its ~1.4s animation (or at once, if that already
+ * passed). Two frames: the first commits React's DOM, the second is painted.
  */
-function dismissSplash() {
-  const boot = document.getElementById('boot');
-  if (!boot) return;
-  // Wait for the frame React painted into, so the fade starts over real content.
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      boot.classList.add('boot-hide');
-      const done = () => boot.remove();
-      boot.addEventListener('transitionend', done, { once: true });
-      setTimeout(done, 400);
-    });
-  });
-}
-
-dismissSplash();
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => window.dispatchEvent(new Event('mynt:ready')));
+});
 
 /*
  * The few looping animations (empty-state float, skeleton shimmer, status

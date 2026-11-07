@@ -1,0 +1,28 @@
+/* The lockup scales from one number: --mynt-size (falls back to the size prop). */
+.mynt-logo {
+  --mynt-size-used: var(--mynt-size, var(--mynt-size-base, 28px));
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--mynt-size-used) * 0.25);
+  line-height: 1;
+}
+
+/* The icon follows the CSS size too, so a breakpoint override moves both. */
+.mynt-logo .mynt-logo-icon {
+  height: calc(var(--mynt-size-used) * 1.35);
+  width: calc(var(--mynt-size-used) * 1.35 * 100 / 120);
+}
+
+.mynt-logo-word {
+  font-family: var(--font-display);
+  font-size: var(--mynt-size-used);
+  font-weight: var(--font-weight-black);
+  letter-spacing: -0.045em;
+  line-height: 1;
+  /* Optical nudge: the x-height letters sit a touch low against the pin. */
+  padding-bottom: 0.08em;
+}
+
+.mynt-logo--default .mynt-logo-word { color: var(--ink-900); }
+.mynt-logo--onMango .mynt-logo-word { color: var(--ink-on-mango); }
+.mynt-logo--onDark .mynt-logo-word { color: var(--mango-50); }

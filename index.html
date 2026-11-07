@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f2b43a" />
-    <meta name="description" content="Zevio — order from hotels and bakeries between Papanasam and Ayyampettai, delivered home." />
+    <meta name="theme-color" content="#F2B43A" />
+    <meta name="description" content="Mynt — food and essentials from hotels and bakeries between Papanasam and Ayyampettai, delivered home." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!--
@@ -25,80 +26,65 @@
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" />
     </noscript>
-    <title>Zevio</title>
+    <title>Mynt — Food &amp; essentials delivered</title>
     <style>
-      /* Plain HTML and CSS so the splash paints while the JavaScript is still
-         downloading — on a slow village connection that is the difference
-         between "loading" and "broken". Colours mirror variables.css (which
-         has not loaded yet): mango-50 wash, mango-500, ink-900. */
-      html, body { margin: 0; background: #fff8ea; }
-
-      #boot {
-        position: fixed;
-        inset: 0;
-        z-index: 100;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
-        background: #fff8ea;
-        color: #2a2116;
-        font-family: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
-        opacity: 1;
-        transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1);
+      /* Intro: plain HTML/CSS so it paints before the JS bundle. Colours mirror
+         variables.css (not loaded yet): cream, mango-500, ink-on-mango, ink-900.
+         ~1.4s: pin drops → leaf springs → letters → pulse → fade. */
+      html,body{margin:0;background:#fffdf8}
+      #mynt-intro{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:#fffdf8;transition:opacity .25s,transform .25s}
+      #mynt-intro.out{opacity:0;transform:scale(1.04);pointer-events:none}
+      .mi{display:flex;align-items:center;gap:.25em;font:800 clamp(44px,14vw,72px)/1 'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;letter-spacing:-.045em;color:#2a2116}
+      .mi svg{height:1.35em;width:1.125em;overflow:visible}
+      .mi .w{display:inline-block;width:2.6em;white-space:nowrap;padding-bottom:.08em}
+      .mi span span{display:inline-block}
+      @media (prefers-reduced-motion:no-preference){
+        .mi{animation:mp .2s .95s ease-in-out}
+        .mi .d{transform-box:fill-box;transform-origin:50% 100%;animation:md .45s cubic-bezier(.22,1,.36,1) both}
+        .mi .l{transform-box:fill-box;transform-origin:center;animation:ml .4s .25s cubic-bezier(.34,1.56,.64,1) both}
+        .mi .w span{animation:mw .3s cubic-bezier(.22,1,.36,1) both}
+        .mi .w span:nth-child(1){animation-delay:.45s}.mi .w span:nth-child(2){animation-delay:.51s}
+        .mi .w span:nth-child(3){animation-delay:.57s}.mi .w span:nth-child(4){animation-delay:.63s}
       }
-      #boot.boot-hide { opacity: 0; pointer-events: none; }
-
-      .boot-mango { width: 84px; height: 84px; }
-      .boot-shadow {
-        width: 56px; height: 8px; margin-top: -10px;
-        border-radius: 50%;
-        background: rgba(42, 33, 22, 0.12);
-      }
-      .boot-name { margin: 6px 0 0; font-size: 34px; font-weight: 800; letter-spacing: -0.01em; }
-
-      /* The mango drops in, bounces once and settles; its shadow grows as it
-         lands. Transform and opacity only — nothing touches layout. */
-      @media (prefers-reduced-motion: no-preference) {
-        .boot-mango { animation: boot-drop 760ms cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: 50% 100%; }
-        .boot-shadow { animation: boot-shadow 760ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-        .boot-name { animation: boot-rise 450ms 260ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-        @keyframes boot-drop {
-          0%   { transform: translateY(-120px) rotate(-14deg); opacity: 0; }
-          45%  { transform: translateY(0) rotate(0) scale(1.06, 0.92); opacity: 1; }
-          62%  { transform: translateY(-18px) scale(0.98, 1.03); }
-          80%  { transform: translateY(0) scale(1.02, 0.97); }
-          100% { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        @keyframes boot-shadow {
-          0%   { transform: scaleX(0.3); opacity: 0; }
-          45%  { transform: scaleX(1.1); opacity: 1; }
-          62%  { transform: scaleX(0.75); }
-          100% { transform: scaleX(1); opacity: 1; }
-        }
-        @keyframes boot-rise {
-          from { transform: translateY(8px); opacity: 0; }
-          to   { transform: none; opacity: 1; }
-        }
-      }
+      @keyframes md{0%{transform:translateY(-40px) scale(1,1.08);opacity:0}27%{opacity:1}60%{transform:translateY(0) scale(1.08,.92)}to{transform:none;opacity:1}}
+      @keyframes ml{0%{transform:scale(0) rotate(-80deg)}to{transform:scale(1) rotate(-35deg)}}
+      @keyframes mw{0%{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+      @keyframes mp{50%{transform:scale(1.02)}}
     </style>
   </head>
   <body>
-    <div id="boot" role="status" aria-live="polite" aria-label="Loading Zevio">
-      <svg class="boot-mango" viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M33 15c-1.6-3-3.4-5-6-6.4" fill="none" stroke="#6b4a12" stroke-width="2.6" stroke-linecap="round" />
-        <path d="M34 15.5c11.6 0 21 9.4 21 21.3C55 48.3 45.6 56 33.4 56 22.4 56 13 49.6 13 39.4c0-7.2 4.4-11.6 9.6-14.6C27 22.3 28.4 15.5 34 15.5Z" fill="#f2b43a" />
-        <path d="M45 26c3.4 3 5 6.6 5 10.6" fill="none" stroke="#fff8ea" stroke-width="3" stroke-linecap="round" opacity=".55" />
-        <path d="M33.6 15.2c1.6-5.8 6.4-9 13.4-8.6-1.4 6.8-6.4 9.8-13.4 8.6Z" fill="#4f8a4b" />
-      </svg>
-      <div class="boot-shadow" aria-hidden="true"></div>
-      <p class="boot-name">Zevio</p>
+    <div id="mynt-intro" aria-hidden="true">
+      <div class="mi">
+        <svg viewBox="0 0 100 120"><g class="d"><path d="M50 4C26 4 8 22 8 46c0 30 42 70 42 70s42-40 42-70C92 22 74 4 50 4z" fill="#f2b43a"/><g class="l" transform="rotate(-35 50 46)"><path d="M50 20c17 9 21 29 0 52C29 49 33 29 50 20z" fill="#3a2a08"/><path d="M50 26v42" stroke="#f2b43a" stroke-width="3" stroke-linecap="round"/><path d="M50 40l-8-6M50 52l8-6" stroke="#f2b43a" stroke-width="2.4" stroke-linecap="round"/></g></g></svg>
+        <span class="w"><span>m</span><span>y</span><span>n</span><span>t</span></span>
+      </div>
     </div>
+    <script>
+      /* Ends at ~1150ms (then a 250ms fade) or when React says it is ready
+         ('mynt:ready', from main.jsx) — whichever is later. 4s cap; tap to skip
+         once ready. Reduced motion: still logo for 300ms, 150ms fade. */
+      (function () {
+        var el = document.getElementById('mynt-intro'), b = document.body;
+        var rm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var ready = false, timeUp = false, gone = false;
+        b.style.overflow = 'hidden';
+        if (rm) el.style.transition = 'opacity .15s';
+        function out() {
+          if (gone) return; gone = true;
+          el.classList.add('out');
+          setTimeout(function () { el.remove(); b.style.overflow = ''; }, rm ? 150 : 250);
+        }
+        function check() { if (ready && timeUp) out(); }
+        setTimeout(function () { timeUp = true; check(); }, rm ? 300 : 1150);
+        addEventListener('mynt:ready', function () { ready = true; check(); });
+        el.addEventListener('click', function () { if (ready) out(); });
+        setTimeout(out, 4000);
+      })();
+    </script>
     <div id="root"></div>
     <noscript>
       <p style="font-family: sans-serif; padding: 24px; text-align: center">
-        Please turn on JavaScript to use Zevio.
+        Please turn on JavaScript to use Mynt.
       </p>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>

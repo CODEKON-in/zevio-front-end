@@ -94,9 +94,6 @@
   --color-press: rgba(58, 42, 8, 0.1); /* pressed tint over mango fills       */
   --color-hero-scrim: rgba(42, 33, 22, 0.55);
   --color-shine: rgba(255, 248, 234, 0.45); /* the one-off hover sweep on the primary */
-  /* The logo's own colours (the mango mark). */
-  --logo-stem: #6b4a12;
-  --logo-leaf: #4f8a4b;
 
   /*
    * Grain — the matte finish. One tiny static noise tile (feTurbulence,

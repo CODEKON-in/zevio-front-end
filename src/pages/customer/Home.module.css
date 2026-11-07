@@ -19,6 +19,7 @@
 }
 
 .topRow,
+.hello,
 .addressChip,
 .searchBar {
   width: 100%;
@@ -28,13 +29,24 @@
 
 .topRow {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
 .hello {
   min-width: 0;
+}
+
+/* The Mynt lockup in the band: 22px wordmark on phones, 26px from 768px. */
+.logo {
+  --mynt-size: 22px;
+}
+
+@media (min-width: 768px) {
+  .logo {
+    --mynt-size: 26px;
+  }
 }
 
 .greeting {

@@ -1,0 +1,18 @@
+/* Mynt icon colours. Same shapes in every variant, colours swapped. */
+.mynt-icon {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.mynt-icon--default .mynt-pin { fill: var(--mango-500); }
+.mynt-icon--default .mynt-leaf-body { fill: var(--ink-on-mango); }
+.mynt-icon--default .mynt-vein { stroke: var(--mango-500); fill: none; }
+
+.mynt-icon--onMango .mynt-pin { fill: var(--ink-on-mango); }
+.mynt-icon--onMango .mynt-leaf-body { fill: var(--mango-500); }
+.mynt-icon--onMango .mynt-vein { stroke: var(--ink-on-mango); fill: none; }
+
+.mynt-icon--onDark .mynt-pin { fill: var(--mango-500); }
+.mynt-icon--onDark .mynt-leaf-body { fill: var(--ink-900); }
+.mynt-icon--onDark .mynt-vein { stroke: var(--mango-500); fill: none; }

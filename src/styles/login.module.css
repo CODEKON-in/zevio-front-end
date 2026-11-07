@@ -32,22 +32,9 @@
   color: var(--color-on-primary);
 }
 
+/* The Mynt lockup on the mango band (onMango colours). */
 .logo {
-  font-family: var(--font-display);
-  display: grid;
-  place-items: center;
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
-  background: var(--color-surface);
-  box-shadow: var(--shadow-2);
-}
-
-.appName {
-  font-family: var(--font-display);
-  font-size: var(--fs-30);
-  font-weight: var(--font-weight-black);
-  letter-spacing: -0.01em;
+  margin: var(--space-2) 0;
 }
 
 .card {

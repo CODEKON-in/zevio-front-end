@@ -3,33 +3,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-height: 100vh;
   padding: var(--space-6);
-  background: var(--color-bg);
+  background: var(--cream);
   color: var(--color-text);
   text-align: center;
 }
 
-.shadow {
-  width: 56px;
-  height: 8px;
-  margin-top: -18px;
-  border-radius: 50%;
-  background: var(--color-press);
-}
-
-.name {
-  margin-top: var(--space-1);
-  font-family: var(--font-display);
-  font-size: var(--fs-36);
-  font-weight: var(--font-weight-black);
-  letter-spacing: -0.01em;
-  line-height: 1.1;
+/* Same size as the HTML intro's lockup. */
+.logo {
+  --mynt-size: clamp(44px, 14vw, 72px);
 }
 
 .tagline {
   max-width: 280px;
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-3);
   color: var(--color-text-muted);
 }

@@ -4,7 +4,8 @@
  */
 const en = {
   app: {
-    name: 'Zevio',
+    name: 'Mynt',
+    title: 'Mynt — Food & essentials delivered',
     tagline: 'Papanasam to Ayyampettai — hotels and bakeries, delivered home',
   },
   common: {
@@ -76,7 +77,7 @@ const en = {
     },
     privacyNote: 'Your location stays on this phone. It is used only to check the delivery area.',
     accuracyTip: 'A phone finds itself best outdoors, or near a window, with location switched on in the phone\u2019s own settings.',
-    accuracyTipComputer: 'Computers have no GPS, so they can only guess their location from your internet connection — often a town far away. Open Zevio on your phone for an accurate location.',
+    accuracyTipComputer: 'Computers have no GPS, so they can only guess their location from your internet connection — often a town far away. Open Mynt on your phone for an accurate location.',
     useMyLocation: 'Use my location',
   },
   gift: {
@@ -102,7 +103,7 @@ const en = {
     BLOCKED: 'This account is blocked. Please contact support.',
     NETWORK: 'Network problem. Please try again.',
     SERVER: 'The server could not do that. Please try again.',
-    API_AUTH: 'The app could not connect to the Zevio server (API key). Please contact support.',
+    API_AUTH: 'The app could not connect to the Mynt server (API key). Please contact support.',
     LOGIN_DETAILS: 'Please enter your name and phone number.',
     ADMIN_CREDENTIALS: 'Wrong email or password.',
     EMAIL_REQUIRED: 'Please enter the shop email.',
@@ -198,10 +199,10 @@ const en = {
     welcome: 'Welcome, {name}!',
   },
   auth: {
-    title: 'Welcome to Zevio',
+    title: 'Welcome to Mynt',
     subtitle: 'Food from hotels and bakeries near you, delivered home.',
     google: 'Continue with Google',
-    googleNote: 'New to Zevio? Continuing with Google creates your account.',
+    googleNote: 'New to Mynt? Continuing with Google creates your account.',
     googleLoading: 'Loading Google sign-in…',
     // Shown when a form on the sign-in screen needs an email
     emailError: 'Please enter a valid email address',
@@ -226,7 +227,7 @@ const en = {
     logout: 'Log out',
     deleteTitle: 'Delete account',
     deleteButton: 'Delete my account',
-    deleteHint: 'Permanently remove your Zevio account.',
+    deleteHint: 'Permanently remove your Mynt account.',
     deleteConfirmTitle: 'Delete your account?',
     deleteIntro: 'This cannot be undone. This will happen:',
     deleteWhat: {

@@ -50,7 +50,7 @@ if (import.meta.env?.DEV) {
   const missing = SERVICE_AREAS.filter(isPlaceholder).map((a) => a.name);
   if (missing.length) {
     console.warn(
-      `[Zevio] serviceAreas.js: ${missing.join(', ')} still ${missing.length === 1 ? 'has' : 'have'} lat/lng 0. ` +
+      `[Mynt] serviceAreas.js: ${missing.join(', ')} still ${missing.length === 1 ? 'has' : 'have'} lat/lng 0. ` +
         'Location cannot detect these areas until real coordinates are filled in.',
     );
   }

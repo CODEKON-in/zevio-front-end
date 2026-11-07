@@ -3,7 +3,7 @@ import { t } from '../../i18n/index.js';
 import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { Button, InfoNote } from '../ui/index.js';
 import SuccessTick from '../ui/SuccessTick.jsx';
-import MangoMark from '../brand/MangoMark.jsx';
+import MyntIcon from '../brand/MyntIcon.jsx';
 import { CheckIcon, InfoIcon, LocationIcon, SearchIcon } from '../icons/Icons.jsx';
 import { deviceKind } from '../../utils/geolocation.js';
 import { SERVICE_AREAS, isPlaceholder } from '../../data/serviceAreas.js';
@@ -59,7 +59,7 @@ export default function LocationStep({ onDone, onCancel }) {
     setManualUnlocked(true);
     if (code === 'INSECURE_CONTEXT') {
       // eslint-disable-next-line no-console
-      console.warn('[Zevio] Location needs HTTPS (or localhost). Choose an area manually to keep testing.');
+      console.warn('[Mynt] Location needs HTTPS (or localhost). Choose an area manually to keep testing.');
     }
     // No point offering "try again": open the list straight away.
     if (NO_RETRY.has(code) || (code === 'INSECURE_CONTEXT' && IS_DEV)) setManualOpen(true);
@@ -100,9 +100,7 @@ export default function LocationStep({ onDone, onCancel }) {
           <OutOfRange result={null} onContinue={() => finish(elsewhereResult())} onRetry={run} />
         ) : (
           <>
-            <span className={s.mark} aria-hidden="true">
-              <MangoMark size={56} />
-            </span>
+            <MyntIcon size={56} className={s.mark} />
             <h1 className={s.title}>{onCancel ? t('location.step.updateTitle') : t('location.step.title')}</h1>
             <p className={s.text}>{t('location.step.subtitle')}</p>
 

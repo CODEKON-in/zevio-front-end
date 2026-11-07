@@ -7,6 +7,7 @@ import ConfirmDialog from '../ui/ConfirmDialog.jsx';
 import { BikeIcon, GridIcon, LogoutIcon, MenuIcon, OrdersIcon, StoreIcon, UserIcon, SlidersIcon } from '../icons/Icons.jsx';
 import { ADMIN_BASE } from '../../utils/constants.js';
 import s from './AdminLayout.module.css';
+import MyntLogo from '../brand/MyntLogo.jsx';
 
 const LINKS = [
   { to: ADMIN_BASE, key: 'dashboard', Icon: GridIcon, end: true },
@@ -63,7 +64,7 @@ export default function AdminLayout() {
     <div className={s.shell}>
       <aside className={s.sidebar}>
         <p className={s.brand}>
-          {t('app.name')} <span className={s.brandTag}>{t('roles.admin')}</span>
+          <MyntLogo size={24} /> <span className={s.brandTag}>{t('roles.admin')}</span>
         </p>
         <NavLinks onLogout={askLogout} />
       </aside>
@@ -73,7 +74,7 @@ export default function AdminLayout() {
           <MenuIcon size={24} />
         </button>
         <p className={s.brand}>
-          {t('app.name')} <span className={s.brandTag}>{t('roles.admin')}</span>
+          <MyntLogo size={20} /> <span className={s.brandTag}>{t('roles.admin')}</span>
         </p>
       </header>
 

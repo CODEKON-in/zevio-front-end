@@ -6,7 +6,7 @@ import { Button, Input } from '../../components/ui/index.js';
 
 import { ROLES } from '../../utils/constants.js';
 import s from '../../styles/login.module.css';
-import MangoMark from '../../components/brand/MangoMark.jsx';
+import MyntLogo from '../../components/brand/MyntLogo.jsx';
 
 /**
  * Admin login. The email and password are checked against the
@@ -40,10 +40,7 @@ export default function AdminLogin() {
   return (
     <main className={s.page}>
       <div className={s.hero}>
-        <span className={s.logo} aria-hidden="true">
-          <MangoMark size={60} />
-        </span>
-        <p className={s.appName}>{t('app.name')}</p>
+        <MyntLogo size={44} variant="onMango" className={s.logo} />
       </div>
       <section className={s.card} aria-labelledby="admin-login-title">
         <h1 id="admin-login-title">{t('admin.login.title')}</h1>

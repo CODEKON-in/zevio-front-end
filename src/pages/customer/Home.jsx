@@ -12,6 +12,7 @@ import { useStagger } from '../../hooks/useStagger.js';
 import { getShops } from '../../services/shopService.js';
 import { Button, EmptyState, ErrorState, SkeletonList } from '../../components/ui/index.js';
 import ShopCard from '../../components/customer/ShopCard.jsx';
+import MyntLogo from '../../components/brand/MyntLogo.jsx';
 import CategoryChips from '../../components/customer/CategoryChips.jsx';
 import CartBar from '../../components/customer/CartBar.jsx';
 import AddressPickerSheet from '../../components/customer/AddressPickerSheet.jsx';
@@ -51,10 +52,7 @@ export default function Home() {
       <header className={s.top}>
         <div className={s.band}>
           <div className={s.topRow}>
-            <div className={s.hello}>
-              <h1 className={s.greeting}>{firstName ? t('home.greeting', { name: firstName }) : t('home.greetingNoName')}</h1>
-              <p className={s.greetingSub}>{t('home.greetingSub')}</p>
-            </div>
+            <MyntLogo size={22} variant="onMango" className={s.logo} />
             <Link to="/cart" className={s.cartBtn} aria-label={itemCount ? t('home.cartWithCount', { count: itemCount }) : t('home.cart')}>
               <CartIcon size={24} />
               {itemCount > 0 && (
@@ -65,6 +63,10 @@ export default function Home() {
                 </span>
               )}
             </Link>
+          </div>
+          <div className={s.hello}>
+            <h1 className={s.greeting}>{firstName ? t('home.greeting', { name: firstName }) : t('home.greetingNoName')}</h1>
+            <p className={s.greetingSub}>{t('home.greetingSub')}</p>
           </div>
           <button type="button" className={s.addressChip} onClick={() => setPickerOpen(true)}>
             <LocationIcon size={18} className={s.pin} />

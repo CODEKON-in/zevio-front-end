@@ -9,7 +9,7 @@ import { cleanPhone, isValidPhone } from '../../utils/format.js';
 import GoogleButton from './GoogleButton.jsx';
 import l from '../../styles/login.module.css';
 import s from './SignIn.module.css';
-import MangoMark from '../../components/brand/MangoMark.jsx';
+import MyntLogo from '../../components/brand/MyntLogo.jsx';
 
 /**
  * SignIn — the customer sign-in screen.
@@ -31,7 +31,7 @@ export default function SignIn() {
   useEffect(() => {
     document.title = `${t('auth.title')}`;
     return () => {
-      document.title = t('app.name');
+      document.title = t('app.title');
     };
   }, []);
 
@@ -56,10 +56,7 @@ export default function SignIn() {
   return (
     <main className={l.page}>
       <div className={l.hero}>
-        <span className={l.logo} aria-hidden="true">
-          <MangoMark size={60} />
-        </span>
-        <p className={l.appName}>{t('app.name')}</p>
+        <MyntLogo size={44} variant="onMango" className={l.logo} />
       </div>
 
       <section className={l.card} aria-labelledby="signin-title">

@@ -41,7 +41,7 @@ function pickClientId() {
   // Not a client ID. Say so once, name the offending value, and carry on with
   // the known-good default rather than guaranteeing a failed sign-in.
   console.error(
-    `[Zevio] VITE_GOOGLE_CLIENT_ID is not a Google client ID: "${fromEnv}".\n` +
+    `[Mynt] VITE_GOOGLE_CLIENT_ID is not a Google client ID: "${fromEnv}".\n` +
     '  It should look like 1234567890-abc123.apps.googleusercontent.com\n' +
     '  (Google Cloud Console -> APIs & Services -> Credentials -> your Web application client.)\n' +
     '  Falling back to the built-in client ID for now.',
