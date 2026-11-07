@@ -9,6 +9,7 @@ import BottomSheet from '../ui/BottomSheet.jsx';
 import Button from '../ui/Button.jsx';
 import AddressForm from './AddressForm.jsx';
 import AddressSummary from './AddressSummary.jsx';
+import { useRedetect } from '../../hooks/useAddressReturn.js';
 import { CheckIcon, PlusIcon } from '../icons/Icons.jsx';
 import s from './AddressPickerSheet.module.css';
 
@@ -17,13 +18,17 @@ import s from './AddressPickerSheet.module.css';
  * Props:
  *  - open, onClose
  *  - startWithForm: boolean — open straight on the "add new" form (used when there are no addresses)
+ *  - allowSkip: boolean — the form offers "Skip for now" (closes without saving).
+ *    Home: true (it is only a nudge). Cart, on the way to checkout: false —
+ *    an order needs an address.
  */
-export default function AddressPickerSheet({ open, onClose, startWithForm = false }) {
+export default function AddressPickerSheet({ open, onClose, startWithForm = false, allowSkip = false }) {
   const { user } = useAuth();
   const { setAddress } = useCart();
   const { addresses, selectedAddress, saveAddress } = useCustomer();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const redetect = useRedetect();
   const [mode, setMode] = useState('list');
 
   useEffect(() => {
@@ -53,7 +58,18 @@ export default function AddressPickerSheet({ open, onClose, startWithForm = fals
   return (
     <BottomSheet open={open} onClose={onClose} title={mode === 'form' ? t('address.newTitle') : t('cart.chooseAddress')}>
       {mode === 'form' ? (
-        <AddressForm defaults={{ name: user?.name, phone: user?.phone }} onSubmit={handleSave} onNotListed={handleNotListed} />
+        <AddressForm
+          defaults={{ name: user?.name, phone: user?.phone }}
+          onSubmit={handleSave}
+          onNotListed={handleNotListed}
+          allowSkip={allowSkip}
+          onSkip={onClose}
+          onRedetect={() => {
+            onClose();
+            redetect();
+          }}
+          isFirst={!addresses.length}
+        />
       ) : (
         <div className={s.list}>
           <ul className={s.options} role="list">

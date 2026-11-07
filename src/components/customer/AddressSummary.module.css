@@ -21,3 +21,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.label {
+  display: inline-block;
+  margin-right: var(--space-2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-light);
+  color: var(--color-on-primary);
+  font-size: var(--fs-12);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.6;
+  vertical-align: 1px;
+}

@@ -1,19 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { useCustomer } from '../../context/CustomerContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
+import { useLocationStatus } from '../../context/LocationContext.jsx';
+import { useReopenAddressForm } from '../../hooks/useAddressReturn.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useStagger } from '../../hooks/useStagger.js';
 import { getShops } from '../../services/shopService.js';
-import { EmptyState, ErrorState, SkeletonList } from '../../components/ui/index.js';
+import { Button, EmptyState, ErrorState, SkeletonList } from '../../components/ui/index.js';
 import ShopCard from '../../components/customer/ShopCard.jsx';
 import CategoryChips from '../../components/customer/CategoryChips.jsx';
 import CartBar from '../../components/customer/CartBar.jsx';
 import AddressPickerSheet from '../../components/customer/AddressPickerSheet.jsx';
-import { CartIcon, ChevronDownIcon, LocationIcon, SearchIcon } from '../../components/icons/Icons.jsx';
+import { CartIcon, ChevronDownIcon, LocationIcon, PlusIcon, SearchIcon } from '../../components/icons/Icons.jsx';
 import p from '../../styles/page.module.css';
 import s from './Home.module.css';
 import { NoShopsArt } from '../../components/illustrations/Illustrations.jsx';
@@ -26,7 +28,19 @@ export default function Home() {
   const { user } = useAuth();
   const firstName = (user?.name || '').trim().split(/\s+/)[0];
   const listRef = useStagger();
-  const { selectedAddress } = useCustomer();
+  const { selectedAddress, addresses, loading: addressesLoading } = useCustomer();
+  const { isOutOfRange } = useLocationStatus();
+  // No address yet (they skipped it): a gentle nudge, never a blocker. Not for
+  // out-of-range customers — their own address is not where orders go.
+  const showNudge = !isOutOfRange && !addressesLoading && !addresses.length;
+  // Back from "Re-detect location": open the address form again.
+  const [reopen, reopened] = useReopenAddressForm();
+  useEffect(() => {
+    if (reopen) {
+      setPickerOpen(true);
+      reopened();
+    }
+  }, [reopen, reopened]);
   const { getPlace } = useSettings();
   const shops = useAsync(() => getShops({ category }), [category]);
 
@@ -70,6 +84,17 @@ export default function Home() {
       </header>
 
       <main className={p.page}>
+        {showNudge && (
+          <div className={s.nudge}>
+            <span className={s.nudgeIcon} aria-hidden="true">
+              <LocationIcon size={20} />
+            </span>
+            <p className={s.nudgeText}>{t('address.nudgeTitle')}</p>
+            <Button size="sm" variant="secondary" iconLeft={<PlusIcon size={16} />} onClick={() => setPickerOpen(true)}>
+              {t('address.nudgeAction')}
+            </Button>
+          </div>
+        )}
         <CategoryChips value={category} onChange={setCategory} />
 
         <section className={p.section} aria-labelledby="shops-title">
@@ -99,7 +124,8 @@ export default function Home() {
       </main>
 
       <CartBar aboveNav />
-      <AddressPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
+      {/* From Home the form is a nudge, so it offers "Skip for now". */}
+      <AddressPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} allowSkip />
     </>
   );
 }

@@ -4,17 +4,6 @@
   gap: var(--space-4);
 }
 
-/* The detected spot is outside the delivery area. */
-.outOfArea {
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-  font-size: var(--font-size-sm);
-}
-
-/* The area: either the chip (detected or chosen) or the button + dropdown. */
 .areaBlock {
   display: grid;
   gap: var(--space-2);
@@ -22,51 +11,140 @@
 
 .areaLabel {
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   color: var(--color-text);
 }
 
-.required {
-  color: var(--color-danger);
+.optional {
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text-muted);
 }
 
+/* The locked area: the same look as "detected" on the location step — a pin,
+   the name, a small tick. Deliberately inert: no chevron, no hover, no
+   pointer, because nothing happens if you tap it. */
 .areaChip {
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  justify-self: start;
   gap: var(--space-2);
-  min-height: 48px;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-success);
-  border-radius: var(--radius-md);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
+  border-radius: var(--radius-pill);
   background: var(--color-success-light);
+  color: var(--color-success-ink);
+  cursor: default;
+  user-select: none;
 }
 
 .chipText {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-success-ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-18);
+  font-weight: var(--font-weight-bold);
 }
 
-.change {
-  min-height: 44px;
-  padding: 0 var(--space-2);
+.chipCheck {
+  flex-shrink: 0;
+}
+
+.areaNote {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+/* The one way to change the area: back through the location step. */
+.redetect {
+  justify-self: start;
+  min-height: var(--tap-target);
+  padding: 0;
   border: 0;
   background: none;
   color: var(--color-primary-ink);
   font: inherit;
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   text-decoration: underline;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
-.error {
+.labels {
   margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.labelRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.labelChip {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
   font-size: var(--font-size-sm);
-  color: var(--color-danger);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
+  position: relative;
+}
+
+.labelChip::before {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+.labelActive {
+  border-color: transparent;
+  background-color: var(--color-primary);
+  background-image: var(--grain);
+  background-blend-mode: multiply;
+  color: var(--color-on-primary);
+}
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--color-border);
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* No home area yet: send them to the location step, never a text box. */
+.needLocation {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  text-align: center;
+}
+
+.needIcon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-on-primary);
+}
+
+.needTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-20);
+  font-weight: var(--font-weight-bold);
+}
+
+.needText {
+  color: var(--color-text-muted);
 }

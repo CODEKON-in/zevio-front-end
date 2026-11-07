@@ -36,8 +36,9 @@ const NO_RETRY = new Set(['UNSUPPORTED']);
  *   failed → manual  (pick an area → Continue; or "order for someone else" → elsewhere)
  *
  * Props:
- *  - onDone() — after Continue saved the location (used by the Profile route
- *    to go back; on sign-up the app moves on by itself)
+ *  - onDone(result) — after Continue saved the location. On sign-up the app
+ *    then offers the address page (in range) or goes Home; from Profile or
+ *    the address form it goes back where it came from.
  *  - onCancel() — optional; only the Profile route offers it, because the
  *    person already has a saved area there
  */
@@ -83,7 +84,7 @@ export default function LocationStep({ onDone, onCancel }) {
 
   const finish = (r) => {
     confirm(r);
-    onDone?.();
+    onDone?.(r);
   };
 
   const detecting = view === 'detecting';

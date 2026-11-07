@@ -9,7 +9,7 @@ import s from './AddressSummary.module.css';
 export default function AddressSummary({ address, compact = false }) {
   const { getPlace } = useSettings();
   if (!address) return null;
-  const place = getPlace(address.placeId)?.name || '';
+  const place = address.area?.name || getPlace(address.placeId)?.name || '';
 
   if (compact) {
     return <span className={s.compact}>{[address.street, place].filter(Boolean).join(', ')}</span>;
@@ -18,6 +18,7 @@ export default function AddressSummary({ address, compact = false }) {
   return (
     <div className={s.block}>
       <p className={s.name}>
+        {address.label && <span className={s.label}>{t(`address.labels.${address.label}`)}</span>}
         {address.name} · {address.phone}
       </p>
       <p>{[address.street, place].filter(Boolean).join(', ')}</p>

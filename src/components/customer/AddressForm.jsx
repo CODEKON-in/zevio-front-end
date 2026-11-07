@@ -1,103 +1,113 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { t } from '../../i18n/index.js';
+import { useLocationStatus } from '../../context/LocationContext.jsx';
 import Input from '../ui/Input.jsx';
 import Select from '../ui/Select.jsx';
 import Button from '../ui/Button.jsx';
-import UseMyLocationButton from '../location/UseMyLocationButton.jsx';
-import LocationDebug from '../location/LocationDebug.jsx';
+import InfoNote from '../ui/InfoNote.jsx';
 import { CheckIcon, LocationIcon } from '../icons/Icons.jsx';
-import { SERVICE_AREAS, areaById } from '../../data/serviceAreas.js';
+import { SERVICE_AREAS, areaById, isPlaceholder } from '../../data/serviceAreas.js';
 import { PLACE_NOT_LISTED } from '../../utils/constants.js';
 import { cleanPhone, isValidPhone } from '../../utils/format.js';
+import { readSession, removeSession, writeSession } from '../../utils/storage.js';
 import s from './AddressForm.module.css';
 
-const IS_DEV = import.meta.env.DEV;
+/** Unsaved typing, kept while the person re-detects their location. */
+const DRAFT_KEY = 'zevio.addressDraft';
+const LABELS = ['Home', 'Work', 'Other'];
 
 /**
- * AddressForm — Name, Phone, Area, Street, Door number, Landmark, Notes.
+ * AddressForm — a delivery address.
  *
- * The area comes from "Use my location" or from the dropdown. Everything else
- * is typed: GPS gives a point, not an address, and a guessed door number is a
- * failed delivery.
+ * The AREA is never typed or picked here. It comes from the customer's home
+ * location (the location step: GPS first, manual only after a failure) and is
+ * shown as a locked chip. To use a different area they re-run that step with
+ * "Not your area? Re-detect location" — there is no inline dropdown, so the
+ * form cannot quietly override what the location step established.
+ * Everything finer is typed: door number, street, landmark. GPS never fills
+ * those in.
  *
- * A manual choice always overrides GPS — near a border the reading can pick the
- * wrong village, and the person knows where they live. When GPS says they are
- * outside our areas the area is left empty, so the address cannot be saved
- * until they pick one we serve.
+ * Each saved address keeps its own copy of its area, so re-detecting later
+ * (say, at a relative's house in Ayyampettai) adds an address there without
+ * changing the ones already saved. Editing an address keeps its own area.
  *
- * The saved address keeps `street` as the single line every other screen and
- * the order itself read ("12, East Street"), with the two parts alongside it,
- * plus lat, lng and accuracy when the area came from GPS, and how it was set.
+ * Out-of-range customers (gifting mode) cannot receive deliveries, so for
+ * them this form is the RECEIVER's address: they are told so, and they
+ * choose the receiver's area from the areas we serve.
+ *
+ * Saved shape — the new fields plus the older ones other screens read:
+ *   { id?, label, area: { id, name, lat, lng }, doorNumber, streetName,
+ *     landmark, isDefault, name, phone, notes,
+ *     placeId, door, street ("12, East Street"), detectionMethod, lat, lng }
  *
  * Props:
- *  - initial: address object to edit (optional)
+ *  - initial: address to edit (optional)
  *  - defaults: { name, phone } — prefilled for new addresses
  *  - onSubmit: async (address) => void
- *  - onNotListed: () => void — user picked "My place is not listed"
+ *  - allowSkip: show "Skip for now" (post-signup, Home, Profile — true;
+ *    the checkout path — false, because an order needs an address)
+ *  - onSkip: () => void — required when allowSkip
+ *  - onRedetect: () => void — open the location step and come back here
+ *  - onNotListed: () => void — gifting mode only: "My place is not listed"
+ *  - isFirst: boolean — this will be their first address (becomes the default)
  */
-export default function AddressForm({ initial, defaults = {}, onSubmit, onNotListed }) {
-  const [values, setValues] = useState({
-    name: initial?.name ?? defaults.name ?? '',
-    phone: initial?.phone ?? defaults.phone ?? '',
-    placeId: initial?.placeId ?? '',
-    // Addresses saved before the street and door were split only have `street`.
-    streetName: initial?.streetName ?? (initial?.door ? '' : initial?.street ?? ''),
-    door: initial?.door ?? '',
-    landmark: initial?.landmark ?? '',
-    notes: initial?.notes ?? '',
+export default function AddressForm({ initial, defaults = {}, onSubmit, allowSkip = false, onSkip, onRedetect, onNotListed, isFirst = false }) {
+  const home = useLocationStatus();
+  const gifting = home.isOutOfRange;
+  const editing = Boolean(initial?.id);
+
+  // The area this address belongs to. Editing: its own. New: the home area.
+  const lockedArea = editing
+    ? areaById(initial.area?.id || initial.placeId)
+    : areaById(home.location?.area || home.location?.place);
+
+  const [values, setValues] = useState(() => {
+    const draft = editing ? null : readSession(DRAFT_KEY, null);
+    return {
+      name: initial?.name ?? draft?.name ?? defaults.name ?? '',
+      phone: initial?.phone ?? draft?.phone ?? defaults.phone ?? '',
+      door: initial?.doorNumber ?? initial?.door ?? draft?.door ?? '',
+      // Addresses saved before the street and door were split only have `street`.
+      streetName: initial?.streetName ?? (initial?.door ? '' : initial?.street) ?? draft?.streetName ?? '',
+      landmark: initial?.landmark ?? draft?.landmark ?? '',
+      notes: initial?.notes ?? draft?.notes ?? '',
+      label: initial?.label ?? draft?.label ?? 'Home',
+      // Gifting mode only: the receiver's area, chosen from the served list.
+      receiverArea: gifting ? initial?.placeId ?? draft?.receiverArea ?? '' : '',
+    };
   });
-  const [detection, setDetection] = useState(() => ({
-    method: initial?.detectionMethod ?? (initial?.placeId ? 'manual' : null),
-    lat: initial?.lat ?? null,
-    lng: initial?.lng ?? null,
-    accuracy: initial?.accuracy ?? null,
-  }));
-  // The dropdown shows when no area is set yet, or when they tap "Change".
-  const [picking, setPicking] = useState(!initial?.placeId);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [lastReading, setLastReading] = useState(null); // dev debug box only
+
+  // The draft has done its job once the form is back on screen.
+  useEffect(() => {
+    if (!editing) removeSession(DRAFT_KEY);
+  }, [editing]);
 
   const set = (field) => (e) => {
     const value = e.target.value;
-    if (field === 'placeId') {
-      if (value === PLACE_NOT_LISTED) {
-        onNotListed?.();
-        return;
-      }
-      // Picking by hand overrides whatever GPS said, and its coordinates no
-      // longer describe this address.
-      setDetection({ method: value ? 'manual' : null, lat: null, lng: null, accuracy: null });
-      if (value) setPicking(false);
+    if (field === 'receiverArea' && value === PLACE_NOT_LISTED) {
+      onNotListed?.();
+      return;
     }
     setValues((v) => ({ ...v, [field]: field === 'phone' ? value.replace(/\D/g, '').slice(0, 10) : value }));
     if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
-  const onDetected = ({ area, reading }) => {
-    setValues((v) => ({ ...v, placeId: area.id }));
-    setDetection({ method: 'gps', lat: reading.lat, lng: reading.lng, accuracy: reading.accuracy });
-    setPicking(false);
-    setErrors((er) => ({ ...er, placeId: undefined }));
+  const redetect = () => {
+    writeSession(DRAFT_KEY, values);
+    onRedetect?.();
   };
 
-  const onOutOfRange = () => {
-    // Not one of ours: clear the area, so this address cannot be saved for
-    // delivery unless they pick an area we serve themselves.
-    setValues((v) => ({ ...v, placeId: '' }));
-    setDetection({ method: null, lat: null, lng: null, accuracy: null });
-    setPicking(true);
-  };
-
-  const onFailed = () => setPicking(true);
+  const area = gifting ? areaById(values.receiverArea) : lockedArea;
 
   const validate = () => {
     const er = {};
     if (!values.name.trim()) er.name = t('address.required');
     if (!isValidPhone(values.phone)) er.phone = t('address.phoneInvalid');
-    if (!values.placeId) er.placeId = t('address.areaRequired');
-    if (!values.streetName.trim()) er.streetName = t('address.required');
+    if (gifting && !values.receiverArea) er.receiverArea = t('address.receiverAreaRequired');
     if (!values.door.trim()) er.door = t('address.required');
+    if (!values.streetName.trim()) er.streetName = t('address.required');
     return er;
   };
 
@@ -110,93 +120,100 @@ export default function AddressForm({ initial, defaults = {}, onSubmit, onNotLis
       e.currentTarget.querySelector('[aria-invalid="true"]')?.focus();
       return;
     }
+    if (!area) return;
     setSaving(true);
     const door = values.door.trim();
     const streetName = values.streetName.trim();
+    const method = gifting ? 'manual' : editing ? initial.detectionMethod || 'manual' : home.location?.detectionMethod || 'gps';
     try {
       await onSubmit({
-        ...(initial?.id ? { id: initial.id } : {}),
+        ...(editing ? { id: initial.id } : {}),
+        label: values.label,
+        area: { id: area.id, name: area.name, lat: area.lat, lng: area.lng },
+        doorNumber: door,
+        streetName,
+        landmark: values.landmark.trim(),
+        isDefault: editing ? Boolean(initial.isDefault) : isFirst,
         name: values.name.trim(),
         phone: cleanPhone(values.phone),
-        placeId: values.placeId,
-        door,
-        streetName,
-        street: [door, streetName].filter(Boolean).join(', '),
-        landmark: values.landmark.trim(),
         notes: values.notes.trim(),
-        detectionMethod: detection.method || 'manual',
-        lat: detection.method === 'gps' ? detection.lat : null,
-        lng: detection.method === 'gps' ? detection.lng : null,
-        accuracy: detection.method === 'gps' ? detection.accuracy : null,
+        // Older names, still read by the order, the cart and the summaries.
+        placeId: area.id,
+        door,
+        street: [door, streetName].filter(Boolean).join(', '),
+        detectionMethod: method,
+        lat: area.lat,
+        lng: area.lng,
       });
     } finally {
       setSaving(false);
     }
   };
 
-  const area = areaById(values.placeId);
-  const areaOptions = [
-    ...SERVICE_AREAS.map((a) => ({ value: a.id, label: a.name })),
+  // No home area at all (should not happen behind the location step, but the
+  // form must never fall back to letting someone type one).
+  if (!gifting && !lockedArea) {
+    return (
+      <div className={s.needLocation}>
+        <span className={s.needIcon} aria-hidden="true">
+          <LocationIcon size={28} />
+        </span>
+        <p className={s.needTitle}>{t('address.needLocation')}</p>
+        <p className={s.needText}>{t('address.needLocationBody')}</p>
+        <Button block iconLeft={<LocationIcon size={20} />} onClick={redetect}>
+          {t('address.goToLocation')}
+        </Button>
+        {allowSkip && (
+          <Button variant="outline" block onClick={onSkip}>
+            {t('address.skip')}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  const receiverOptions = [
+    ...SERVICE_AREAS.filter((a) => !isPlaceholder(a)).map((a) => ({ value: a.id, label: a.name })),
     { value: PLACE_NOT_LISTED, label: t('address.notListed') },
   ];
 
   return (
     <form className={s.form} onSubmit={handleSubmit} noValidate>
-      <Input label={t('address.nameLabel')} required value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
-      <Input
-        label={t('address.phoneLabel')}
-        required
-        prefix="+91"
-        type="tel"
-        inputMode="numeric"
-        autoComplete="tel-national"
-        value={values.phone}
-        onChange={set('phone')}
-        error={errors.phone}
-      />
-
-      <div className={s.areaBlock}>
-        <span className={s.areaLabel} id="address-area-label">
-          {t('address.areaLabel')} <span className={s.required} aria-hidden="true">*</span>
-        </span>
-
-        {area && !picking ? (
-          <div className={s.areaChip} aria-labelledby="address-area-label">
-            <span className={s.chipText}>
-              <LocationIcon size={18} />
-              {detection.method === 'gps' ? t('address.areaDetected', { area: area.name }) : area.name}
-              {detection.method === 'gps' && <CheckIcon size={16} />}
-            </span>
-            <button type="button" className={s.change} onClick={() => setPicking(true)}>
-              {t('address.changeArea')}
-            </button>
+      {gifting ? (
+        <>
+          <InfoNote tone="warning">{t('address.outOfRangeNote')}</InfoNote>
+          <Select
+            label={t('address.receiverAreaLabel')}
+            required
+            placeholder={t('address.placePlaceholder')}
+            options={receiverOptions}
+            value={values.receiverArea}
+            onChange={set('receiverArea')}
+            error={errors.receiverArea}
+          />
+        </>
+      ) : (
+        <div className={s.areaBlock}>
+          <span className={s.areaLabel} id="address-area-label">
+            {t('address.areaLabel')}
+          </span>
+          {/* Locked: not a field, not a button — just the area. */}
+          <div className={s.areaChip} role="group" aria-labelledby="address-area-label" aria-describedby="address-area-note">
+            <LocationIcon size={18} />
+            <span className={s.chipText}>{lockedArea.name}</span>
+            <CheckIcon size={16} className={s.chipCheck} />
           </div>
-        ) : (
-          <>
-            <UseMyLocationButton onDetected={onDetected} onOutOfRange={onOutOfRange} onFailed={onFailed} onReading={setLastReading} />
-            <Select
-              label={t('address.pickAreaLabel')}
-              placeholder={t('address.placePlaceholder')}
-              options={areaOptions}
-              value={values.placeId}
-              onChange={set('placeId')}
-              error={errors.placeId}
-            />
-          </>
-        )}
-        {errors.placeId && area && !picking && <p className={s.error}>{errors.placeId}</p>}
-        {IS_DEV && <LocationDebug reading={lastReading} />}
-      </div>
+          <p id="address-area-note" className={s.areaNote}>
+            {editing ? t('address.areaLockedEdit') : t('address.areaLocked')}
+          </p>
+          {!editing && onRedetect && (
+            <button type="button" className={s.redetect} onClick={redetect}>
+              {t('address.redetect')}
+            </button>
+          )}
+        </div>
+      )}
 
-      <Input
-        label={t('address.streetNameLabel')}
-        required
-        placeholder={t('address.streetNamePlaceholder')}
-        value={values.streetName}
-        onChange={set('streetName')}
-        error={errors.streetName}
-        autoComplete="address-line1"
-      />
       <Input
         label={t('address.doorLabel')}
         required
@@ -204,25 +221,79 @@ export default function AddressForm({ initial, defaults = {}, onSubmit, onNotLis
         value={values.door}
         onChange={set('door')}
         error={errors.door}
+        autoComplete="address-line1"
+      />
+      <Input
+        label={t('address.streetNameLabel')}
+        required
+        placeholder={t('address.streetNamePlaceholder')}
+        value={values.streetName}
+        onChange={set('streetName')}
+        error={errors.streetName}
         autoComplete="address-line2"
       />
       <Input
         label={`${t('address.landmarkLabel')} (${t('common.optional')})`}
-        hint={t('address.landmarkHint')}
+        placeholder={t('address.landmarkPlaceholder')}
         value={values.landmark}
         onChange={set('landmark')}
       />
-      <Input
-        label={`${t('address.notesLabel')} (${t('common.optional')})`}
-        placeholder={t('address.notesPlaceholder')}
-        multiline
-        rows={2}
-        value={values.notes}
-        onChange={set('notes')}
-      />
-      <Button type="submit" size="lg" block loading={saving}>
-        {t('address.save')}
-      </Button>
+
+      <fieldset className={s.labels}>
+        <legend className={s.areaLabel}>
+          {t('address.labelTitle')} <span className={s.optional}>({t('common.optional')})</span>
+        </legend>
+        <div className={s.labelRow}>
+          {LABELS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              className={`${s.labelChip} ${values.label === l ? s.labelActive : ''}`}
+              aria-pressed={values.label === l}
+              onClick={() => setValues((v) => ({ ...v, label: l }))}
+            >
+              {t(`address.labels.${l}`)}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      {/* Who receives it. Prefilled with their own details; for a gift order
+          these are the receiver's. */}
+      <div className={s.contact}>
+        <p className={s.areaLabel}>{gifting ? t('address.receiverTitle') : t('address.contactTitle')}</p>
+        <Input label={t('address.nameLabel')} required value={values.name} onChange={set('name')} error={errors.name} autoComplete="name" />
+        <Input
+          label={t('address.phoneLabel')}
+          required
+          prefix="+91"
+          type="tel"
+          inputMode="numeric"
+          autoComplete="tel-national"
+          value={values.phone}
+          onChange={set('phone')}
+          error={errors.phone}
+        />
+        <Input
+          label={`${t('address.notesLabel')} (${t('common.optional')})`}
+          placeholder={t('address.notesPlaceholder')}
+          multiline
+          rows={2}
+          value={values.notes}
+          onChange={set('notes')}
+        />
+      </div>
+
+      <div className={s.actions}>
+        <Button type="submit" size="lg" block loading={saving}>
+          {t('address.save')}
+        </Button>
+        {allowSkip && (
+          <Button type="button" variant="outline" size="lg" block onClick={onSkip} disabled={saving}>
+            {t('address.skip')}
+          </Button>
+        )}
+      </div>
     </form>
   );
 }

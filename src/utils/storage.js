@@ -28,3 +28,30 @@ export function removeStorage(key) {
     /* ignore */
   }
 }
+
+/** The same, for sessionStorage: kept for this tab only. */
+export function readSession(key, fallback = null) {
+  try {
+    const raw = window.sessionStorage.getItem(key);
+    return raw === null ? fallback : JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+export function writeSession(key, value) {
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function removeSession(key) {
+  try {
+    window.sessionStorage.removeItem(key);
+  } catch {
+    /* ignore */
+  }
+}

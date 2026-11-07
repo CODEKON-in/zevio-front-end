@@ -190,3 +190,33 @@
 @keyframes count-roll {
   from { transform: translateY(100%); opacity: 0; }
 }
+
+/* "Add your delivery address to order faster" — a quiet card, not a wall. */
+.nudge {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--color-primary-edge);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.nudgeIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-on-primary);
+}
+
+.nudgeText {
+  flex: 1;
+  min-width: 160px;
+  font-weight: var(--font-weight-bold);
+}

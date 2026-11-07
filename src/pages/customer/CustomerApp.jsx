@@ -20,6 +20,7 @@ import Orders from './Orders.jsx';
 import Profile from './Profile.jsx';
 import NotServiceable from './NotServiceable.jsx';
 import LocationStep from '../../components/location/LocationStep.jsx';
+import WelcomeAddress from './WelcomeAddress.jsx';
 
 /** Scroll to the top whenever the page (path) changes. */
 function ScrollToTop() {
@@ -32,12 +33,19 @@ function ScrollToTop() {
 
 /**
  * Customer section (lazy-loaded). Flow: Splash → Login → app.
- * Routes: /  /search  /shop/:id  /cart  /checkout  /orders  /orders/:id  /orders/:id/placed  /profile  /not-serviceable  /location
+ * Routes: /  /search  /shop/:id  /cart  /checkout  /orders  /orders/:id  /orders/:id/placed  /profile  /not-serviceable  /location  /welcome/address
  */
-/** Profile → "Update": the same GPS-first step, then back to Profile. */
+/**
+ * The same GPS-first step, opened on purpose: Profile → Update, or "Not your
+ * area? Re-detect location" in the address form. It goes back where it came
+ * from, and tells the address form to open again with the new area.
+ */
 function UpdateLocation() {
   const navigate = useNavigate();
-  return <LocationStep onDone={() => navigate('/profile', { replace: true })} onCancel={() => navigate(-1)} />;
+  const { state } = useLocation();
+  const back = () =>
+    navigate(state?.returnTo || '/profile', { replace: true, state: state?.reopenAddress ? { reopenAddress: true } : null });
+  return <LocationStep onDone={back} onCancel={back} />;
 }
 
 export default function CustomerApp() {
@@ -45,6 +53,7 @@ export default function CustomerApp() {
   const { status, error, reload } = useSettings();
   const location = useLocationStatus();
   const booted = useRef(false);
+  const navigate = useNavigate();
 
   if (status === 'ready') booted.current = true;
   if (!booted.current && status === 'loading') return <Splash />;
@@ -55,7 +64,11 @@ export default function CustomerApp() {
   // Signed in: the location step comes before anything else, and cannot be
   // skipped — whether they are in range decides how they can pay. Every
   // route, Home included, is behind it.
-  if (location.needsStep) return <LocationStep />;
+  // In range: offer the address page next (it can be skipped). Out of range:
+  // straight Home — their own address is not where orders can go.
+  if (location.needsStep) {
+    return <LocationStep onDone={(r) => navigate(r.status === 'in_range' ? '/welcome/address' : '/', { replace: true })} />;
+  }
 
   return (
     <CustomerProvider>
@@ -74,6 +87,7 @@ export default function CustomerApp() {
         <Route path="orders/:id/placed" element={<OrderSuccess />} />
         <Route path="not-serviceable" element={<NotServiceable />} />
         <Route path="location" element={<UpdateLocation />} />
+        <Route path="welcome/address" element={<WelcomeAddress />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </CustomerProvider>

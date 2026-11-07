@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -12,6 +12,7 @@ import DeleteAccount from '../../components/account/DeleteAccount.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
 import { ChatIcon, EditIcon, InfoIcon, LocationIcon, LogoutIcon, PhoneIcon, PlusIcon, TrashIcon } from '../../components/icons/Icons.jsx';
 import { areaById } from '../../data/serviceAreas.js';
+import { useRedetect, useReopenAddressForm } from '../../hooks/useAddressReturn.js';
 import { telLink, whatsappLink } from '../../utils/links.js';
 import p from '../../styles/page.module.css';
 import s from './Profile.module.css';
@@ -31,6 +32,15 @@ export default function Profile() {
   const [editing, setEditing] = useState(null); // null | 'new' | address
   const [deleting, setDeleting] = useState(null);
   const [confirmLogout, setConfirmLogout] = useState(false);
+  const redetect = useRedetect();
+  // Back from "Re-detect location": open the new-address form again.
+  const [reopen, reopened] = useReopenAddressForm();
+  useEffect(() => {
+    if (reopen) {
+      setEditing('new');
+      reopened();
+    }
+  }, [reopen, reopened]);
 
   const handleSave = async (address) => {
     try {
@@ -160,6 +170,13 @@ export default function Profile() {
             initial={editing === 'new' ? null : editing}
             defaults={{ name: user.name, phone: user.phone }}
             onSubmit={handleSave}
+            allowSkip={editing === 'new'}
+            onSkip={() => setEditing(null)}
+            onRedetect={() => {
+              setEditing(null);
+              redetect();
+            }}
+            isFirst={editing === 'new' && !addresses.length}
             onNotListed={() => {
               setEditing(null);
               navigate('/not-serviceable');

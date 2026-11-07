@@ -12,6 +12,7 @@ import PageHeader from '../../components/layout/PageHeader.jsx';
 import BillDetails from '../../components/customer/BillDetails.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
 import AddressPickerSheet from '../../components/customer/AddressPickerSheet.jsx';
+import { useReopenAddressForm } from '../../hooks/useAddressReturn.js';
 import { AlertIcon, LocationIcon, PlusIcon, StoreIcon } from '../../components/icons/Icons.jsx';
 import p from '../../styles/page.module.css';
 import s from './Cart.module.css';
@@ -25,6 +26,14 @@ export default function Cart() {
   const { settings } = useSettings();
   const { revalidate } = useCartMinimums();
   const [pickerOpen, setPickerOpen] = useState(false);
+  // Back from "Re-detect location": open the address form again.
+  const [reopen, reopened] = useReopenAddressForm();
+  useEffect(() => {
+    if (reopen) {
+      setPickerOpen(true);
+      reopened();
+    }
+  }, [reopen, reopened]);
   const [confirmClear, setConfirmClear] = useState(false);
   const [checking, setChecking] = useState(false);
 
@@ -174,7 +183,8 @@ export default function Cart() {
         </div>
       </div>
 
-      <AddressPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
+      {/* On the way to checkout: an address is required, so no "Skip for now". */}
+      <AddressPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} allowSkip={false} />
       <ConfirmDialog
         open={confirmClear}
         title={t('cart.clearConfirmTitle')}
