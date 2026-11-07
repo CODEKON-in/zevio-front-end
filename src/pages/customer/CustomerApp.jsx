@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import { CustomerProvider } from '../../context/CustomerContext.jsx';
@@ -19,8 +19,7 @@ import OrderTracking from './OrderTracking.jsx';
 import Orders from './Orders.jsx';
 import Profile from './Profile.jsx';
 import NotServiceable from './NotServiceable.jsx';
-import LocationGate from '../../components/location/LocationGate.jsx';
-import OutOfRangeNotice from '../../components/location/OutOfRangeNotice.jsx';
+import LocationStep from '../../components/location/LocationStep.jsx';
 
 /** Scroll to the top whenever the page (path) changes. */
 function ScrollToTop() {
@@ -33,8 +32,14 @@ function ScrollToTop() {
 
 /**
  * Customer section (lazy-loaded). Flow: Splash → Login → app.
- * Routes: /  /search  /shop/:id  /cart  /checkout  /orders  /orders/:id  /orders/:id/placed  /profile  /not-serviceable
+ * Routes: /  /search  /shop/:id  /cart  /checkout  /orders  /orders/:id  /orders/:id/placed  /profile  /not-serviceable  /location
  */
+/** Profile → "Update": the same GPS-first step, then back to Profile. */
+function UpdateLocation() {
+  const navigate = useNavigate();
+  return <LocationStep onDone={() => navigate('/profile', { replace: true })} onCancel={() => navigate(-1)} />;
+}
+
 export default function CustomerApp() {
   const { user } = useAuth();
   const { status, error, reload } = useSettings();
@@ -47,9 +52,10 @@ export default function CustomerApp() {
 
   if (user?.role !== ROLES.CUSTOMER) return <SignIn />;
 
-  // Signed in: ask once where they are, and say so plainly if we cannot deliver there.
-  if (location.status === 'unknown') return <LocationGate />;
-  if (location.status === 'out_of_range' && !location.acknowledged) return <OutOfRangeNotice />;
+  // Signed in: the location step comes before anything else, and cannot be
+  // skipped — whether they are in range decides how they can pay. Every
+  // route, Home included, is behind it.
+  if (location.needsStep) return <LocationStep />;
 
   return (
     <CustomerProvider>
@@ -67,6 +73,7 @@ export default function CustomerApp() {
         <Route path="orders/:id" element={<OrderTracking />} />
         <Route path="orders/:id/placed" element={<OrderSuccess />} />
         <Route path="not-serviceable" element={<NotServiceable />} />
+        <Route path="location" element={<UpdateLocation />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </CustomerProvider>

@@ -66,3 +66,35 @@
 .logout.danger {
   border-color: var(--color-danger);
 }
+
+.homeArea {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.homeIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-on-primary);
+}
+
+.homeText {
+  flex: 1;
+  min-width: 0;
+}
+
+.homeLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.homeValue {
+  font-weight: var(--font-weight-bold);
+}

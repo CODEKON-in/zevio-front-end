@@ -1,28 +1,32 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { t } from '../../i18n/index.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCustomer } from '../../context/CustomerContext.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
+import { useLocationStatus } from '../../context/LocationContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { BottomSheet, Button, Card, ConfirmDialog, ErrorState, SkeletonList } from '../../components/ui/index.js';
 import AddressForm from '../../components/customer/AddressForm.jsx';
 import DeleteAccount from '../../components/account/DeleteAccount.jsx';
 import AddressSummary from '../../components/customer/AddressSummary.jsx';
-import { ChatIcon, EditIcon, InfoIcon, LogoutIcon, PhoneIcon, PlusIcon, TrashIcon } from '../../components/icons/Icons.jsx';
+import { ChatIcon, EditIcon, InfoIcon, LocationIcon, LogoutIcon, PhoneIcon, PlusIcon, TrashIcon } from '../../components/icons/Icons.jsx';
+import { areaById } from '../../data/serviceAreas.js';
 import { telLink, whatsappLink } from '../../utils/links.js';
 import p from '../../styles/page.module.css';
 import s from './Profile.module.css';
 
 const APP_VERSION = '0.2.0';
 
-/** Profile: name, phone, saved addresses, help, about, logout. */
+/** Profile: name, phone, home area, saved addresses, help, about, logout. */
 export default function Profile() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { addresses, loading, error, reload, saveAddress, deleteAddress } = useCustomer();
   const { settings } = useSettings();
   const { showToast } = useToast();
+  const home = useLocationStatus();
+  const homeArea = areaById(home.location?.area || home.location?.place);
 
   const [editing, setEditing] = useState(null); // null | 'new' | address
   const [deleting, setDeleting] = useState(null);
@@ -64,6 +68,23 @@ export default function Profile() {
           <p className={s.name}>{user.name}</p>
           <p className={p.muted}>+91 {user.phone}</p>
         </div>
+      </Card>
+
+      {/* Home area from the location step; Update runs the same step again. */}
+      <Card className={s.homeArea}>
+        <span className={s.homeIcon} aria-hidden="true">
+          <LocationIcon size={20} />
+        </span>
+        <div className={s.homeText}>
+          <p className={s.homeLabel}>{t('profile.homeArea')}</p>
+          <p className={s.homeValue}>
+            {home.isOutOfRange ? t('profile.homeAreaOut') : homeArea ? t('profile.homeAreaIn', { area: homeArea.name }) : '—'}
+            {home.location?.detectionMethod === 'manual' && !home.isOutOfRange && <span className={p.muted}> · {t('profile.homeAreaManual')}</span>}
+          </p>
+        </div>
+        <Button as={Link} to="/location" variant="ghost" size="sm">
+          {t('profile.updateArea')}
+        </Button>
       </Card>
 
       <section className={p.section} aria-labelledby="addr-title">

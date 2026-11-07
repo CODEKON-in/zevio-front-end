@@ -59,6 +59,7 @@ export function getCurrentPosition({ onProgress } = {}) {
     }
 
     let best = null;
+    let lastError = null;
     let watchId = null;
     let timer = null;
     let settled = false;
@@ -73,7 +74,9 @@ export function getCurrentPosition({ onProgress } = {}) {
 
     timer = setTimeout(() => {
       if (best) finish(resolve, best);
-      else finish(reject, new ServiceError('TIMEOUT'));
+      // Say what actually went wrong: a phone that kept reporting "no fix"
+      // is POSITION_UNAVAILABLE, not merely slow.
+      else finish(reject, new ServiceError(lastError || 'TIMEOUT'));
     }, FIX_TIMEOUT_MS);
 
     watchId = navigator.geolocation.watchPosition(
@@ -91,6 +94,7 @@ export function getCurrentPosition({ onProgress } = {}) {
       },
       (error) => {
         const code = BROWSER_ERRORS[error?.code] || 'POSITION_UNAVAILABLE';
+        lastError = code;
         // A refusal is final. Anything else may still be followed by a reading
         // before the deadline, so only give up early if there is nothing to show.
         if (code === 'PERMISSION_DENIED') finish(reject, new ServiceError(code, error?.message));

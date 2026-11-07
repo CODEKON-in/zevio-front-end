@@ -1,0 +1,48 @@
+.tick {
+  display: block;
+}
+
+.ring {
+  fill: var(--color-success-light);
+}
+
+.disc {
+  fill: var(--color-success);
+}
+
+.check {
+  fill: none;
+  stroke: var(--color-text-inverse);
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* Transform, opacity and stroke-dashoffset only. */
+@media (prefers-reduced-motion: no-preference) {
+  .disc {
+    transform-origin: 60px 60px;
+    animation: pop var(--dur-slow) var(--ease-spring) both;
+  }
+  .ring {
+    transform-origin: 60px 60px;
+    animation: ring 700ms var(--ease-out) 120ms both;
+  }
+  .check {
+    animation: draw 420ms var(--ease-out) 300ms both;
+  }
+}
+
+@keyframes pop {
+  from { transform: scale(0.4); opacity: 0; }
+}
+
+@keyframes ring {
+  from { transform: scale(0.6); opacity: 0; }
+}
+
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+}
