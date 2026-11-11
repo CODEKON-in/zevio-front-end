@@ -1,0 +1,284 @@
+/* App Shell & Layout Styles */
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cream);
+  overflow-x: hidden;
+}
+
+/* ================= Topbar ================= */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--topbar-height);
+  background: rgba(255, 253, 248, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-inner {
+  max-width: var(--max-content-width);
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* Desktop Navigation (hidden on mobile) */
+.desktop-nav {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.desktop-nav-link {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap; /* "Shop Settings" must not break across two lines */
+  transition: all var(--transition-fast);
+}
+
+.desktop-nav-link:hover {
+  background: var(--mango-50);
+  color: var(--ink-900);
+}
+
+.desktop-nav-link.active {
+  background: var(--mango-100);
+  color: var(--mango-text);
+  /* Always #3A2A08 */
+  font-weight: 700;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* The shop chip gives up width before anything spills off a small screen. */
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+/* Shop chip */
+/* Phones: "sho…" tells a shopkeeper nothing, and the shop's own name is
+   already the first line of the dashboard. The room goes to the logo. */
+.shop-badge-chip {
+  display: none;
+  min-width: 72px;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--mango-50);
+  border: 1px solid var(--mango-100);
+  border-radius: var(--radius-pill);
+  color: var(--mango-text);
+  font-weight: 700;
+  font-size: 12.5px;
+  max-width: 150px;
+}
+
+.shop-badge-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Logout button */
+.btn-logout {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--cream-card);
+  color: var(--ink-600);
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-logout:hover {
+  background: var(--error-bg);
+  border-color: rgba(200, 69, 59, 0.3);
+  color: var(--error);
+}
+
+.logout-text {
+  display: none;
+}
+
+/* ================= Main Content Area ================= */
+.app-main {
+  flex: 1;
+  width: 100%;
+}
+
+/* ================= Bottom Navigation (Mobile-First) ================= */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: var(--bottom-nav-height);
+  background: var(--cream-card);
+  border-top: 1px solid var(--line);
+  box-shadow: var(--shadow-bottom-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 2px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-nav-item {
+  flex: 1;
+  min-height: var(--touch-target-min);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--ink-600);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  position: relative;
+  border-radius: var(--radius-sm);
+  margin: 0;
+}
+
+.bottom-nav-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 26px;
+  border-radius: var(--radius-pill);
+  transition: all var(--transition-fast);
+}
+
+.bottom-nav-badge {
+  position: absolute;
+  top: -3px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  background: var(--error);
+  color: #FFFFFF;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--cream-card);
+}
+
+.bottom-nav-label {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+}
+
+/* Active State for Bottom Nav */
+.bottom-nav-item.active {
+  color: var(--mango-text);
+  /* Always #3A2A08 */
+}
+
+.bottom-nav-item.active .bottom-nav-icon-wrap {
+  background-color: var(--mango-500);
+  background-image: var(--grain), var(--mango-fill);
+  background-blend-mode: multiply, normal;
+  color: var(--mango-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.bottom-nav-item.active .bottom-nav-label {
+  font-weight: 800;
+}
+
+/* ================= 360px Extra Narrow Screen Optimizations ================= */
+@media (max-width: 380px) {
+  .topbar-inner {
+    padding: 0 10px;
+  }
+
+  .bottom-nav-label {
+    font-size: 10px;
+  }
+
+  .bottom-nav-icon-wrap {
+    width: 28px;
+    height: 24px;
+  }
+}
+
+/* ================= Responsive Breakpoints ================= */
+@media (min-width: 480px) {
+  .logout-text {
+    display: inline;
+  }
+
+  .shop-badge-chip {
+    max-width: 180px;
+    padding: 6px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .shop-badge-chip {
+    display: inline-flex;
+  }
+
+  .desktop-nav {
+    display: flex;
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+
+  /* There is room at this width: the chip keeps its name and stops shrinking. */
+  .shop-badge-chip {
+    max-width: 260px;
+    flex-shrink: 0;
+  }
+
+  .topbar-inner {
+    max-width: 1180px;
+  }
+}

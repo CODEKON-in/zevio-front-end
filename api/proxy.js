@@ -32,6 +32,11 @@ const ALLOWED = {
     `/api/user/${ID}`,
     '/api/settings/',
     '/api/places/',
+    '/api/seller/me',
+    '/api/seller/shop',
+    '/api/seller/products',
+    '/api/seller/orders',
+    `/api/seller/order/${ID}`,
   ],
   POST: [
     '/api/user/add/',
@@ -39,6 +44,17 @@ const ALLOWED = {
     '/api/order/place/',
     '/api/order/cancel/',
     '/api/auth/google',
+    // Seller panel (/seller). Each of these is scoped to the signed-in seller's
+    // own shop by the API, which checks their Google token.
+    '/api/seller/shop/update/',
+    '/api/seller/shop/toggle-open/',
+    '/api/seller/product/add/',
+    '/api/seller/product/update/',
+    '/api/seller/product/toggle-stock/',
+    '/api/seller/product/delete/',
+    '/api/seller/order/accept/',
+    '/api/seller/order/reject/',
+    '/api/seller/order/ready/',
   ],
 };
 
@@ -154,6 +170,8 @@ export default async function handler(req, res) {
   const headers = { 'X-API-Key': key, Accept: 'application/json' };
   const type = req.headers['content-type'];
   if (type) headers['content-type'] = type;
+  // The seller panel identifies the seller with their Google token.
+  if (req.headers.authorization) headers.Authorization = req.headers.authorization;
 
   try {
     const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);
