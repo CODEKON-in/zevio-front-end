@@ -202,8 +202,10 @@ export default async function handler(req, res) {
   const headers = { 'X-API-Key': key, Accept: 'application/json' };
   const type = req.headers['content-type'];
   if (type) headers['content-type'] = type;
-  // The seller panel identifies the seller with their Google token.
+  // Forward authentication and partner identification headers
   if (req.headers.authorization) headers.Authorization = req.headers.authorization;
+  if (req.headers['x-partner-id']) headers['X-Partner-Id'] = req.headers['x-partner-id'];
+  if (req.headers['x-partner-email']) headers['X-Partner-Email'] = req.headers['x-partner-email'];
 
   try {
     const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await readBody(req);

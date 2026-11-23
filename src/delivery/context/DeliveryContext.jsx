@@ -82,12 +82,23 @@ export function DeliveryProvider({ children }) {
     let active = true;
     if (authStatus === 'authenticated' && partner?.uid) {
       setOrders(getAllOrdersForPartner(partner.uid));
-      // Asynchronously sync with live backend API
-      syncOrdersWithBackend(partner.uid).then((liveOrders) => {
-        if (active && liveOrders && liveOrders.length > 0) {
-          setOrders(liveOrders);
-        }
-      });
+
+      const doSync = () => {
+        syncOrdersWithBackend(partner.uid).then((liveOrders) => {
+          if (active && Array.isArray(liveOrders)) {
+            setOrders(liveOrders);
+          }
+        });
+      };
+
+      doSync();
+      // Poll every 10 seconds so new customer orders appear automatically
+      const pollTimer = setInterval(doSync, 10000);
+
+      return () => {
+        active = false;
+        clearInterval(pollTimer);
+      };
     } else {
       setOrders([]);
     }
@@ -181,6 +192,15 @@ export function DeliveryProvider({ children }) {
     setOrders(reset);
   }, [authStatus, partner?.uid]);
 
+  const refreshOrders = useCallback(async () => {
+    if (authStatus !== 'authenticated' || !partner?.uid) return [];
+    const live = await syncOrdersWithBackend(partner.uid);
+    if (Array.isArray(live)) {
+      setOrders(live);
+    }
+    return live;
+  }, [authStatus, partner?.uid]);
+
   // Active orders sorted by operational priority, then earliest assigned time
   const activeOrders = useMemo(() => {
     return orders
@@ -246,7 +266,8 @@ export function DeliveryProvider({ children }) {
     clearAuthError,
     updateOrderStatus,
     reportIssue,
-    resetDemoData
+    resetDemoData,
+    refreshOrders
   };
 
   return <DeliveryContext.Provider value={value}>{children}</DeliveryContext.Provider>;

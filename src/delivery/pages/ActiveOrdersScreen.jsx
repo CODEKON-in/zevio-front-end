@@ -3,9 +3,19 @@ import OrderCard from '../components/OrderCard';
 import { useDelivery } from '../context/DeliveryContext';
 
 export default function ActiveOrdersScreen() {
-  const { partner, activeOrders, earningsSummary, isOnDuty, toggleDutyStatus, resetDemoData } =
+  const { partner, activeOrders, earningsSummary, isOnDuty, toggleDutyStatus, resetDemoData, refreshOrders } =
     useDelivery();
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshOrders();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const filteredOrders =
     statusFilter === 'all'
@@ -101,9 +111,19 @@ export default function ActiveOrdersScreen() {
               : 'No orders match the selected status filter.'}
           </p>
           {activeOrders.length === 0 && (
-            <button type="button" className="btn btn--outline" onClick={resetDemoData}>
-              Reload Sample Active Orders
-            </button>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? 'Checking...' : 'Check for Orders'}
+              </button>
+              <button type="button" className="btn btn--outline" onClick={resetDemoData}>
+                Load Demo Sample Orders
+              </button>
+            </div>
           )}
         </div>
       )}

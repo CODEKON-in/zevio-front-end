@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import StatusBadge from '../components/StatusBadge';
 import { useDelivery } from '../context/DeliveryContext';
+import { fetchOrderDetailsFromBackend } from '../services/deliveryService';
 import { ORDER_STATUS_CONFIG, ISSUE_REASONS } from '../data/mockData';
 import {
   formatTimeShort,
@@ -20,9 +21,34 @@ const STEPS = [
 export default function OrderDetailScreen() {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { orders, updateOrderStatus, reportIssue } = useDelivery();
+  const { orders, updateOrderStatus, reportIssue, partner } = useDelivery();
 
-  const order = orders.find((o) => o.orderId === orderId);
+  const contextOrder = orders.find(
+    (o) => o.orderId === orderId || o.id === orderId || o.order_number === orderId
+  );
+  const [fetchedOrder, setFetchedOrder] = useState(null);
+  const [loading, setLoading] = useState(!contextOrder);
+
+  useEffect(() => {
+    if (contextOrder) {
+      setFetchedOrder(contextOrder);
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    fetchOrderDetailsFromBackend(orderId, partner?.uid).then((data) => {
+      if (active) {
+        if (data) setFetchedOrder(data);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [orderId, contextOrder, partner?.uid]);
+
+  const order = contextOrder || fetchedOrder;
 
   const [showIssuePanel, setShowIssuePanel] = useState(false);
   const [selectedReason, setSelectedReason] = useState(ISSUE_REASONS[0]);
@@ -55,6 +81,16 @@ export default function OrderDetailScreen() {
       navigate('/delivery/orders');
     }
   };
+
+  if (loading && !order) {
+    return (
+      <div className="screen-container">
+        <div className="empty-state">
+          <p className="empty-state__desc">Loading order #{orderId}…</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
