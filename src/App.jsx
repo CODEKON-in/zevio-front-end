@@ -18,6 +18,9 @@ const LocationCheck = lazyRetry(() => import('./pages/LocationCheck.jsx'));
 // The shop owners' panel, served at /seller. Lazy, so customers never download it.
 const SellerApp = lazyRetry(() => import('./seller/SellerApp.jsx'));
 
+// The delivery partners' panel, served at /delivery (and /partner). Lazy, so customers never download it.
+const DeliveryApp = lazyRetry(() => import('./delivery/DeliveryApp.jsx'));
+
 export default function App() {
   const { pathname } = useLocation();
   return (
@@ -29,6 +32,8 @@ export default function App() {
           <Routes>
             <Route path="/location-check" element={<LocationCheck />} />
             <Route path="/seller/*" element={<SellerApp />} />
+            <Route path="/delivery/*" element={<DeliveryApp />} />
+            <Route path="/partner/*" element={<DeliveryApp />} />
             {/* Customer section handles its own login screen. */}
             <Route path="/*" element={<CustomerApp />} />
           </Routes>

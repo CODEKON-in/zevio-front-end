@@ -82,6 +82,28 @@ Editor):
   paid".
 - Saved addresses stay on the phone that typed them. Each order carries its own copy.
 
+## Delivery Partner App (`/delivery/*` & `/partner/*`)
+
+| Route | Screen |
+| --- | --- |
+| `/delivery/login` | Google Sign-in for delivery partners |
+| `/delivery/orders` | Active assigned deliveries with on/off duty status toggle & filters |
+| `/delivery/orders/:id` | Order details: customer drop, shop pickup, direct call, Google Maps directions, and status progress (Picked Up → Delivered) |
+| `/delivery/history` | Completed deliveries ledger (filtered by Today, This Week, All) |
+| `/delivery/earnings` | Daily, weekly, and total earnings calculations (base ₹35/delivery) |
+| `/delivery/profile` | Partner profile details, assigned corridor, vehicle info, and logout |
+
+## Seller Admin Panel (`/seller/*`)
+
+| Route | Screen |
+| --- | --- |
+| `/seller/login` | Google Sign-in for shop owners |
+| `/seller/dashboard` | Quick store metrics and open/close toggle |
+| `/seller/orders` | Live incoming orders feed with sound alerts |
+| `/seller/products` | Catalog & menu management (items, pricing, min_order_qty, veg flag) |
+| `/seller/history` | Delivered and cancelled orders ledger |
+| `/seller/settings` | Store hours, UPI ID, and contact details |
+
 ## Rules of the codebase
 
 | Rule | Where |
