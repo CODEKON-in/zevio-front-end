@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   loginWithGoogle,
+  loginWithGoogleCredential,
   logoutUser,
   subscribeToAuthState,
 } from '../services/authService';
@@ -71,6 +72,22 @@ export function SellerAuthProvider({ children }) {
     }
   };
 
+  const handleLoginWithCredential = async (credential) => {
+    try {
+      setError(null);
+      setLoading(true);
+      const sellerData = await loginWithGoogleCredential(credential);
+      setUser(sellerData);
+      setSeller(sellerData);
+      setLoading(false);
+      return sellerData;
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || 'Login failed. Please try again.');
+      throw err;
+    }
+  };
+
   /**
    * DEV-ONLY guest login bypass
    * Strictly blocked if isDevAllowed is false
@@ -128,6 +145,7 @@ export function SellerAuthProvider({ children }) {
     error,
     setError,
     handleLogin,
+    handleLoginWithCredential,
     handleLogout,
     loginAsDevGuest,
     isDevAllowed,

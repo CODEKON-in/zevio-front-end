@@ -53,11 +53,17 @@ function getGoogleCredential() {
   );
 }
 
+/** Complete sign-in using an already obtained Google ID token credential. */
+export async function loginWithGoogleCredential(credential) {
+  if (!credential) throw new Error('Sign-in failed. Please try again.');
+  saveSession(credential);
+  return fetchSeller();
+}
+
 /** Sign in with Google; only sellers known to the API get through. */
 export async function loginWithGoogle() {
   const credential = await getGoogleCredential();
-  saveSession(credential);
-  return fetchSeller();
+  return loginWithGoogleCredential(credential);
 }
 
 export async function logoutUser() {
