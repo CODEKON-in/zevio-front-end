@@ -11,6 +11,7 @@ function toUser(me) {
     name: me.name || 'Seller',
     photo: me.photo || '',
     shopId: shop.id,
+    shopName: shop.shop_name || shop.name || 'My Shop',
     invitedBy: null,
     createdAt: me.profile?.created_at || null,
   };

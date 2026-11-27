@@ -37,6 +37,7 @@ const ALLOWED = {
     '/api/seller/products',
     '/api/seller/orders',
     `/api/seller/order/${ID}`,
+    `/api/seller/order/[a-zA-Z0-9_-]+`,
     // Delivery partner panel (/delivery & /partner)
     '/api/partner/me',
     '/api/partner/orders',

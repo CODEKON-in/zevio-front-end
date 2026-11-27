@@ -78,6 +78,7 @@ export async function apiRequest(path, { method = 'GET', form, query } = {}) {
       if (v !== undefined && v !== null) body.append(k, String(v));
     });
     init.body = body;
+    init.headers['Content-Type'] = 'application/x-www-form-urlencoded';
   }
 
   let res;
