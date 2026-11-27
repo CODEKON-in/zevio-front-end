@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSellerAuth } from '../context/SellerAuthContext';
+import { useToast } from '../../context/ToastContext';
 import {
   subscribeToShopOrders,
   acceptOrder,
@@ -22,6 +23,7 @@ const ORDER_FILTER_TABS = [
 
 export default function OrdersPage() {
   const { user } = useSellerAuth();
+  const { showToast } = useToast();
   const shopId = user?.shopId;
 
   const [orders, setOrders] = useState([]);
@@ -80,19 +82,36 @@ export default function OrdersPage() {
 
   // Actions
   const handleAcceptOrder = async (orderId) => {
+    const prevOrders = orders;
+    const targetOrder = orders.find((o) => o.id === orderId);
+    const orderNum = targetOrder?.orderNumber ? `#${targetOrder.orderNumber}` : '';
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: 'preparing', normalizedStatus: 'preparing' }
+          : o
+      )
+    );
+    setNewlyArrivedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(orderId);
+      return next;
+    });
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder((prev) => (prev ? { ...prev, status: 'preparing', normalizedStatus: 'preparing' } : null));
+    }
+    showToast(`Order ${orderNum} accepted and moved to Preparing.`.trim(), { type: 'success' });
+
     try {
       setIsActionLoading(true);
       await acceptOrder(orderId);
-      setNewlyArrivedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(orderId);
-        return next;
-      });
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder((prev) => (prev ? { ...prev, normalizedStatus: 'preparing' } : null));
-      }
     } catch (err) {
-      alert(`Accept failed: ${err.message}`);
+      setOrders(prevOrders);
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder(targetOrder);
+      }
+      showToast(`Accept failed: ${err.message}`, { type: 'error' });
     } finally {
       setIsActionLoading(false);
     }
@@ -103,29 +122,57 @@ export default function OrdersPage() {
   };
 
   const handleConfirmReject = async (orderId, reason) => {
+    const prevOrders = orders;
+    const targetOrder = orders.find((o) => o.id === orderId);
+    const orderNum = targetOrder?.orderNumber ? `#${targetOrder.orderNumber}` : '';
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: 'cancelled', normalizedStatus: 'rejected', rejectionReason: reason }
+          : o
+      )
+    );
+    setOrderToReject(null);
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder(null);
+    }
+    showToast(`Order ${orderNum} rejected.`.trim(), { type: 'info' });
+
     try {
       setIsActionLoading(true);
       await rejectOrder(orderId, reason);
-      setOrderToReject(null);
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder(null);
-      }
     } catch (err) {
-      alert(`Reject failed: ${err.message}`);
+      setOrders(prevOrders);
+      showToast(`Reject failed: ${err.message}`, { type: 'error' });
     } finally {
       setIsActionLoading(false);
     }
   };
 
   const handleMarkReady = async (orderId) => {
+    const prevOrders = orders;
+    const targetOrder = orders.find((o) => o.id === orderId);
+    const orderNum = targetOrder?.orderNumber ? `#${targetOrder.orderNumber}` : '';
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, status: 'out_for_delivery', normalizedStatus: 'ready' }
+          : o
+      )
+    );
+    if (selectedOrder?.id === orderId) {
+      setSelectedOrder((prev) => (prev ? { ...prev, status: 'out_for_delivery', normalizedStatus: 'ready' } : null));
+    }
+    showToast(`Order ${orderNum} marked as ready for delivery!`.trim(), { type: 'success' });
+
     try {
       setIsActionLoading(true);
       await markOrderReady(orderId);
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder((prev) => (prev ? { ...prev, normalizedStatus: 'ready' } : null));
-      }
     } catch (err) {
-      alert(`Mark ready failed: ${err.message}`);
+      setOrders(prevOrders);
+      showToast(`Mark ready failed: ${err.message}`, { type: 'error' });
     } finally {
       setIsActionLoading(false);
     }

@@ -70,8 +70,16 @@ export async function apiRequest(path, { method = 'GET', form, query } = {}) {
     throw new ApiError('Your session has expired. Please sign in again.', 401);
   }
 
-  const qs = query ? `?${new URLSearchParams(query)}` : '';
-  const init = { method, headers: { Authorization: `Bearer ${credential}`, Accept: 'application/json' } };
+  const queryObj = { ...(query || {}) };
+  if (method === 'GET' && !queryObj._t) {
+    queryObj._t = Date.now();
+  }
+  const qs = Object.keys(queryObj).length ? `?${new URLSearchParams(queryObj)}` : '';
+  const init = {
+    method,
+    cache: 'no-store',
+    headers: { Authorization: `Bearer ${credential}`, Accept: 'application/json' },
+  };
   if (form) {
     const body = new URLSearchParams();
     Object.entries(form).forEach(([k, v]) => {
@@ -122,9 +130,14 @@ export function refreshAll() {
 export function poll(fetcher, onData, onError, intervalMs) {
   let active = true;
   let running = false;
+  let queued = false;
 
   const tick = async () => {
-    if (!active || running) return;
+    if (!active) return;
+    if (running) {
+      queued = true;
+      return;
+    }
     running = true;
     try {
       const data = await fetcher();
@@ -133,6 +146,10 @@ export function poll(fetcher, onData, onError, intervalMs) {
       if (active) onError(err);
     } finally {
       running = false;
+      if (queued && active) {
+        queued = false;
+        tick();
+      }
     }
   };
   const timer = setInterval(() => {
