@@ -107,6 +107,8 @@ export function toProduct(raw) {
 
 function fromApiStatus(apiStatus) {
   const st = String(apiStatus || 'pending').toUpperCase();
+  if (st === 'PROCESSING' || st === 'ACCEPTED' || st === 'IN_PROGRESS') return ORDER_STATUS.PREPARING;
+  if (st === 'SHIPPED' || st === 'PICKED_UP' || st === 'READY') return ORDER_STATUS.OUT_FOR_DELIVERY;
   return ORDER_STATUS[st] || ORDER_STATUS.PENDING;
 }
 

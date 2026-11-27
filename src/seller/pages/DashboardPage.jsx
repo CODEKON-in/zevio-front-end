@@ -119,6 +119,7 @@ export default function DashboardPage() {
   // Order Actions
   const handleAcceptOrder = async (orderId) => {
     const prevOrders = orders;
+    const prevTab = activeTab;
     const targetOrder = orders.find((o) => o.id === orderId);
     const orderNum = targetOrder?.orderNumber ? `#${targetOrder.orderNumber}` : '';
 
@@ -146,6 +147,7 @@ export default function DashboardPage() {
       await acceptOrder(orderId);
     } catch (err) {
       setOrders(prevOrders);
+      setActiveTab(prevTab);
       if (selectedOrder?.id === orderId) {
         setSelectedOrder(targetOrder);
       }

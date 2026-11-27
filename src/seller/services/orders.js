@@ -9,8 +9,8 @@ const ORDERS_POLL_MS = 8000;
 export function normalizeStatus(status) {
   const s = (status || '').toLowerCase();
   if (s === 'pending' || s === 'new' || s === 'placed') return 'new';
-  if (s === 'preparing' || s === 'confirmed' || s === 'accepted' || s === 'in_progress') return 'preparing';
-  if (s === 'ready' || s === 'food_ready' || s === 'out_for_delivery') return 'ready';
+  if (s === 'preparing' || s === 'confirmed' || s === 'accepted' || s === 'in_progress' || s === 'processing') return 'preparing';
+  if (s === 'ready' || s === 'food_ready' || s === 'out_for_delivery' || s === 'shipped' || s === 'picked_up') return 'ready';
   if (s === 'completed' || s === 'delivered') return 'completed';
   if (s === 'rejected' || s === 'cancelled') return 'rejected';
   return 'new';
