@@ -192,6 +192,7 @@ export default function DashboardPage() {
 
   const handleMarkReady = async (orderId) => {
     const prevOrders = orders;
+    const prevTab = activeTab;
     const targetOrder = orders.find((o) => o.id === orderId);
     const orderNum = targetOrder?.orderNumber ? `#${targetOrder.orderNumber}` : '';
 
@@ -213,6 +214,7 @@ export default function DashboardPage() {
       await markOrderReady(orderId);
     } catch (err) {
       setOrders(prevOrders);
+      setActiveTab(prevTab);
       showToast(`Failed to mark ready: ${err.message}`, { type: 'error' });
     } finally {
       setIsActionLoading(false);
